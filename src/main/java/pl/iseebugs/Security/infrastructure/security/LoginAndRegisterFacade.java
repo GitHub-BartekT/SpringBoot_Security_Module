@@ -10,6 +10,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import pl.iseebugs.Security.domain.user.AppUser;
 import pl.iseebugs.Security.domain.user.AppUserRepository;
+import pl.iseebugs.Security.infrastructure.security.email.EmailSender;
 import pl.iseebugs.Security.infrastructure.security.projection.AuthReqRespDTO;
 import pl.iseebugs.Security.infrastructure.security.token.ConfirmationToken;
 import pl.iseebugs.Security.infrastructure.security.token.ConfirmationTokenService;
@@ -29,6 +30,7 @@ class LoginAndRegisterFacade {
     private final JWTUtils jwtUtils;
     private final AuthenticationManager authenticationManager;
     private final ConfirmationTokenService confirmationTokenService;
+    private final EmailSender emailSender;
 
     AuthReqRespDTO signUp(AuthReqRespDTO registrationRequest){
         AuthReqRespDTO responseDTO = new AuthReqRespDTO();
@@ -69,8 +71,13 @@ class LoginAndRegisterFacade {
                 responseDTO.setMessage("User created successfully");
                 responseDTO.setExpirationTime("15 minutes");
                 responseDTO.setStatusCode(200);
+
+                String link = "http://localhost:8080/api/auth/confirm?token=" + token;
+                emailSender.send(
+                        registrationRequest.getEmail(),
+                        buildEmail(registrationRequest.getFirstName(), link));
             }
-        }catch (Exception e){
+        } catch (Exception e){
             responseDTO.setStatusCode(500);
             responseDTO.setError(e.getMessage());
         }
@@ -145,5 +152,37 @@ class LoginAndRegisterFacade {
         response.setMessage("Invalid Token");
         }
         return response;
+    }
+
+    private String buildEmail(String name, String link) {
+        return  "<div style=\"font-family:Helvetica,Arial,sans-serif;font-size:16px;margin:0;color:#0b0c0c\">\n" +
+                "  <table role=\"presentation\" class=\"m_-6186904992287805515content\" align=\"center\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" style=\"border-collapse:collapse;max-width:580px;width:100%!important\" width=\"100%\">\n" +
+                "    <tbody>\n" +
+                "      <tr>\n" +
+                "        <td height=\"30\"><br></td>\n" +
+                "      </tr>\n" +
+                "      <tr>\n" +
+                "        <td width=\"10\" valign=\"middle\"><br></td>\n" +
+                "        <td style=\"font-family:Helvetica,Arial,sans-serif;font-size:19px;line-height:1.315789474;max-width:560px\">\n" +
+                "          <p style=\"Margin:0 0 20px 0;font-size:19px;line-height:25px;color:#0b0c0c\">Hi " + name + ",</p>\n" +
+                "          <p style=\"Margin:0 0 20px 0;font-size:19px;line-height:25px;color:#0b0c0c\"> Thank you for registering. Please click on the below link to activate your account: </p>\n" +
+                "          <blockquote style=\"Margin:0 0 20px 0;border-left:10px solid #b1b4b6;padding:15px 0 0.1px 15px;font-size:19px;line-height:25px\">\n" +
+                "            <p style=\"Margin:0 0 20px 0;font-size:19px;line-height:25px;color:#0b0c0c\">\n" +
+                "              <a href=\"" + link + "\">Activate Now</a>\n" +
+                "            </p>\n" +
+                "          </blockquote>\n" +
+                "          Link will expire in 15 minutes.\n" +
+                "          <p>See you soon</p>\n" +
+                "        </td>\n" +
+                "        <td width=\"10\" valign=\"middle\"><br></td>\n" +
+                "      </tr>\n" +
+                "      <tr>\n" +
+                "        <td height=\"30\"><br></td>\n" +
+                "      </tr>\n" +
+                "    </tbody>\n" +
+                "  </table>\n" +
+                "  <div class=\"yj6qo\"></div>\n" +
+                "  <div class=\"adL\"></div>\n" +
+                "</div>";
     }
 }
