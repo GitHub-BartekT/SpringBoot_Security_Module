@@ -6,10 +6,11 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import pl.iseebugs.appuser.projection.AppUserReadModel;
+import pl.iseebugs.appuser.projection.AppUserWriteModel;
 
 @AllArgsConstructor
 @Service
-class AppUserFacade implements UserDetailsService {
+class AppUserFacade implements UserDetailsService, AppUserPort {
     private final static String USER_NOT_FOUND_MSG =
             "user with email %s not found";
 
@@ -36,5 +37,24 @@ class AppUserFacade implements UserDetailsService {
                 )
                 .orElseThrow(() ->
                         new UsernameNotFoundException(String.format(USER_NOT_FOUND_MSG,email)));
+    }
+
+    //TODO: to implement logic, validation
+    @Override
+    public AppUserReadModel save(final AppUserWriteModel userWriteModel) {
+        AppUser userToSave = AppUserMapper.toAppUserFromWriteModel(userWriteModel);
+        AppUser savedUser = appUserRepository.save(userToSave);
+        return AppUserMapper.toAppUserReadModel(savedUser);
+    }
+
+    @Override
+    public boolean exists(final String email) {
+        return appUserRepository.findByEmail(email).isPresent();
+    }
+
+    //TODO: to implement logic, validation
+    @Override
+    public void delete(final String email) {
+        appUserRepository.deleteAppUserByEmail(email);
     }
 }

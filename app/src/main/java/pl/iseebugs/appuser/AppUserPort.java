@@ -9,5 +9,5 @@ interface AppUserPort {
     public UserDetails loadUserByUsername(final String email) throws UsernameNotFoundException;
     AppUserReadModel save(AppUserWriteModel appUserWriteModel);
     boolean exists(String email);
-    boolean delete(String email);
+    void delete(String email);
 }

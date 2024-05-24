@@ -9,7 +9,11 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.Optional;
 
 @Repository
-@Transactional(readOnly = true)
+@Transactional
 interface AppUserRepository extends JpaRepository<AppUser,Long> {
     Optional<AppUser> findByEmail(String email);
+
+    @Modifying
+    @Query("DELETE FROM AppUser a WHERE a.email = ?1")
+    void deleteAppUserByEmail(String email);
 }
