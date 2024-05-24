@@ -114,18 +114,36 @@ class LoginAndRegisterFacade {
                             signingRequest.getPassword()));
             var user = appUserRepository.findByEmail(signingRequest.getEmail()).orElseThrow();
 
-            UserDetails userToJWT = AppUserMapper.formEntityToUserDetails(user);
+            UserDetails userToJWT = AppUserMapper.fromEntityToUserDetails(user);
             var jwt = jwtUtils.generateToken(userToJWT);
             var refreshToken = jwtUtils.generateRefreshToken(new HashMap<>(), userToJWT);
             response.setStatusCode(200);
             response.setToken(jwt);
             response.setRefreshToken(refreshToken);
-            response.setExpirationTime("5 minutes");
+            response.setExpirationTime("24Hr");
             response.setMessage("Successfully singed in");
         }catch (Exception e){
             response.setStatusCode(500);
             response.setError(e.getMessage());
         }
+        return response;
+    }
+
+    AuthReqRespDTO refreshToken(AuthReqRespDTO refreshTokenRegister){
+        AuthReqRespDTO response = new AuthReqRespDTO();
+
+        String ourEmail = jwtUtils.extractUsername(refreshTokenRegister.getToken());
+        AppUser user = appUserRepository.findByEmail(ourEmail).orElseThrow();
+        UserDetails userToJWT = AppUserMapper.fromEntityToUserDetails(user);
+        if (jwtUtils.isTokenValid(refreshTokenRegister.getToken(), userToJWT)){
+            var jwt = jwtUtils.generateToken(userToJWT);
+            response.setStatusCode(200);
+            response.setToken(jwt);
+            response.setRefreshToken(refreshTokenRegister.getToken());
+            response.setExpirationTime("5 minutes");
+            response.setMessage("Successfully Refreshed Token");
+        }
+        response.setStatusCode(500);
         return response;
     }
 }

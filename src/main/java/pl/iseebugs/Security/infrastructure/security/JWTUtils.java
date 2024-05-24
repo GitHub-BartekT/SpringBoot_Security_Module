@@ -20,7 +20,6 @@ class JWTUtils {
     private static final long EXPIRATION_REFRESH_TIME = 86400000; //24 hours or 86400 000 milliseconds
     private static final long EXPIRATION_ACCESS_TIME =   300000; //5 minutes or 300 000 milliseconds
 
-
     JWTUtils(){
         String secreteString = "4564654654654654564879956465JHKJ456497891233";
         byte[] keyBytes = Base64.getDecoder().decode(secreteString.getBytes(StandardCharsets.UTF_8));

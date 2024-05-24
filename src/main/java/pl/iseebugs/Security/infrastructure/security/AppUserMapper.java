@@ -9,7 +9,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 class AppUserMapper {
-    static AppUserInfoDetails formEntityToUserDetails(AppUser userDetails){
+    static AppUserInfoDetails fromEntityToUserDetails(AppUser userDetails){
         return new AppUserInfoDetails(
                 userDetails.getFirstName(),
                 userDetails.getLastName(),

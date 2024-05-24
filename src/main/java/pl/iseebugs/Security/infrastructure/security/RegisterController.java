@@ -32,10 +32,8 @@ class RegisterController {
         return  ResponseEntity.ok(loginAndRegisterFacade.signIn(signInRequest));
     }
 
-    //TODO:
-    //signUp - only token sending on mail
-    //confirm
-    //SingIn
-    //refresh
-
+    @PostMapping("/refresh")
+    public ResponseEntity<AuthReqRespDTO> refreshToken(@RequestBody AuthReqRespDTO refreshTokenRequest){
+        return  ResponseEntity.ok(loginAndRegisterFacade.refreshToken(refreshTokenRequest));
+    }
 }
