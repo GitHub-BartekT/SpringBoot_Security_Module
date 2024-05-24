@@ -1,5 +1,6 @@
 package pl.iseebugs.appuser;
 
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -9,6 +10,7 @@ import java.util.Collection;
 import java.util.Collections;
 
 @Builder
+@AllArgsConstructor
 class AppUserInfoDetails implements UserDetails {
     private String firstName;
     private String lastName;
