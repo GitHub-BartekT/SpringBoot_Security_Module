@@ -22,8 +22,18 @@ class RegisterController {
         return  ResponseEntity.ok(loginAndRegisterFacade.signUp(signUpRequest));
     }
 
+    @GetMapping(path = "/confirm")
+    public ResponseEntity<AuthReqRespDTO> confirm(@RequestParam("token") String token) {
+        return ResponseEntity.ok(loginAndRegisterFacade.confirmToken(token));
+    }
+
+    @PostMapping("/signin")
+    public ResponseEntity<AuthReqRespDTO> signIn(@RequestBody AuthReqRespDTO signInRequest){
+        return  ResponseEntity.ok(loginAndRegisterFacade.signIn(signInRequest));
+    }
+
     //TODO:
-    //signUp -token sending
+    //signUp - only token sending on mail
     //confirm
     //SingIn
     //refresh

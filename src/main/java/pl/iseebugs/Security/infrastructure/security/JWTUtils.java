@@ -18,7 +18,7 @@ class JWTUtils {
 
     private SecretKey Key;
     private static final long EXPIRATION_REFRESH_TIME = 86400000; //24 hours or 86400 000 milliseconds
-    private static final long EXPIRATION_ACCESS_TIME =   3600000; //60 minutes or 3600 000 milliseconds
+    private static final long EXPIRATION_ACCESS_TIME =   300000; //5 minutes or 300 000 milliseconds
 
 
     JWTUtils(){

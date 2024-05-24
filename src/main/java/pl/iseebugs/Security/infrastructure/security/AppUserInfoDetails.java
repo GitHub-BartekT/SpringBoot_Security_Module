@@ -18,7 +18,7 @@ class AppUserInfoDetails implements UserDetails {
     private final String password;
     private final List<GrantedAuthority> appUserRole;
     private Boolean locked = false;
-    private Boolean enabled = false;
+    private Boolean enabled = true;
 
     public AppUserInfoDetails(
             String firstName,

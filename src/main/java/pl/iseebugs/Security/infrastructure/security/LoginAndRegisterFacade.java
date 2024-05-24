@@ -2,8 +2,10 @@ package pl.iseebugs.Security.infrastructure.security;
 
 import lombok.AllArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import pl.iseebugs.Security.domain.user.AppUser;
@@ -14,6 +16,7 @@ import pl.iseebugs.Security.infrastructure.security.token.ConfirmationTokenServi
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.UUID;
 
@@ -23,6 +26,8 @@ class LoginAndRegisterFacade {
 
     private final AppUserRepository appUserRepository;
     private final PasswordEncoder passwordEncoder;
+    private final JWTUtils jwtUtils;
+    private final AuthenticationManager authenticationManager;
     private final ConfirmationTokenService confirmationTokenService;
 
     AuthReqRespDTO signUp(AuthReqRespDTO registrationRequest){
@@ -61,7 +66,8 @@ class LoginAndRegisterFacade {
             responseDTO.setToken(token);
 
             if (ourUserResult.getId() != null){
-                responseDTO.setMessage("User saved successfully");
+                responseDTO.setMessage("User created successfully");
+                responseDTO.setExpirationTime("15 minutes");
                 responseDTO.setStatusCode(200);
             }
         }catch (Exception e){
@@ -69,5 +75,57 @@ class LoginAndRegisterFacade {
             responseDTO.setError(e.getMessage());
         }
         return responseDTO;
+    }
+
+
+
+    AuthReqRespDTO confirmToken(final String token) {
+        ConfirmationToken confirmationToken = confirmationTokenService
+                .getToken(token)
+                .orElseThrow(() ->
+                        new IllegalStateException("token not found"));
+
+        if (confirmationToken.getConfirmedAt() != null) {
+            throw new IllegalStateException("email already confirmed");
+        }
+
+        LocalDateTime expiredAt = confirmationToken.getExpiresAt();
+
+        if (expiredAt.isBefore(LocalDateTime.now())) {
+            throw new IllegalStateException("token expired");
+        }
+
+        confirmationTokenService.setConfirmedAt(token);
+        appUserRepository.enableAppUser(
+                confirmationToken.getAppUser().getEmail());
+        AuthReqRespDTO response = new AuthReqRespDTO();
+        response.setStatusCode(200);
+        response.setMessage("User confirmed");
+        return response;
+    }
+
+    AuthReqRespDTO signIn(AuthReqRespDTO signingRequest){
+        AuthReqRespDTO response = new AuthReqRespDTO();
+
+        try {
+            authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(
+                            signingRequest.getEmail(),
+                            signingRequest.getPassword()));
+            var user = appUserRepository.findByEmail(signingRequest.getEmail()).orElseThrow();
+
+            UserDetails userToJWT = AppUserMapper.formEntityToUserDetails(user);
+            var jwt = jwtUtils.generateToken(userToJWT);
+            var refreshToken = jwtUtils.generateRefreshToken(new HashMap<>(), userToJWT);
+            response.setStatusCode(200);
+            response.setToken(jwt);
+            response.setRefreshToken(refreshToken);
+            response.setExpirationTime("5 minutes");
+            response.setMessage("Successfully singed in");
+        }catch (Exception e){
+            response.setStatusCode(500);
+            response.setError(e.getMessage());
+        }
+        return response;
     }
 }
