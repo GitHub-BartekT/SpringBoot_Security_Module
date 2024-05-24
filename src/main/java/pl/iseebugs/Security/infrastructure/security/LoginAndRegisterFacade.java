@@ -77,8 +77,6 @@ class LoginAndRegisterFacade {
         return responseDTO;
     }
 
-
-
     AuthReqRespDTO confirmToken(final String token) {
         ConfirmationToken confirmationToken = confirmationTokenService
                 .getToken(token)
@@ -132,18 +130,20 @@ class LoginAndRegisterFacade {
     AuthReqRespDTO refreshToken(AuthReqRespDTO refreshTokenRegister){
         AuthReqRespDTO response = new AuthReqRespDTO();
 
-        String ourEmail = jwtUtils.extractUsername(refreshTokenRegister.getToken());
+        String ourEmail = jwtUtils.extractUsername(refreshTokenRegister.getRefreshToken());
         AppUser user = appUserRepository.findByEmail(ourEmail).orElseThrow();
         UserDetails userToJWT = AppUserMapper.fromEntityToUserDetails(user);
-        if (jwtUtils.isTokenValid(refreshTokenRegister.getToken(), userToJWT)){
+        if (jwtUtils.isTokenValid(refreshTokenRegister.getRefreshToken(), userToJWT)){
             var jwt = jwtUtils.generateToken(userToJWT);
             response.setStatusCode(200);
             response.setToken(jwt);
-            response.setRefreshToken(refreshTokenRegister.getToken());
-            response.setExpirationTime("5 minutes");
+            response.setRefreshToken(refreshTokenRegister.getRefreshToken());
+            response.setExpirationTime("24Hr");
             response.setMessage("Successfully Refreshed Token");
-        }
+        } else {
         response.setStatusCode(500);
+        response.setMessage("Invalid Token");
+        }
         return response;
     }
 }
