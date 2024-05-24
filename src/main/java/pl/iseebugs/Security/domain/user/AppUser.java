@@ -34,6 +34,6 @@ public class AppUser{
     private String email;
     private String password;
     private String  appUserRole;
-    private Boolean locked = false;
-    private Boolean enabled = false;
+    private Boolean locked;
+    private Boolean enabled;
 }

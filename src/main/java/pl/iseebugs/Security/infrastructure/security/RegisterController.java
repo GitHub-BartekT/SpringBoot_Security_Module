@@ -23,7 +23,7 @@ class RegisterController {
     }
 
     //TODO:
-    //signUp
+    //signUp -token sending
     //confirm
     //SingIn
     //refresh

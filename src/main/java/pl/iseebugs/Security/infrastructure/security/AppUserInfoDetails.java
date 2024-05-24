@@ -4,12 +4,10 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import pl.iseebugs.Security.domain.user.AppUser;
-import pl.iseebugs.Security.domain.user.AppUserRole;
 import pl.iseebugs.Security.infrastructure.security.projection.AppUserReadModel;
 
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -19,8 +17,8 @@ class AppUserInfoDetails implements UserDetails {
     private final String email;
     private final String password;
     private final List<GrantedAuthority> appUserRole;
-    private Boolean locked;
-    private Boolean enabled;
+    private Boolean locked = false;
+    private Boolean enabled = false;
 
     public AppUserInfoDetails(
             String firstName,
@@ -96,8 +94,9 @@ class AppUserInfoDetails implements UserDetails {
                     .email(this.email)
                     .password(this.password)
                     .appUserRole(this.appUserRole.toString())
+                    .locked(locked)
+                    .enabled(enabled)
                     .build();
-
         }
 
 }
