@@ -2,12 +2,6 @@ package pl.iseebugs.Security.domain.user;
 
 import jakarta.persistence.*;
 import lombok.*;
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.userdetails.UserDetails;
-
-import java.util.Collection;
-import java.util.Collections;
 
 @AllArgsConstructor
 @Getter
@@ -33,7 +27,7 @@ public class AppUser{
     private String lastName;
     private String email;
     private String password;
-    private String  appUserRole;
+    private String role;
     private Boolean locked;
     private Boolean enabled;
 }

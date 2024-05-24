@@ -2,6 +2,7 @@ package pl.iseebugs.Security.infrastructure.security.token;
 
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
+import pl.iseebugs.Security.domain.user.AppUser;
 
 import java.time.LocalDateTime;
 import java.util.Optional;
@@ -23,5 +24,9 @@ public class ConfirmationTokenService {
     public int setConfirmedAt(String token) {
         return confirmationTokenRepository.updateConfirmedAt(
                 token, LocalDateTime.now());
+    }
+
+    public void deleteConfirmationToken(AppUser appUser){
+        confirmationTokenRepository.deleteByAppUserId(appUser.getId());
     }
 }

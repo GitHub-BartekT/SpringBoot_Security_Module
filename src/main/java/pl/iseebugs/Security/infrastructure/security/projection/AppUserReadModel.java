@@ -2,7 +2,9 @@ package pl.iseebugs.Security.infrastructure.security.projection;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
+import lombok.Getter;
 
+@Getter
 @Builder
 @AllArgsConstructor
 public class AppUserReadModel {
@@ -12,25 +14,4 @@ public class AppUserReadModel {
     private final String email;
     private final String password;
     private final String roles;
-
-
-    public String getFirstName() {
-        return firstName;
-    }
-
-    public String getPassword() {
-        return password;
-    }
-
-    public String getRoles() {
-        return roles;
-    }
-
-    public String getLastName() {
-        return lastName;
-    }
-
-    public  String getEmail() {
-        return email;
-    }
 }

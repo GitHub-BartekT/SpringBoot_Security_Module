@@ -35,7 +35,7 @@ class AppUserInfoService implements UserDetailsService {
                         .lastName(user.getLastName())
                         .email(user.getEmail())
                         .password(user.getPassword())
-                        .roles(user.getAppUserRole())
+                        .roles(user.getRole())
                         .build())
                 .orElseThrow(() -> new BadCredentialsException(USER_NOT_FOUND));
     }

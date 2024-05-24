@@ -41,6 +41,9 @@ class SecurityConfig {
                                 "/api/auth/confirm",
                                 "/api/auth/signin",
                                 "/api/auth/refresh").permitAll()
+                        .requestMatchers(
+                                "/api/auth/user/deleteUser")
+                        .hasAnyAuthority("USER")
                         .anyRequest().authenticated())
                 .sessionManagement(manager -> manager.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authenticationProvider(authenticationProvider()).addFilterBefore(
