@@ -1,10 +1,10 @@
-package pl.iseebugs.SecurityEmail;
+package pl.iseebugs.SpringBootSecurity;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
 @SpringBootTest
-class SecurityEmailApplicationTests {
+class SpringBootSecurityApplicationTests {
 
 	@Test
 	void contextLoads() {

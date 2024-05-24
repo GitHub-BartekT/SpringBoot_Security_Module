@@ -1,13 +1,13 @@
-package pl.iseebugs.SecurityEmail;
+package pl.iseebugs.SpringBootSecurity;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-public class SecurityEmailApplication {
+public class SpringBootSecurityApplication {
 
 	public static void main(String[] args) {
-		SpringApplication.run(SecurityEmailApplication.class, args);
+		SpringApplication.run(SpringBootSecurityApplication.class, args);
 	}
 
 }
