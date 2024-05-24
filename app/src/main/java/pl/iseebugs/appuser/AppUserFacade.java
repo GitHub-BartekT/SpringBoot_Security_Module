@@ -10,7 +10,7 @@ import pl.iseebugs.appuser.projection.AppUserWriteModel;
 
 @AllArgsConstructor
 @Service
-class AppUserFacade implements UserDetailsService, AppUserPort {
+public class AppUserFacade implements UserDetailsService, AppUserPort {
     private final static String USER_NOT_FOUND_MSG =
             "user with email %s not found";
 
