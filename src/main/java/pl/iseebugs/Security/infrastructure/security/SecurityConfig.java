@@ -42,7 +42,8 @@ class SecurityConfig {
                                 "/api/auth/signin",
                                 "/api/auth/refresh").permitAll()
                         .requestMatchers(
-                                "/api/auth/user/deleteUser")
+                                "/api/auth/user/deleteUser",
+                                "/api/auth/user/updateUser")
                         .hasAnyAuthority("USER")
                         .anyRequest().authenticated())
                 .sessionManagement(manager -> manager.sessionCreationPolicy(SessionCreationPolicy.STATELESS))

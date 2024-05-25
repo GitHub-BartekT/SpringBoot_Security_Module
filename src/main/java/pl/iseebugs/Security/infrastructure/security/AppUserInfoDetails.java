@@ -89,6 +89,14 @@ class AppUserInfoDetails implements UserDetails {
         return lastName;
     }
 
+    void setLocked(final Boolean locked) {
+        this.locked = locked;
+    }
+
+    void setEnabled(final Boolean enabled) {
+        this.enabled = enabled;
+    }
+
     AppUser toNewAppUser(){
             return AppUser.builder()
                     .firstName(this.firstName)

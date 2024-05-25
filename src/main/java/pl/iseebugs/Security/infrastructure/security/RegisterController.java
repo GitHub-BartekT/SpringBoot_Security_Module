@@ -43,4 +43,9 @@ class RegisterController {
     ResponseEntity<AuthReqRespDTO> deleteUser(@RequestBody AuthReqRespDTO deleteRequest) throws AppUserNotFoundException {
         return ResponseEntity.ok(loginAndRegisterFacade.deleteUser(deleteRequest));
     }
+
+    @PutMapping("/user/updateUser")
+    ResponseEntity<AuthReqRespDTO> updateUser(@RequestBody AuthReqRespDTO updateRequest){
+        return ResponseEntity.ok(loginAndRegisterFacade.updateUser(updateRequest));
+    }
 }
