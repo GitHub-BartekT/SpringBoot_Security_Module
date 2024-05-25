@@ -156,8 +156,8 @@ class LoginAndRegisterFacade {
     }
 
 
-    AuthReqRespDTO updateUser(final AuthReqRespDTO updateRequest) {
-        String ourEmail = jwtUtils.extractUsername(updateRequest.getRefreshToken());
+    AuthReqRespDTO updateUser(String refreshToken, AuthReqRespDTO updateRequest) {
+        String ourEmail = jwtUtils.extractUsername(refreshToken);
         AppUser user = appUserRepository.findByEmail(ourEmail).orElseThrow();
 
         AuthReqRespDTO responseDTO = new AuthReqRespDTO();
@@ -180,8 +180,11 @@ class LoginAndRegisterFacade {
 
             AppUser toUpdate = appUserRepository.findByEmail(ourEmail).orElseThrow();
 
+            if (password != null && !password.trim().isEmpty()) {
+                toUpdate.setPassword(passwordEncoder.encode(password));
+            }
+
             toUpdate.setEmail(email);
-            toUpdate.setPassword(password);
             toUpdate.setRole(roles);
             toUpdate.setFirstName(firstName);
             toUpdate.setLastName(lastName);

@@ -54,7 +54,12 @@ class RegisterController {
     }
 
     @PutMapping("/user/updateUser")
-    ResponseEntity<AuthReqRespDTO> updateUser(@RequestBody AuthReqRespDTO updateRequest){
-        return ResponseEntity.ok(loginAndRegisterFacade.updateUser(updateRequest));
+    ResponseEntity<AuthReqRespDTO> updateUser(@RequestHeader("Authorization") String authHeader,
+                                              @RequestBody AuthReqRespDTO updateRequest){
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
+        }
+        String refreshToken = authHeader.substring(7);
+        return ResponseEntity.ok(loginAndRegisterFacade.updateUser(refreshToken, updateRequest));
     }
 }
