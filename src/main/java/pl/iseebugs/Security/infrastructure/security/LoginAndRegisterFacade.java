@@ -134,18 +134,19 @@ class LoginAndRegisterFacade {
         return response;
     }
 
-    AuthReqRespDTO refreshToken(AuthReqRespDTO refreshTokenRegister){
+    AuthReqRespDTO refreshToken(String refreshToken){
         AuthReqRespDTO response = new AuthReqRespDTO();
 
-        String ourEmail = jwtUtils.extractUsername(refreshTokenRegister.getRefreshToken());
+        String ourEmail = jwtUtils.extractUsername(refreshToken);
         AppUser user = appUserRepository.findByEmail(ourEmail).orElseThrow();
         UserDetails userToJWT = AppUserMapper.fromEntityToUserDetails(user);
-        if (jwtUtils.isTokenValid(refreshTokenRegister.getRefreshToken(), userToJWT)){
+
+        if (jwtUtils.isTokenValid(refreshToken, userToJWT)){
             var jwt = jwtUtils.generateToken(userToJWT);
             response.setStatusCode(200);
             response.setToken(jwt);
-            response.setRefreshToken(refreshTokenRegister.getRefreshToken());
-            response.setExpirationTime("24Hr");
+            response.setRefreshToken(refreshToken);
+            response.setExpirationTime("60 min");
             response.setMessage("Successfully Refreshed Token");
         } else {
         response.setStatusCode(500);
