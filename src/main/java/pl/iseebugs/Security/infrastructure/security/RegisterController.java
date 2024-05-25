@@ -3,6 +3,8 @@ package pl.iseebugs.Security.infrastructure.security;
 import lombok.AllArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import pl.iseebugs.Security.domain.user.AppUser;
+import pl.iseebugs.Security.domain.user.AppUserNotFoundException;
 import pl.iseebugs.Security.infrastructure.security.projection.AuthReqRespDTO;
 
 @AllArgsConstructor
@@ -35,5 +37,15 @@ class RegisterController {
     @PostMapping("/refresh")
     public ResponseEntity<AuthReqRespDTO> refreshToken(@RequestBody AuthReqRespDTO refreshTokenRequest){
         return  ResponseEntity.ok(loginAndRegisterFacade.refreshToken(refreshTokenRequest));
+    }
+
+    @DeleteMapping("/user/deleteUser")
+    ResponseEntity<AuthReqRespDTO> deleteUser(@RequestBody AuthReqRespDTO deleteRequest) throws AppUserNotFoundException {
+        return ResponseEntity.ok(loginAndRegisterFacade.deleteUser(deleteRequest));
+    }
+
+    @PutMapping("/user/updateUser")
+    ResponseEntity<AuthReqRespDTO> updateUser(@RequestBody AuthReqRespDTO updateRequest){
+        return ResponseEntity.ok(loginAndRegisterFacade.updateUser(updateRequest));
     }
 }

@@ -16,7 +16,7 @@ class AppUserInfoDetails implements UserDetails {
     private final String lastName;
     private final String email;
     private final String password;
-    private final List<GrantedAuthority> appUserRole;
+    private final String role;
     private Boolean locked = false;
     private Boolean enabled = true;
 
@@ -25,13 +25,13 @@ class AppUserInfoDetails implements UserDetails {
             String lastName,
             String email,
             String password,
-            final List<GrantedAuthority> appUserRole
+            String role
             ){
         this.firstName = firstName;
         this.lastName = lastName;
         this.email = email;
         this.password = password;
-        this.appUserRole = appUserRole;
+        this.role = role;
     }
 
     public AppUserInfoDetails(AppUserReadModel userReadModel){
@@ -39,14 +39,16 @@ class AppUserInfoDetails implements UserDetails {
         this.lastName = userReadModel.getLastName();
         this.email = userReadModel.getEmail();
         this.password = userReadModel.getPassword();
-        this.appUserRole = Arrays.stream(userReadModel.getRoles().split(","))
-                .map(SimpleGrantedAuthority::new)
-                .collect(Collectors.toList());
+        this.role = userReadModel.getRoles();
     }
 
+
+    /*Arrays.stream(userReadModel.getRoles().split(","))
+                .map(SimpleGrantedAuthority::new)
+                .collect(Collectors.toList())*/
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return appUserRole;
+        return List.of(new SimpleGrantedAuthority(role));
     }
 
     @Override
@@ -87,13 +89,21 @@ class AppUserInfoDetails implements UserDetails {
         return lastName;
     }
 
+    void setLocked(final Boolean locked) {
+        this.locked = locked;
+    }
+
+    void setEnabled(final Boolean enabled) {
+        this.enabled = enabled;
+    }
+
     AppUser toNewAppUser(){
             return AppUser.builder()
                     .firstName(this.firstName)
                     .lastName(this.lastName)
                     .email(this.email)
                     .password(this.password)
-                    .appUserRole(this.appUserRole.toString())
+                    .role(this.role)
                     .locked(locked)
                     .enabled(enabled)
                     .build();

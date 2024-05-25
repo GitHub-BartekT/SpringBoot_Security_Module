@@ -1,9 +1,9 @@
 package pl.iseebugs.Security.infrastructure.security;
 
 import lombok.AllArgsConstructor;
+import lombok.extern.java.Log;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -23,6 +23,7 @@ import java.util.UUID;
 
 @AllArgsConstructor
 @Service
+@Log
 class LoginAndRegisterFacade {
 
     private final AppUserRepository appUserRepository;
@@ -39,8 +40,7 @@ class LoginAndRegisterFacade {
             String lastName = registrationRequest.getLastName();
             String email = registrationRequest.getEmail();
             String password = passwordEncoder.encode(registrationRequest.getPassword());
-            List<GrantedAuthority> roles = new ArrayList<>();
-            roles.add(new SimpleGrantedAuthority("USER"));
+            String roles = "USER";
 
 
             if (appUserRepository.findByEmail(email).isPresent()) {
@@ -151,6 +151,64 @@ class LoginAndRegisterFacade {
         response.setStatusCode(500);
         response.setMessage("Invalid Token");
         }
+        return response;
+    }
+
+
+    AuthReqRespDTO updateUser(final AuthReqRespDTO updateRequest) {
+        String ourEmail = jwtUtils.extractUsername(updateRequest.getRefreshToken());
+        AppUser user = appUserRepository.findByEmail(ourEmail).orElseThrow();
+
+        AuthReqRespDTO responseDTO = new AuthReqRespDTO();
+
+        try {
+            String firstName = updateRequest.getFirstName();
+            String lastName = updateRequest.getLastName();
+            String email = updateRequest.getEmail();
+            String password = passwordEncoder.encode(updateRequest.getPassword());
+            String roles = user.getRole();
+            Boolean locked = user.getLocked();
+            Boolean enabled = user.getEnabled();
+
+
+            if (appUserRepository.findByEmail(email).isEmpty()) {
+               email = updateRequest.getEmail();
+            } else {
+                email = ourEmail;
+            }
+
+            AppUser toUpdate = appUserRepository.findByEmail(ourEmail).orElseThrow();
+
+            toUpdate.setEmail(email);
+            toUpdate.setPassword(password);
+            toUpdate.setRole(roles);
+            toUpdate.setFirstName(firstName);
+            toUpdate.setLastName(lastName);
+            toUpdate.setEnabled(enabled);
+            toUpdate.setLocked(locked);
+
+            AppUser ourUserResult = appUserRepository.save(toUpdate);
+
+            if (ourUserResult.getId() != null){
+                responseDTO.setMessage("User update successfully");
+                responseDTO.setStatusCode(200);
+            }
+        } catch (Exception e){
+            responseDTO.setStatusCode(500);
+            responseDTO.setError(e.getMessage());
+        }
+        return responseDTO;
+    }
+
+    AuthReqRespDTO deleteUser(final AuthReqRespDTO deleteRequest) {
+        AuthReqRespDTO response = new AuthReqRespDTO();
+
+        String userEmail = jwtUtils.extractUsername(deleteRequest.getRefreshToken());
+        AppUser user = appUserRepository.findByEmail(userEmail).orElseThrow();
+        confirmationTokenService.deleteConfirmationToken(user);
+        appUserRepository.deleteByEmail(userEmail);
+        response.setStatusCode(204);
+        response.setMessage("Successfully deleted user");
         return response;
     }
 
