@@ -45,8 +45,12 @@ class RegisterController {
     }
 
     @DeleteMapping("/user/deleteUser")
-    ResponseEntity<AuthReqRespDTO> deleteUser(@RequestBody AuthReqRespDTO deleteRequest) throws AppUserNotFoundException {
-        return ResponseEntity.ok(loginAndRegisterFacade.deleteUser(deleteRequest));
+    ResponseEntity<AuthReqRespDTO> deleteUser(@RequestHeader("Authorization") String authHeader) throws AppUserNotFoundException {
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
+        }
+        String refreshToken = authHeader.substring(7);
+        return ResponseEntity.ok(loginAndRegisterFacade.deleteUser(refreshToken));
     }
 
     @PutMapping("/user/updateUser")
