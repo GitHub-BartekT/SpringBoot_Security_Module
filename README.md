@@ -4,6 +4,9 @@ The module covers all basic authorization and authentication features.
 
 ## Scope of the project
 
+### Live demo in postman
+https://youtu.be/LfLcWpJ4oq4
+
 ### Major features:
 - Registration with:
   - Token confirmation
@@ -34,7 +37,7 @@ Access the API documentation at:http://localhost:8080/swagger-ui/index.html#/
 - Lombok
 - Postman
 
-## Run:
+## Run🚀
 
 1. Database 
    1. Create a database named "auth" in PostgreSQL.

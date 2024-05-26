@@ -17,7 +17,7 @@ class RegisterController {
 
     @GetMapping()
     public String goHome(){
-        return "This is public access without any authentication. You should first signup at /api/auth/signup than login at /api/auth/signin.";
+        return "This is path with public access.";
     }
 
     @PostMapping("/signup")

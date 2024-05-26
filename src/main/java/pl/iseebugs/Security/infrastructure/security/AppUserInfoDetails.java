@@ -6,10 +6,8 @@ import org.springframework.security.core.userdetails.UserDetails;
 import pl.iseebugs.Security.domain.user.AppUser;
 import pl.iseebugs.Security.infrastructure.security.projection.AppUserReadModel;
 
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
-import java.util.stream.Collectors;
 
 class AppUserInfoDetails implements UserDetails {
     private final String firstName;
@@ -18,7 +16,7 @@ class AppUserInfoDetails implements UserDetails {
     private final String password;
     private final String role;
     private Boolean locked = false;
-    private Boolean enabled = true;
+    private Boolean enabled = false;
 
     public AppUserInfoDetails(
             String firstName,
@@ -40,12 +38,9 @@ class AppUserInfoDetails implements UserDetails {
         this.email = userReadModel.getEmail();
         this.password = userReadModel.getPassword();
         this.role = userReadModel.getRoles();
+        this.enabled = userReadModel.getEnable();
     }
 
-
-    /*Arrays.stream(userReadModel.getRoles().split(","))
-                .map(SimpleGrantedAuthority::new)
-                .collect(Collectors.toList())*/
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return List.of(new SimpleGrantedAuthority(role));
@@ -68,7 +63,7 @@ class AppUserInfoDetails implements UserDetails {
 
     @Override
     public boolean isAccountNonLocked() {
-        return !locked;
+        return true;
     }
 
     @Override

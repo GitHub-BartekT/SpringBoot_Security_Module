@@ -27,7 +27,6 @@ class AppUserInfoService implements UserDetailsService {
         return new AppUserInfoDetails(userReadModel);
     }
 
-
     AppUserReadModel findByUsername(final String email) throws BadCredentialsException {
         return appUserRepository.findByEmail(email)
                 .map(user -> AppUserReadModel.builder()
@@ -36,6 +35,7 @@ class AppUserInfoService implements UserDetailsService {
                         .email(user.getEmail())
                         .password(user.getPassword())
                         .roles(user.getRole())
+                        .enable(user.getEnabled())
                         .build())
                 .orElseThrow(() -> new BadCredentialsException(USER_NOT_FOUND));
     }
