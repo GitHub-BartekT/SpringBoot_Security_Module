@@ -5,7 +5,10 @@ The module covers all basic authorization and authentication features.
 ## Scope of the project
 
 ### Live demo in postman
+
 https://youtu.be/LfLcWpJ4oq4
+
+![img_1.png](img_1.png)
 
 ### Major features:
 - Registration with:
