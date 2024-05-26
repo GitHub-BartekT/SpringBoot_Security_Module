@@ -39,13 +39,18 @@ Access the API documentation at:http://localhost:8080/swagger-ui/index.html#/
 1. Database 
    1. Create a database named "auth" in PostgreSQL.
    2. Create a .env file with your PostgreSQL credentials in the root project directory:
-      ```makefile
-      POSTGRES_USER=
-      POSTGRES_PASSWORD=
-      ```
+```makefile
+POSTGRES_USER=
+POSTGRES_PASSWORD=
+```
 2. Instal and run maildev to receive mails
 - ```npm install -g maildev```
 - ```maildev```
+
+You can check emails at:
+```java
+http://127.0.0.1:1080/
+```
 3. Run project
 - ```mvn spring-boot:run ```
 
