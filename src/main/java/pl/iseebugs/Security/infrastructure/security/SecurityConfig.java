@@ -42,6 +42,12 @@ class SecurityConfig {
                                 "/api/auth/signin",
                                 "/api/auth/refresh").permitAll()
                         .requestMatchers(
+                                "/swagger-ui/**",
+                                "/swagger-ui.html",
+                                "/v3/api-docs",
+                                "/v3/api-docs/**",
+                                "/swagger-resources/**").permitAll()
+                        .requestMatchers(
                                 "/api/auth/user/deleteUser",
                                 "/api/auth/user/updateUser")
                         .hasAnyAuthority("USER")
