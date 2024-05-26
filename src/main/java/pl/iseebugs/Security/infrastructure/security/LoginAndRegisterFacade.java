@@ -134,18 +134,19 @@ class LoginAndRegisterFacade {
         return response;
     }
 
-    AuthReqRespDTO refreshToken(AuthReqRespDTO refreshTokenRegister){
+    AuthReqRespDTO refreshToken(String refreshToken){
         AuthReqRespDTO response = new AuthReqRespDTO();
 
-        String ourEmail = jwtUtils.extractUsername(refreshTokenRegister.getRefreshToken());
+        String ourEmail = jwtUtils.extractUsername(refreshToken);
         AppUser user = appUserRepository.findByEmail(ourEmail).orElseThrow();
         UserDetails userToJWT = AppUserMapper.fromEntityToUserDetails(user);
-        if (jwtUtils.isTokenValid(refreshTokenRegister.getRefreshToken(), userToJWT)){
+
+        if (jwtUtils.isTokenValid(refreshToken, userToJWT)){
             var jwt = jwtUtils.generateToken(userToJWT);
             response.setStatusCode(200);
             response.setToken(jwt);
-            response.setRefreshToken(refreshTokenRegister.getRefreshToken());
-            response.setExpirationTime("24Hr");
+            response.setRefreshToken(refreshToken);
+            response.setExpirationTime("60 min");
             response.setMessage("Successfully Refreshed Token");
         } else {
         response.setStatusCode(500);
@@ -155,8 +156,8 @@ class LoginAndRegisterFacade {
     }
 
 
-    AuthReqRespDTO updateUser(final AuthReqRespDTO updateRequest) {
-        String ourEmail = jwtUtils.extractUsername(updateRequest.getRefreshToken());
+    AuthReqRespDTO updateUser(String refreshToken, AuthReqRespDTO updateRequest) {
+        String ourEmail = jwtUtils.extractUsername(refreshToken);
         AppUser user = appUserRepository.findByEmail(ourEmail).orElseThrow();
 
         AuthReqRespDTO responseDTO = new AuthReqRespDTO();
@@ -179,8 +180,11 @@ class LoginAndRegisterFacade {
 
             AppUser toUpdate = appUserRepository.findByEmail(ourEmail).orElseThrow();
 
+            if (password != null && !password.trim().isEmpty()) {
+                toUpdate.setPassword(passwordEncoder.encode(password));
+            }
+
             toUpdate.setEmail(email);
-            toUpdate.setPassword(password);
             toUpdate.setRole(roles);
             toUpdate.setFirstName(firstName);
             toUpdate.setLastName(lastName);
@@ -200,10 +204,10 @@ class LoginAndRegisterFacade {
         return responseDTO;
     }
 
-    AuthReqRespDTO deleteUser(final AuthReqRespDTO deleteRequest) {
+    AuthReqRespDTO deleteUser(String refreshToken) {
         AuthReqRespDTO response = new AuthReqRespDTO();
 
-        String userEmail = jwtUtils.extractUsername(deleteRequest.getRefreshToken());
+        String userEmail = jwtUtils.extractUsername(refreshToken);
         AppUser user = appUserRepository.findByEmail(userEmail).orElseThrow();
         confirmationTokenService.deleteConfirmationToken(user);
         appUserRepository.deleteByEmail(userEmail);

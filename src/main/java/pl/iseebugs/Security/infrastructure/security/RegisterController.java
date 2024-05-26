@@ -1,6 +1,7 @@
 package pl.iseebugs.Security.infrastructure.security;
 
 import lombok.AllArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import pl.iseebugs.Security.domain.user.AppUser;
@@ -35,17 +36,30 @@ class RegisterController {
     }
 
     @PostMapping("/refresh")
-    public ResponseEntity<AuthReqRespDTO> refreshToken(@RequestBody AuthReqRespDTO refreshTokenRequest){
-        return  ResponseEntity.ok(loginAndRegisterFacade.refreshToken(refreshTokenRequest));
+    public ResponseEntity<AuthReqRespDTO> refreshToken(@RequestHeader("Authorization") String authHeader){
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
+        }
+        String refreshToken = authHeader.substring(7);
+        return ResponseEntity.ok(loginAndRegisterFacade.refreshToken(refreshToken));
     }
 
     @DeleteMapping("/user/deleteUser")
-    ResponseEntity<AuthReqRespDTO> deleteUser(@RequestBody AuthReqRespDTO deleteRequest) throws AppUserNotFoundException {
-        return ResponseEntity.ok(loginAndRegisterFacade.deleteUser(deleteRequest));
+    ResponseEntity<AuthReqRespDTO> deleteUser(@RequestHeader("Authorization") String authHeader) throws AppUserNotFoundException {
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
+        }
+        String refreshToken = authHeader.substring(7);
+        return ResponseEntity.ok(loginAndRegisterFacade.deleteUser(refreshToken));
     }
 
     @PutMapping("/user/updateUser")
-    ResponseEntity<AuthReqRespDTO> updateUser(@RequestBody AuthReqRespDTO updateRequest){
-        return ResponseEntity.ok(loginAndRegisterFacade.updateUser(updateRequest));
+    ResponseEntity<AuthReqRespDTO> updateUser(@RequestHeader("Authorization") String authHeader,
+                                              @RequestBody AuthReqRespDTO updateRequest){
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
+        }
+        String refreshToken = authHeader.substring(7);
+        return ResponseEntity.ok(loginAndRegisterFacade.updateUser(refreshToken, updateRequest));
     }
 }
