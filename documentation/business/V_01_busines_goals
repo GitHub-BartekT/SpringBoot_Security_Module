@@ -1,0 +1,29 @@
+REST application to user managing.
+
+Technical requirement:
+    - REST app
+    - Java
+    - Hibernate
+    - Spring Boot
+    - PostgreSQL
+
+Features:
+    - registration
+    - OPTIONAL - e-mail confirmation of registration
+    - login
+    - changing user data
+    - deleting user
+
+Security
+    - JWT tokens
+    - confirmation of registration
+        - via endpoint
+        - via e-mail
+
+Presentation
+    - github repository
+        https://github.com/GitHub-BartekT/SpringBoot_Security_Module
+    - screens
+        on github repositories
+    - video of the application in operation in Postman
+        https://www.youtube.com/watch?v=INOvOtW8JO8&t=1s
