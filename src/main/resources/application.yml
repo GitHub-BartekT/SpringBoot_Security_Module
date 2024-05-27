@@ -35,3 +35,15 @@ spring:
           connectiontimeout: 5000
           timeout: 3000
           writetimeout: 5000
+
+---
+spring:
+  config:
+    activate:
+      on-profile: integration
+
+  datasource:
+    url: jdbc:tc:postgresql:latest:///testdb
+    username: test
+    password: test
+    driver-class-name: org.testcontainers.jdbc.ContainerDatabaseDriver
