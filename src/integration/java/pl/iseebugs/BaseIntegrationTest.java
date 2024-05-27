@@ -1,5 +1,6 @@
 package pl.iseebugs;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.tomakehurst.wiremock.junit5.WireMockExtension;
 import jakarta.annotation.PostConstruct;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -22,10 +23,14 @@ import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMoc
 @Testcontainers
 public abstract class BaseIntegrationTest {
 
-    public static final String WIRE_MOCK_HOST = "http://localhost";
+    public static final String WIRE_MOCK_HOST = "http://localhost:8080/";
 
     @Autowired
     public MockMvc mockMvc;
+
+
+    @Autowired
+    public ObjectMapper objectMapper;
 
     @Container
     public static final PostgreSQLContainer<?> postgresqlContainer

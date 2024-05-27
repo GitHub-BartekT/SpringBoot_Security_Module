@@ -1,5 +1,8 @@
 # checking authorization and authentication path:
-# User - "someTestUser", password='somePassword' - not registered
+#   firstName   = "firstTestName",
+    lastName    = "lastTestName",
+    email       = "some@mail.com"
+    password    = "somePassword" - not registered
 
 Step 1: User tried to get JWT token by requesting POST /auth/signin
         with username='someTestUser', password='somePassword' and system returned UNAUTHORIZED
