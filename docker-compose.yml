@@ -1,0 +1,29 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:latest
+    restart: always
+    shm_size: 128mb
+    volumes:
+      - .psqlrc:/root/.psqlrc:ro
+      - dbdat:/var/lib/postgresql/data
+      - ./log:/root/log:cached
+      - ./latest.dump:/latest.dump
+    environment:
+      POSTGRES_DB: auth
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    ports:
+      - "5432:5432"
+
+  adminer:
+    image: adminer
+    restart: always
+    ports:
+      - "5000:8080"
+    depends_on:
+      - db
+
+volumes:
+  dbdat:
