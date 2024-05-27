@@ -6,7 +6,7 @@ The module covers all basic authorization and authentication features.
 
 ### Live demo in postman
 
-https://youtu.be/LfLcWpJ4oq4
+https://www.youtube.com/watch?v=INOvOtW8JO8
 
 ![img_1.png](img_1.png)
 
