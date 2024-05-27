@@ -6,6 +6,9 @@ import org.springframework.test.web.servlet.ResultActions;
 import pl.iseebugs.BaseIntegrationTest;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 
@@ -29,8 +32,16 @@ class UserRegistersAndDeletesAccountIntegrationTest extends BaseIntegrationTest 
         failedLoginRequest
                 .andExpect(status().isForbidden());
 
+
     //Step 2: User made GET /{some public endpoint} and system returned OK(200) with some public response
-    
+        // given && then
+        ResultActions publicAccess = mockMvc.perform(get("/api/auth")
+                .contentType(MediaType.APPLICATION_JSON)
+        );
+        //then
+        publicAccess.andExpect(status().isOk())
+                .andExpect(content().string("This is path with public access.".trim()));
+
 
     //Step 3: user made POST /api/auth/signup with username="someTestUser", password="someTestPassword"
     //and system registered user with status OK(200) and token="someToken"
