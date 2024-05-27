@@ -5,9 +5,9 @@ server:
 
 spring:
   datasource:
-    password: ${POSTGRES_PASSWORD}
     url: jdbc:postgresql://localhost:5432/auth
-    username: ${POSTGRES_USER}
+    username: ${POSTGRES_USER:postgres}
+    password: ${POSTGRES_PASSWORD:pass}
     driver-class-name: org.postgresql.Driver
   jpa:
     hibernate:

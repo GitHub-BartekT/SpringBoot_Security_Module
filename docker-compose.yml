@@ -12,8 +12,8 @@ services:
       - ./latest.dump:/latest.dump
     environment:
       POSTGRES_DB: auth
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-pass}
     ports:
       - "5432:5432"
 
