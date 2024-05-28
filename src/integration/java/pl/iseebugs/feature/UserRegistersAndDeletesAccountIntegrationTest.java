@@ -13,6 +13,7 @@ import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -138,12 +139,12 @@ class UserRegistersAndDeletesAccountIntegrationTest extends BaseIntegrationTest 
         );
 
 
-    //Step 6: User made POST /api/auth/updateUser with header “Authorization: AAAA.BBBB.CCC” and body username='notMyName'
-    //and system returned OK(200)
+    //Step 6: User made POST /api/auth/refresh with “Authorization: DDDD.EEEE.FFF
+    // and system returned OK(200) and token=GGGG.HHHH.III and refreshToken=JJJJ.KKKK.LLL
         // given && when
-            ResultActions refreshRegisterRequest = mockMvc.perform(post("/api/auth/refresh")
-                .header("Authorization", "Bearer " + refreshToken)
-                .contentType(MediaType.APPLICATION_JSON_VALUE)
+         ResultActions refreshRegisterRequest = mockMvc.perform(post("/api/auth/refresh")
+             .header("Authorization", "Bearer " + refreshToken)
+             .contentType(MediaType.APPLICATION_JSON_VALUE)
         );
 
         // then
@@ -162,11 +163,11 @@ class UserRegistersAndDeletesAccountIntegrationTest extends BaseIntegrationTest 
                 () -> assertThat(refreshResultDto.getRefreshToken()).isNotBlank(),
                 () -> assertThat(StringUtils.countOccurrencesOf(newAccessToken, ".")).isEqualTo(2),
                 () -> assertThat(StringUtils.countOccurrencesOf(newRefreshToken, ".")).isEqualTo(2)
-    );
+        );
 
 
-    //Step 7: User made POST /api/auth/refresh with “Authorization: DDDD.EEEE.FFF”
-    //and system returned OK(200) and token=GGGG.HHHH.III and refreshToken=JJJJ.KKKK.LLL
+    //Step 7: User made POST /api/auth/updateUser with header “Authorization: GGGG.HHHH.III” and new data
+    // and system returned OK(200)
         // given && when
         ResultActions updateRegisterRequest = mockMvc.perform(put("/api/auth/user/updateUser")
                 .header("Authorization", "Bearer " + newAccessToken)
@@ -194,5 +195,20 @@ class UserRegistersAndDeletesAccountIntegrationTest extends BaseIntegrationTest 
 
     //Step 8: User made DELETE /api/auth/deleteUser with “Authorization: DDDD.EEEE.FFF”
     //and system returned OK(204)
+        ResultActions deleteRegisterRequest = mockMvc.perform(delete("/api/auth/user/deleteUser")
+                .header("Authorization", "Bearer " + newAccessToken)
+                .contentType(MediaType.APPLICATION_JSON_VALUE)
+        );
+
+        // then
+        MvcResult delete = deleteRegisterRequest.andExpect(status().isOk()).andReturn();
+        String deleteActionResultJson = delete.getResponse().getContentAsString();
+        AuthReqRespDTO deleteResultDto = objectMapper.readValue(deleteActionResultJson, AuthReqRespDTO.class);
+
+        //then
+        assertAll(
+                () -> assertThat(deleteResultDto.getStatusCode()).isEqualTo(204),
+                () -> assertThat(deleteResultDto.getMessage()).isEqualTo("Successfully deleted user")
+       );
     }
 }
