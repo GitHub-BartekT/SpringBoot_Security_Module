@@ -4,6 +4,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.ResultActions;
+import org.springframework.util.StringUtils;
 import pl.iseebugs.BaseIntegrationTest;
 import pl.iseebugs.Security.infrastructure.security.projection.AuthReqRespDTO;
 
@@ -22,7 +23,7 @@ class UserRegistersAndDeletesAccountIntegrationTest extends BaseIntegrationTest 
     void should_user_registers_and_deletes_account() throws Exception {
     //Step 1: User tried to get JWT token by requesting POST /auth/signin
     //with username='someTestUser', password='somePassword' and system returned UNAUTHORIZED
-        // given && then
+        // given && when
         ResultActions failedLoginRequest = mockMvc.perform(post("/api/auth/signin")
                 .content("""
                         {
@@ -46,7 +47,7 @@ class UserRegistersAndDeletesAccountIntegrationTest extends BaseIntegrationTest 
 
 
     //Step 2: User made GET /{some public endpoint} and system returned OK(200) with some public response
-        // given && then
+        // given && when
         ResultActions publicAccess = mockMvc.perform(get("/api/auth")
                 .contentType(MediaType.APPLICATION_JSON)
         );
@@ -58,7 +59,7 @@ class UserRegistersAndDeletesAccountIntegrationTest extends BaseIntegrationTest 
 
     //Step 3: user made POST /api/auth/signup with username="someTestUser", password="someTestPassword"
     //and system registered user with status OK(200) and token="someToken"
-        // given && then
+        // given && when
         ResultActions successRegisterRequest = mockMvc.perform(post("/api/auth/signup")
                 .content("""
                         {
@@ -83,9 +84,9 @@ class UserRegistersAndDeletesAccountIntegrationTest extends BaseIntegrationTest 
                 () -> assertThat(finalConfirmResultDto.getMessage()).isEqualTo("User created successfully"),
                 () -> assertThat(finalConfirmResultDto.getToken()).isNotBlank()
         );
-        
+
     //Step 4: user made POST /api/auth/confirm with token="someToken" and system responses with status OK(200)
-        // given && then
+        // given && when
         ResultActions confirmRegisterRequest = mockMvc.perform(post("/api/auth/confirm?token=" + registrationToken)
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
         );
@@ -94,6 +95,7 @@ class UserRegistersAndDeletesAccountIntegrationTest extends BaseIntegrationTest 
         MvcResult confirmActionResult = confirmRegisterRequest.andExpect(status().isOk()).andReturn();
         String confirmActionResultJson = confirmActionResult.getResponse().getContentAsString();
         AuthReqRespDTO confirmResultDto = objectMapper.readValue(confirmActionResultJson, AuthReqRespDTO.class);
+
         assertAll(
                 () -> assertThat(confirmResultDto.getStatusCode()).isEqualTo(200),
                 () -> assertThat(confirmResultDto.getMessage()).isEqualTo("User confirmed")
@@ -102,12 +104,64 @@ class UserRegistersAndDeletesAccountIntegrationTest extends BaseIntegrationTest 
 
     //Step 5: user tried to get JWT token by requesting POST /api/auth/signin with username="someTestUser", password="someTestPassword"
     //and system returned OK(200) and token=AAAA.BBBB.CCC and refreshToken=DDDD.EEEE.FFF
+        // given && when
+        ResultActions loginRequest = mockMvc.perform(post("/api/auth/signin")
+                .content("""
+                        {
+                        "firstName": "firstTestName",
+                        "lastName": "lastTestName",
+                        "email": "some@mail.com",
+                        "password": "somePassword"
+                        }
+                        """.trim())
+                .contentType(MediaType.APPLICATION_JSON_VALUE)
+        );
 
-            //            .header("Authorization", "Bearer " + token)
+
+        // then
+        MvcResult loginActionResult = loginRequest.andExpect(status().isOk()).andReturn();
+        String loginActionResultJson = loginActionResult.getResponse().getContentAsString();
+        AuthReqRespDTO loginResultDto = objectMapper.readValue(loginActionResultJson, AuthReqRespDTO.class);
+
+        String accessToken = loginResultDto.getToken();
+        String refreshToken = loginResultDto.getRefreshToken();
+
+        //then
+        assertAll(
+                () -> assertThat(loginResultDto.getStatusCode()).isEqualTo(200),
+                () -> assertThat(loginResultDto.getMessage()).isEqualTo("Successfully singed in"),
+                () -> assertThat(loginResultDto.getToken()).isNotBlank(),
+                () -> assertThat(loginResultDto.getRefreshToken()).isNotBlank(),
+                () -> assertThat(StringUtils.countOccurrencesOf(accessToken, ".")).isEqualTo(2),
+                () -> assertThat(StringUtils.countOccurrencesOf(refreshToken, ".")).isEqualTo(2)
+        );
 
 
         //Step 6: User made POST /api/auth/updateUser with header “Authorization: AAAA.BBBB.CCC” and body username='notMyName'
-    //and system returned OK(200)
+        //and system returned OK(200)
+            // given && when
+                ResultActions refreshRegisterRequest = mockMvc.perform(post("/api/auth/refresh")
+                    .header("Authorization", "Bearer " + refreshToken)
+                    .contentType(MediaType.APPLICATION_JSON_VALUE)
+            );
+
+            // then
+            MvcResult refreshActionResult = refreshRegisterRequest.andExpect(status().isOk()).andReturn();
+            String refreshActionResultJson = refreshActionResult.getResponse().getContentAsString();
+            AuthReqRespDTO refreshResultDto = objectMapper.readValue(refreshActionResultJson, AuthReqRespDTO.class);
+
+            String newAccessToken = refreshResultDto.getToken();
+            String newRefreshToken = refreshResultDto.getToken();
+
+            //then
+            assertAll(
+                    () -> assertThat(refreshResultDto.getStatusCode()).isEqualTo(200),
+                    () -> assertThat(refreshResultDto.getMessage()).isEqualTo("Successfully Refreshed Token"),
+                    () -> assertThat(refreshResultDto.getToken()).isNotBlank(),
+                    () -> assertThat(refreshResultDto.getRefreshToken()).isNotBlank(),
+                    () -> assertThat(StringUtils.countOccurrencesOf(newAccessToken, ".")).isEqualTo(2),
+                    () -> assertThat(StringUtils.countOccurrencesOf(newRefreshToken, ".")).isEqualTo(2)
+        );
 
 
     //Step 7: User made POST /api/auth/refresh with “Authorization: DDDD.EEEE.FFF”
