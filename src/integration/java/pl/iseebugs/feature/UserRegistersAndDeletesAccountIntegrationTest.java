@@ -34,16 +34,15 @@ class UserRegistersAndDeletesAccountIntegrationTest extends BaseIntegrationTest 
                         """.trim())
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
         );
+
         // then
         MvcResult registerActionResultFailed = failedLoginRequest.andExpect(status().isOk()).andReturn();
-        String registerActionResultJson = registerActionResultFailed.getResponse().getContentAsString();
-        AuthReqRespDTO registrationResultDto = objectMapper.readValue(registerActionResultJson, AuthReqRespDTO.class);
-        final AuthReqRespDTO finalRegistrationResultDto = registrationResultDto;
+        String confirmActionResultFailedJson = registerActionResultFailed.getResponse().getContentAsString();
+        AuthReqRespDTO confirmResultFailedDto = objectMapper.readValue(confirmActionResultFailedJson, AuthReqRespDTO.class);
         assertAll(
-                () -> assertThat(finalRegistrationResultDto.getStatusCode()).isEqualTo(500),
-                () -> assertThat(finalRegistrationResultDto.getError()).isEqualTo("User not found")
+                () -> assertThat(confirmResultFailedDto.getStatusCode()).isEqualTo(500),
+                () -> assertThat(confirmResultFailedDto.getError()).isEqualTo("User not found")
         );
-        String registrationToken = registrationResultDto.getToken();
 
 
     //Step 2: User made GET /{some public endpoint} and system returned OK(200) with some public response
@@ -51,6 +50,7 @@ class UserRegistersAndDeletesAccountIntegrationTest extends BaseIntegrationTest 
         ResultActions publicAccess = mockMvc.perform(get("/api/auth")
                 .contentType(MediaType.APPLICATION_JSON)
         );
+
         //then
         publicAccess.andExpect(status().isOk())
                 .andExpect(content().string("This is path with public access.".trim()));
@@ -70,25 +70,43 @@ class UserRegistersAndDeletesAccountIntegrationTest extends BaseIntegrationTest 
                         """.trim())
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
         );
+
         // then
         MvcResult registerActionResult = successRegisterRequest.andExpect(status().isOk()).andReturn();
-        registerActionResultJson = registerActionResult.getResponse().getContentAsString();
-        registrationResultDto = objectMapper.readValue(registerActionResultJson, AuthReqRespDTO.class);
-        registrationToken = registrationResultDto.getToken();
-        final AuthReqRespDTO finalRegistrationResultDto1 = registrationResultDto;
+        String registerActionResultJson = registerActionResult.getResponse().getContentAsString();
+        AuthReqRespDTO registerResultDto = objectMapper.readValue(registerActionResultJson, AuthReqRespDTO.class);
+
+        String registrationToken = registerResultDto.getToken();
+
+        final AuthReqRespDTO finalConfirmResultDto = registerResultDto;
         assertAll(
-                () -> assertThat(finalRegistrationResultDto1.getStatusCode()).isEqualTo(200),
-                () -> assertThat(finalRegistrationResultDto1.getToken()).isNotBlank()
+                () -> assertThat(finalConfirmResultDto.getMessage()).isEqualTo("User created successfully"),
+                () -> assertThat(finalConfirmResultDto.getToken()).isNotBlank()
+        );
+        
+    //Step 4: user made POST /api/auth/confirm with token="someToken" and system responses with status OK(200)
+        // given && then
+        ResultActions confirmRegisterRequest = mockMvc.perform(post("/api/auth/confirm?token=" + registrationToken)
+                .contentType(MediaType.APPLICATION_JSON_VALUE)
         );
 
-    //Step 4: user made POST /api/auth/confirm with token="someToken" and system responses with status OK(200)
+        // then
+        MvcResult confirmActionResult = confirmRegisterRequest.andExpect(status().isOk()).andReturn();
+        String confirmActionResultJson = confirmActionResult.getResponse().getContentAsString();
+        AuthReqRespDTO confirmResultDto = objectMapper.readValue(confirmActionResultJson, AuthReqRespDTO.class);
+        assertAll(
+                () -> assertThat(confirmResultDto.getStatusCode()).isEqualTo(200),
+                () -> assertThat(confirmResultDto.getMessage()).isEqualTo("User confirmed")
+        );
 
 
     //Step 5: user tried to get JWT token by requesting POST /api/auth/signin with username="someTestUser", password="someTestPassword"
     //and system returned OK(200) and token=AAAA.BBBB.CCC and refreshToken=DDDD.EEEE.FFF
 
+            //            .header("Authorization", "Bearer " + token)
 
-    //Step 6: User made POST /api/auth/updateUser with header “Authorization: AAAA.BBBB.CCC” and body username='notMyName'
+
+        //Step 6: User made POST /api/auth/updateUser with header “Authorization: AAAA.BBBB.CCC” and body username='notMyName'
     //and system returned OK(200)
 
 

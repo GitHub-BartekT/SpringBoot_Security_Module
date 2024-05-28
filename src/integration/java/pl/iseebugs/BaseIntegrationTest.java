@@ -2,7 +2,11 @@ package pl.iseebugs;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.tomakehurst.wiremock.junit5.WireMockExtension;
+import com.icegreen.greenmail.util.GreenMail;
+import com.icegreen.greenmail.util.ServerSetup;
 import jakarta.annotation.PostConstruct;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -44,11 +48,27 @@ public abstract class BaseIntegrationTest {
             .options(wireMockConfig().dynamicPort())
             .build();
 
+    private GreenMail greenMail;
+
     @PostConstruct
     public void setup() {
         System.setProperty("DB_URL", postgresqlContainer.getJdbcUrl());
         System.setProperty("DB_USERNAME", postgresqlContainer.getUsername());
         System.setProperty("DB_PASSWORD", postgresqlContainer.getPassword());
         System.setProperty("wiremock.server.port", String.valueOf(wireMockServer.getPort()));
+    }
+
+    @BeforeEach
+    public void setUpMailServer() {
+        ServerSetup setup = new ServerSetup(1025, "localhost", ServerSetup.PROTOCOL_SMTP);
+        greenMail = new GreenMail(setup);
+        greenMail.start();
+    }
+
+    @AfterEach
+    public void tearDownMailServer() {
+        if (greenMail != null) {
+            greenMail.stop();
+        }
     }
 }

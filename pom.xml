@@ -76,6 +76,12 @@
 			<artifactId>spring-security-test</artifactId>
 			<scope>test</scope>
 		</dependency>
+		<dependency>
+			<groupId>com.icegreen</groupId>
+			<artifactId>greenmail</artifactId>
+			<version>1.5.12</version>
+			<scope>test</scope>
+		</dependency>
 
 		<!--Test containers-->
 		<dependency>
