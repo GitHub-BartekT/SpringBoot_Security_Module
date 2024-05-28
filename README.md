@@ -75,11 +75,6 @@ With credentials:
 | Hasło       | pass       |
 | Baza danych | auth       |
 
-You can check the database on:
-
-```java
-http://localhost:5000/
-```
 
 If you want to have individual credentials to database you have to create `.env` file in the main root.
 
