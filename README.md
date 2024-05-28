@@ -45,6 +45,10 @@ Access the API documentation at:
 
 ## Run🚀
 
+### Integration test🚀
+
+- ```mvn test ```
+
 ### Fast launch🚀
 
 - ```docker-compose up -d```

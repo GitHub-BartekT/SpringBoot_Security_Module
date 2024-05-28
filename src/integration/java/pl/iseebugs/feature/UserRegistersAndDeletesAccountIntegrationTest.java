@@ -40,8 +40,8 @@ class UserRegistersAndDeletesAccountIntegrationTest extends BaseIntegrationTest 
 
         // then
         MvcResult registerActionResultFailed = failedLoginRequest.andExpect(status().isOk()).andReturn();
-        String confirmActionResultFailedJson = registerActionResultFailed.getResponse().getContentAsString();
-        AuthReqRespDTO confirmResultFailedDto = objectMapper.readValue(confirmActionResultFailedJson, AuthReqRespDTO.class);
+        String registerActionResultFailedJson = registerActionResultFailed.getResponse().getContentAsString();
+        AuthReqRespDTO confirmResultFailedDto = objectMapper.readValue(registerActionResultFailedJson, AuthReqRespDTO.class);
         assertAll(
                 () -> assertThat(confirmResultFailedDto.getStatusCode()).isEqualTo(500),
                 () -> assertThat(confirmResultFailedDto.getError()).isEqualTo("User not found")
@@ -89,7 +89,7 @@ class UserRegistersAndDeletesAccountIntegrationTest extends BaseIntegrationTest 
 
     //Step 4: user made POST /api/auth/confirm with token="someToken" and system responses with status OK(200)
         // given && when
-        ResultActions confirmRegisterRequest = mockMvc.perform(post("/api/auth/confirm?token=" + registrationToken)
+        ResultActions confirmRegisterRequest = mockMvc.perform(get("/api/auth/confirm?token=" + registrationToken)
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
         );
 
@@ -210,5 +210,29 @@ class UserRegistersAndDeletesAccountIntegrationTest extends BaseIntegrationTest 
                 () -> assertThat(deleteResultDto.getStatusCode()).isEqualTo(204),
                 () -> assertThat(deleteResultDto.getMessage()).isEqualTo("Successfully deleted user")
        );
+
+    //Step 9: User tried to get JWT token by requesting POST /auth/signin
+    //with username='someTestUser', password='somePassword' and system returned UNAUTHORIZED
+        // given && when
+        ResultActions failedLoginRequestNoUser = mockMvc.perform(post("/api/auth/signin")
+                .content("""
+                        {
+                        "firstName": "firstTestName",
+                        "lastName": "lastTestName",
+                        "email": "some@mail.com",
+                        "password": "somePassword"
+                        }
+                        """.trim())
+                .contentType(MediaType.APPLICATION_JSON_VALUE)
+        );
+
+        // then
+        MvcResult registerActionResultFailedNoUser = failedLoginRequestNoUser.andExpect(status().isOk()).andReturn();
+        String confirmActionResultFailedJsonNoUser = registerActionResultFailedNoUser.getResponse().getContentAsString();
+        AuthReqRespDTO confirmResultFailedDtoNoUser = objectMapper.readValue(confirmActionResultFailedJsonNoUser, AuthReqRespDTO.class);
+        assertAll(
+                () -> assertThat(confirmResultFailedDtoNoUser.getStatusCode()).isEqualTo(500),
+                () -> assertThat(confirmResultFailedDtoNoUser.getError()).isEqualTo("User not found")
+        );
     }
 }

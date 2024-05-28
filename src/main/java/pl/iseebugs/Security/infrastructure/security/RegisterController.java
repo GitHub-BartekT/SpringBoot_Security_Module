@@ -25,7 +25,7 @@ class RegisterController {
         return  ResponseEntity.ok(loginAndRegisterFacade.signUp(signUpRequest));
     }
 
-    @PostMapping(path = "/confirm")
+    @GetMapping(path = "/confirm")
     public ResponseEntity<AuthReqRespDTO> confirm(@RequestParam("token") String token) {
         return ResponseEntity.ok(loginAndRegisterFacade.confirmToken(token));
     }
