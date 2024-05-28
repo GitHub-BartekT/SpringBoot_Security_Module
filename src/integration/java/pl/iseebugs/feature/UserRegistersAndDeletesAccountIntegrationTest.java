@@ -12,6 +12,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -137,35 +138,58 @@ class UserRegistersAndDeletesAccountIntegrationTest extends BaseIntegrationTest 
         );
 
 
-        //Step 6: User made POST /api/auth/updateUser with header “Authorization: AAAA.BBBB.CCC” and body username='notMyName'
-        //and system returned OK(200)
-            // given && when
-                ResultActions refreshRegisterRequest = mockMvc.perform(post("/api/auth/refresh")
-                    .header("Authorization", "Bearer " + refreshToken)
-                    .contentType(MediaType.APPLICATION_JSON_VALUE)
-            );
-
-            // then
-            MvcResult refreshActionResult = refreshRegisterRequest.andExpect(status().isOk()).andReturn();
-            String refreshActionResultJson = refreshActionResult.getResponse().getContentAsString();
-            AuthReqRespDTO refreshResultDto = objectMapper.readValue(refreshActionResultJson, AuthReqRespDTO.class);
-
-            String newAccessToken = refreshResultDto.getToken();
-            String newRefreshToken = refreshResultDto.getToken();
-
-            //then
-            assertAll(
-                    () -> assertThat(refreshResultDto.getStatusCode()).isEqualTo(200),
-                    () -> assertThat(refreshResultDto.getMessage()).isEqualTo("Successfully Refreshed Token"),
-                    () -> assertThat(refreshResultDto.getToken()).isNotBlank(),
-                    () -> assertThat(refreshResultDto.getRefreshToken()).isNotBlank(),
-                    () -> assertThat(StringUtils.countOccurrencesOf(newAccessToken, ".")).isEqualTo(2),
-                    () -> assertThat(StringUtils.countOccurrencesOf(newRefreshToken, ".")).isEqualTo(2)
+    //Step 6: User made POST /api/auth/updateUser with header “Authorization: AAAA.BBBB.CCC” and body username='notMyName'
+    //and system returned OK(200)
+        // given && when
+            ResultActions refreshRegisterRequest = mockMvc.perform(post("/api/auth/refresh")
+                .header("Authorization", "Bearer " + refreshToken)
+                .contentType(MediaType.APPLICATION_JSON_VALUE)
         );
+
+        // then
+        MvcResult refreshActionResult = refreshRegisterRequest.andExpect(status().isOk()).andReturn();
+        String refreshActionResultJson = refreshActionResult.getResponse().getContentAsString();
+        AuthReqRespDTO refreshResultDto = objectMapper.readValue(refreshActionResultJson, AuthReqRespDTO.class);
+
+        String newAccessToken = refreshResultDto.getToken();
+        String newRefreshToken = refreshResultDto.getToken();
+
+        //then
+        assertAll(
+                () -> assertThat(refreshResultDto.getStatusCode()).isEqualTo(200),
+                () -> assertThat(refreshResultDto.getMessage()).isEqualTo("Successfully Refreshed Token"),
+                () -> assertThat(refreshResultDto.getToken()).isNotBlank(),
+                () -> assertThat(refreshResultDto.getRefreshToken()).isNotBlank(),
+                () -> assertThat(StringUtils.countOccurrencesOf(newAccessToken, ".")).isEqualTo(2),
+                () -> assertThat(StringUtils.countOccurrencesOf(newRefreshToken, ".")).isEqualTo(2)
+    );
 
 
     //Step 7: User made POST /api/auth/refresh with “Authorization: DDDD.EEEE.FFF”
     //and system returned OK(200) and token=GGGG.HHHH.III and refreshToken=JJJJ.KKKK.LLL
+        // given && when
+        ResultActions updateRegisterRequest = mockMvc.perform(put("/api/auth/user/updateUser")
+                .header("Authorization", "Bearer " + newAccessToken)
+                .content("""
+                        {
+                        "firstName": "Foo",
+                        "lastName": "Bar",
+                        "email": "some@mail.com",
+                        "password": "newPassword"
+                        }
+                        """.trim())
+                .contentType(MediaType.APPLICATION_JSON_VALUE)
+        );
+
+        // then
+        MvcResult updateActionResult = updateRegisterRequest.andExpect(status().isOk()).andReturn();
+        String updateActionResultJson = updateActionResult.getResponse().getContentAsString();
+        AuthReqRespDTO updateResultDto = objectMapper.readValue(updateActionResultJson, AuthReqRespDTO.class);
+
+        assertAll(
+                () -> assertThat(updateResultDto.getStatusCode()).isEqualTo(200),
+                () -> assertThat(updateResultDto.getMessage()).isEqualTo("User update successfully")
+       );
 
 
     //Step 8: User made DELETE /api/auth/deleteUser with “Authorization: DDDD.EEEE.FFF”
