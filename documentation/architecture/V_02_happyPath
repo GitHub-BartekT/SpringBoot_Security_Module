@@ -1,0 +1,24 @@
+# checking authorization and authentication path:
+#   firstName   = "firstTestName",
+    lastName    = "lastTestName",
+    email       = "some@mail.com"
+    password    = "somePassword" - not registered
+
+Step 1: User tried to get JWT by requesting POST /auth/signin
+        with username='someTestUser', password='somePassword' and system returned UNAUTHORIZED
+Step 2: User made GET /{some public endpoint} and system returned OK(200) and some public response
+Step 3: user made POST /api/auth/signup with username="someTestUser", password="someTestPassword"
+        and system registered user with status OK(200) and register token="someToken"
+Step 4: user made POST /api/auth/confirm with token="this.IsNot.AToken"
+        and system responses with status FORBIDDEN(403)
+Step 5: user made POST /api/auth/confirm with token="someToken" and system responses with status OK(200)
+Step 6: user tried to get JWT by requesting POST /api/auth/signin with username="someTestUser", password="someTestPassword"
+        and system returned OK(200) and accessToken=AAAA.BBBB.CCC and refreshToken=DDDD.EEEE.FFF
+Step 7: User made POST /api/auth/refresh with “Authorization: DDDD.EEEE.FFF” (refresh token)
+        and system returned OK(200) and token=GGGG.HHHH.III and refreshToken=DDDD.EEEE.FFF
+Step 8: User made POST /api/auth/updateUser with header “Authorization: AAAA.BBBB.CCC” and new data
+        and system returned OK(200)
+Step 9: User made DELETE /api/auth/deleteUser with “Authorization: AAAA.BBBB.CCC”
+        and system returned OK(204)
+Step 10:    User tried to get JWT by requesting POST /auth/signin
+            with username='someTestUser', password='somePassword' and system returned UNAUTHORIZED
