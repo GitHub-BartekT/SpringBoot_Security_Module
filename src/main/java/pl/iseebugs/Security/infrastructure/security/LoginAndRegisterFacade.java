@@ -4,7 +4,6 @@ import lombok.AllArgsConstructor;
 import lombok.extern.java.Log;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -16,9 +15,7 @@ import pl.iseebugs.Security.infrastructure.security.token.ConfirmationToken;
 import pl.iseebugs.Security.infrastructure.security.token.ConfirmationTokenService;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.UUID;
 
 @AllArgsConstructor
@@ -120,8 +117,8 @@ class LoginAndRegisterFacade {
             var user = appUserRepository.findByEmail(signingRequest.getEmail()).orElseThrow();
 
             UserDetails userToJWT = AppUserMapper.fromEntityToUserDetails(user);
-            var jwt = jwtUtils.generateToken(userToJWT);
-            var refreshToken = jwtUtils.generateRefreshToken(new HashMap<>(), userToJWT);
+            var jwt = jwtUtils.generateAccessToken(userToJWT);
+            var refreshToken = jwtUtils.generateRefreshToken(userToJWT);
             response.setStatusCode(200);
             response.setToken(jwt);
             response.setRefreshToken(refreshToken);
@@ -136,25 +133,28 @@ class LoginAndRegisterFacade {
 
     AuthReqRespDTO refreshToken(String refreshToken){
         AuthReqRespDTO response = new AuthReqRespDTO();
-
         String ourEmail = jwtUtils.extractUsername(refreshToken);
         AppUser user = appUserRepository.findByEmail(ourEmail).orElseThrow();
         UserDetails userToJWT = AppUserMapper.fromEntityToUserDetails(user);
 
-        if (jwtUtils.isTokenValid(refreshToken, userToJWT)){
-            var jwt = jwtUtils.generateToken(userToJWT);
+        if (jwtUtils.isTokenValid(refreshToken, userToJWT)
+                && jwtUtils.isRefreshToken(refreshToken)){
+            var jwt = jwtUtils.generateAccessToken(userToJWT);
             response.setStatusCode(200);
             response.setToken(jwt);
             response.setRefreshToken(refreshToken);
             response.setExpirationTime("60 min");
             response.setMessage("Successfully Refreshed Token");
         } else {
-        response.setStatusCode(500);
+        response.setStatusCode(401);
         response.setMessage("Invalid Token");
+            log.info("User with email: " + ourEmail +
+                    " used invalid token.");
         }
+
+        log.info("User with email: " + ourEmail + " refreshed access token.");
         return response;
     }
-
 
     AuthReqRespDTO updateUser(String refreshToken, AuthReqRespDTO updateRequest) {
         String ourEmail = jwtUtils.extractUsername(refreshToken);
