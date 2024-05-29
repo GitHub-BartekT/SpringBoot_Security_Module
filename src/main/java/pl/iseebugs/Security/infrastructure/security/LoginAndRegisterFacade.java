@@ -82,19 +82,33 @@ class LoginAndRegisterFacade {
     }
 
     AuthReqRespDTO confirmToken(final String token) {
-        ConfirmationToken confirmationToken = confirmationTokenService
-                .getToken(token)
-                .orElseThrow(() ->
-                        new IllegalStateException("token not found"));
+        ConfirmationToken confirmationToken;
+        try {
+            confirmationToken = confirmationTokenService
+                    .getToken(token)
+                    .orElseThrow(() ->
+                            new IllegalStateException("token not found"));
+        } catch (IllegalStateException e) {
+            AuthReqRespDTO response = new AuthReqRespDTO();
+            response.setStatusCode(401);
+            response.setMessage("token not found");
+            return response;
+        }
 
         if (confirmationToken.getConfirmedAt() != null) {
-            throw new IllegalStateException("email already confirmed");
+            AuthReqRespDTO response = new AuthReqRespDTO();
+            response.setStatusCode(409);
+            response.setMessage("email already confirmed");
+            return response;
         }
 
         LocalDateTime expiredAt = confirmationToken.getExpiresAt();
 
         if (expiredAt.isBefore(LocalDateTime.now())) {
-            throw new IllegalStateException("token expired");
+            AuthReqRespDTO response = new AuthReqRespDTO();
+            response.setStatusCode(401);
+            response.setMessage("token expired");
+            return response;
         }
 
         confirmationTokenService.setConfirmedAt(token);
@@ -125,7 +139,7 @@ class LoginAndRegisterFacade {
             response.setExpirationTime("24Hr");
             response.setMessage("Successfully singed in");
         }catch (Exception e){
-            response.setStatusCode(500);
+            response.setStatusCode(404);
             response.setError(e.getMessage());
         }
         return response;

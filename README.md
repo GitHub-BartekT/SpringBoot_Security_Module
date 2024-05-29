@@ -16,9 +16,9 @@ The module covers all basic authorization and authentication features.
   - Email confirmation
 - Login 
 - Tokens:
-  - Register
-  - Refresh
-  - Access
+  - Register: Token used to confirm user registration.
+  - Refresh: : Token used to generate new access tokens.
+  - Access: Token used to authenticate and access protected endpoints.
 - Token refreshing
 - User updating
 - User deleting

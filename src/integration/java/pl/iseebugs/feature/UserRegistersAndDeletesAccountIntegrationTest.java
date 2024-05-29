@@ -1,5 +1,6 @@
 package pl.iseebugs.feature;
 
+import org.glassfish.jaxb.core.v2.TODO;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MvcResult;
@@ -22,8 +23,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class UserRegistersAndDeletesAccountIntegrationTest extends BaseIntegrationTest {
 
     @Test
-    void should_user_registers_and_deletes_account() throws Exception {
-    //Step 1: User tried to get JWT token by requesting POST /auth/signin
+    void should_user_registers_changes_data_and_deletes_account() throws Exception {
+    //Step 1: User tried to get JWT by requesting POST /auth/signin
     //with username='someTestUser', password='somePassword' and system returned UNAUTHORIZED
         // given && when
         ResultActions failedLoginRequest = mockMvc.perform(post("/api/auth/signin")
@@ -43,12 +44,12 @@ class UserRegistersAndDeletesAccountIntegrationTest extends BaseIntegrationTest 
         String registerActionResultFailedJson = registerActionResultFailed.getResponse().getContentAsString();
         AuthReqRespDTO confirmResultFailedDto = objectMapper.readValue(registerActionResultFailedJson, AuthReqRespDTO.class);
         assertAll(
-                () -> assertThat(confirmResultFailedDto.getStatusCode()).isEqualTo(500),
+                () -> assertThat(confirmResultFailedDto.getStatusCode()).isEqualTo(404),
                 () -> assertThat(confirmResultFailedDto.getError()).isEqualTo("User not found")
         );
 
 
-    //Step 2: User made GET /{some public endpoint} and system returned OK(200) with some public response
+    //Step 2: User made GET /{some public endpoint} and system returned OK(200) and some public response
         // given && when
         ResultActions publicAccess = mockMvc.perform(get("/api/auth")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -60,7 +61,7 @@ class UserRegistersAndDeletesAccountIntegrationTest extends BaseIntegrationTest 
 
 
     //Step 3: user made POST /api/auth/signup with username="someTestUser", password="someTestPassword"
-    //and system registered user with status OK(200) and token="someToken"
+    //and system registered user with status OK(200) and register token="someToken"
         // given && when
         ResultActions successRegisterRequest = mockMvc.perform(post("/api/auth/signup")
                 .content("""
@@ -87,7 +88,27 @@ class UserRegistersAndDeletesAccountIntegrationTest extends BaseIntegrationTest 
                 () -> assertThat(finalConfirmResultDto.getToken()).isNotBlank()
         );
 
-    //Step 4: user made POST /api/auth/confirm with token="someToken" and system responses with status OK(200)
+
+
+    // Step 4: user made POST /api/auth/confirm with token="invalidToken" and system responses with status FORBIDDEN(403)
+        // given && when
+        String badToken = "this.IsNot.AToken";
+        ResultActions badConfirmTokenRegisterRequest = mockMvc.perform(get("/api/auth/confirm?token=" + badToken)
+                .contentType(MediaType.APPLICATION_JSON_VALUE)
+        );
+
+        // then
+        MvcResult badConfirmTokenActionResult = badConfirmTokenRegisterRequest.andExpect(status().isOk()).andReturn();
+        String badConfirmTokenActionResultJson = badConfirmTokenActionResult.getResponse().getContentAsString();
+        AuthReqRespDTO badConfirmTokenResultDto = objectMapper.readValue(badConfirmTokenActionResultJson, AuthReqRespDTO.class);
+        assertAll(
+                () -> assertThat(badConfirmTokenResultDto.getStatusCode()).isEqualTo(401),
+                () -> assertThat(badConfirmTokenResultDto.getMessage()).isEqualTo("token not found")
+
+        );
+
+
+    //Step 5: user made POST /api/auth/confirm with token="someToken" and system responses with status OK(200)
         // given && when
         ResultActions confirmRegisterRequest = mockMvc.perform(get("/api/auth/confirm?token=" + registrationToken)
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
@@ -104,8 +125,8 @@ class UserRegistersAndDeletesAccountIntegrationTest extends BaseIntegrationTest 
         );
 
 
-    //Step 5: user tried to get JWT token by requesting POST /api/auth/signin with username="someTestUser", password="someTestPassword"
-    //and system returned OK(200) and token=AAAA.BBBB.CCC and refreshToken=DDDD.EEEE.FFF
+    //Step 6: user tried to get JWT by requesting POST /api/auth/signin with username="someTestUser", password="someTestPassword"
+    //and system returned OK(200) and accessToken=AAAA.BBBB.CCC and refreshToken=DDDD.EEEE.FFF
         // given && when
         ResultActions loginRequest = mockMvc.perform(post("/api/auth/signin")
                 .content("""
@@ -137,10 +158,29 @@ class UserRegistersAndDeletesAccountIntegrationTest extends BaseIntegrationTest 
                 () -> assertThat(StringUtils.countOccurrencesOf(accessToken, ".")).isEqualTo(2),
                 () -> assertThat(StringUtils.countOccurrencesOf(refreshToken, ".")).isEqualTo(2)
         );
+    //Step 7: User made POST /api/auth/refresh with “Authorization: AAAA.BBBB.CCC” (access token)
+    // and system returned UNAUTHORIZED(401)
+        // given && when
+        ResultActions badRefreshRegisterRequest = mockMvc.perform(post("/api/auth/refresh")
+                .header("Authorization", "Bearer " + accessToken)
+                .contentType(MediaType.APPLICATION_JSON_VALUE)
+        );
+
+        // then
+        MvcResult badRefreshActionResult = badRefreshRegisterRequest.andExpect(status().isOk()).andReturn();
+        String badRefreshActionResultJson = badRefreshActionResult.getResponse().getContentAsString();
+        AuthReqRespDTO badRefreshResultDto = objectMapper.readValue(badRefreshActionResultJson, AuthReqRespDTO.class);
 
 
-    //Step 6: User made POST /api/auth/refresh with “Authorization: DDDD.EEEE.FFF
-    // and system returned OK(200) and token=GGGG.HHHH.III and refreshToken=JJJJ.KKKK.LLL
+        //then
+        assertAll(
+                () -> assertThat(badRefreshResultDto.getStatusCode()).isEqualTo(401),
+                () -> assertThat(badRefreshResultDto.getMessage()).isEqualTo("Invalid Token")
+        );
+
+
+    //Step 8: User made POST /api/auth/refresh with “Authorization: DDDD.EEEE.FFF (refresh token)
+    // and system returned OK(200) and token=GGGG.HHHH.III and refreshToken=DDDD.EEEE.FFF
         // given && when
          ResultActions refreshRegisterRequest = mockMvc.perform(post("/api/auth/refresh")
              .header("Authorization", "Bearer " + refreshToken)
@@ -161,12 +201,13 @@ class UserRegistersAndDeletesAccountIntegrationTest extends BaseIntegrationTest 
                 () -> assertThat(refreshResultDto.getMessage()).isEqualTo("Successfully Refreshed Token"),
                 () -> assertThat(refreshResultDto.getToken()).isNotBlank(),
                 () -> assertThat(refreshResultDto.getRefreshToken()).isNotBlank(),
+                () -> assertThat(refreshResultDto.getRefreshToken().equals(refreshToken)),
                 () -> assertThat(StringUtils.countOccurrencesOf(newAccessToken, ".")).isEqualTo(2),
                 () -> assertThat(StringUtils.countOccurrencesOf(newRefreshToken, ".")).isEqualTo(2)
         );
 
 
-    //Step 7: User made POST /api/auth/updateUser with header “Authorization: GGGG.HHHH.III” and new data
+    //Step 9: User made POST /api/auth/updateUser with header “Authorization: GGGG.HHHH.III” and new data
     // and system returned OK(200)
         // given && when
         ResultActions updateRegisterRequest = mockMvc.perform(put("/api/auth/user/updateUser")
@@ -191,9 +232,25 @@ class UserRegistersAndDeletesAccountIntegrationTest extends BaseIntegrationTest 
                 () -> assertThat(updateResultDto.getStatusCode()).isEqualTo(200),
                 () -> assertThat(updateResultDto.getMessage()).isEqualTo("User update successfully")
        );
+    //Step 10:    User made DELETE /api/auth/deleteUser “Authorization: AAAA.BBBB.CCC” (refresh token)
+    // and system returned UNAUTHORIZED(401)
+        ResultActions badDeleteRegisterRequest = mockMvc.perform(delete("/api/auth/user/deleteUser")
+                .header("Authorization", "Bearer " + refreshToken)
+                .contentType(MediaType.APPLICATION_JSON_VALUE)
+        );
+        // then
+        MvcResult badDelete = badDeleteRegisterRequest.andExpect(status().isOk()).andReturn();
+        String badDeleteActionResultJson = badDelete.getResponse().getContentAsString();
+        AuthReqRespDTO badDeleteResultDto = objectMapper.readValue(badDeleteActionResultJson, AuthReqRespDTO.class);
+
+        //then
+        assertAll(
+                () -> assertThat(badDeleteResultDto.getStatusCode()).isEqualTo(401),
+                () -> assertThat(badDeleteResultDto.getMessage()).isEqualTo("Invalid Token")
+        );
 
 
-    //Step 8: User made DELETE /api/auth/deleteUser with “Authorization: DDDD.EEEE.FFF”
+    //Step 11: User made DELETE /api/auth/deleteUser with “Authorization: AAAA.BBBB.CCC”
     //and system returned OK(204)
         ResultActions deleteRegisterRequest = mockMvc.perform(delete("/api/auth/user/deleteUser")
                 .header("Authorization", "Bearer " + newAccessToken)
@@ -211,7 +268,7 @@ class UserRegistersAndDeletesAccountIntegrationTest extends BaseIntegrationTest 
                 () -> assertThat(deleteResultDto.getMessage()).isEqualTo("Successfully deleted user")
        );
 
-    //Step 9: User tried to get JWT token by requesting POST /auth/signin
+    //Step 12: User tried to get JWT by requesting POST /auth/signin
     //with username='someTestUser', password='somePassword' and system returned UNAUTHORIZED
         // given && when
         ResultActions failedLoginRequestNoUser = mockMvc.perform(post("/api/auth/signin")
@@ -231,7 +288,7 @@ class UserRegistersAndDeletesAccountIntegrationTest extends BaseIntegrationTest 
         String confirmActionResultFailedJsonNoUser = registerActionResultFailedNoUser.getResponse().getContentAsString();
         AuthReqRespDTO confirmResultFailedDtoNoUser = objectMapper.readValue(confirmActionResultFailedJsonNoUser, AuthReqRespDTO.class);
         assertAll(
-                () -> assertThat(confirmResultFailedDtoNoUser.getStatusCode()).isEqualTo(500),
+                () -> assertThat(confirmResultFailedDtoNoUser.getStatusCode()).isEqualTo(404),
                 () -> assertThat(confirmResultFailedDtoNoUser.getError()).isEqualTo("User not found")
         );
     }
