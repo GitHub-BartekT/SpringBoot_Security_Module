@@ -218,10 +218,10 @@ class LoginAndRegisterFacade {
         return responseDTO;
     }
 
-    AuthReqRespDTO deleteUser(String refreshToken) {
+    AuthReqRespDTO deleteUser(String accessToken) {
         AuthReqRespDTO response = new AuthReqRespDTO();
 
-        String userEmail = jwtUtils.extractUsername(refreshToken);
+        String userEmail = jwtUtils.extractUsername(accessToken);
         AppUser user = appUserRepository.findByEmail(userEmail).orElseThrow();
         confirmationTokenService.deleteConfirmationToken(user);
         appUserRepository.deleteByEmail(userEmail);

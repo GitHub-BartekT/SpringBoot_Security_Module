@@ -49,8 +49,8 @@ class RegisterController {
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
         }
-        String refreshToken = authHeader.substring(7);
-        return ResponseEntity.ok(loginAndRegisterFacade.deleteUser(refreshToken));
+        String accessToken = authHeader.substring(7);
+        return ResponseEntity.ok(loginAndRegisterFacade.deleteUser(accessToken));
     }
 
     @PutMapping("/user/updateUser")
