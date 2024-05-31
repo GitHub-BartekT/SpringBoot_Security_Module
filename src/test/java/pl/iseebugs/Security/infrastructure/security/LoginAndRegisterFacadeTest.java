@@ -12,6 +12,7 @@ import pl.iseebugs.Security.infrastructure.security.projection.AuthReqRespDTO;
 import pl.iseebugs.Security.infrastructure.security.token.ConfirmationToken;
 import pl.iseebugs.Security.infrastructure.security.token.ConfirmationTokenService;
 
+import java.time.LocalDateTime;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -56,7 +57,7 @@ class LoginAndRegisterFacadeTest {
 
         //then
         assertAll(
-                () -> assertThat(response.getStatusCode()).isEqualTo(500),
+                () -> assertThat(response.getStatusCode()).isEqualTo(409),
                 () -> assertThat(response.getError())
                         .isEqualTo("User with email: " + email + " already exists")
         );
@@ -103,7 +104,35 @@ class LoginAndRegisterFacadeTest {
     }
 
     @Test
-    void confirmToken() {
+    void confirmToken_should_return_token_not_found() {
+        //given
+        var appUserRepository =mock(AppUserRepository.class);
+        var passwordEncoder = mock(PasswordEncoder.class);
+        var jwtUtils = mock(JWTUtils.class);
+        var authenticationManager = mock(AuthenticationManager.class);
+        var confirmationTokenService = mock(ConfirmationTokenService.class);
+        var emailSender = mock(EmailSender.class);
+
+        when(confirmationTokenService.getToken(anyString())).thenReturn(Optional.empty());
+        //system under test
+        var toTest = new LoginAndRegisterFacade(
+                appUserRepository,
+                passwordEncoder,
+                jwtUtils,
+                authenticationManager,
+                confirmationTokenService,
+                emailSender
+        );
+        //when
+        String token = "foo";
+        AuthReqRespDTO response = toTest.confirmToken(token);
+
+        //then
+        assertAll(
+                () -> assertThat(response.getStatusCode()).isEqualTo(401),
+                () -> assertThat(response.getError())
+                        .isEqualTo("token not found")
+        );
     }
 
     @Test

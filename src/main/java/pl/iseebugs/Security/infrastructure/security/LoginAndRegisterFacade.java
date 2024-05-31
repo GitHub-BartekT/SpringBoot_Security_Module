@@ -75,7 +75,7 @@ class LoginAndRegisterFacade {
                         buildEmail(registrationRequest.getFirstName(), link));
             }
         } catch (Exception e){
-            responseDTO.setStatusCode(500);
+            responseDTO.setStatusCode(409);
             responseDTO.setError(e.getMessage());
         }
         return responseDTO;
@@ -91,14 +91,14 @@ class LoginAndRegisterFacade {
         } catch (IllegalStateException e) {
             AuthReqRespDTO response = new AuthReqRespDTO();
             response.setStatusCode(401);
-            response.setMessage("token not found");
+            response.setError("token not found");
             return response;
         }
 
         if (confirmationToken.getConfirmedAt() != null) {
             AuthReqRespDTO response = new AuthReqRespDTO();
             response.setStatusCode(409);
-            response.setMessage("email already confirmed");
+            response.setError("email already confirmed");
             return response;
         }
 
@@ -107,7 +107,7 @@ class LoginAndRegisterFacade {
         if (expiredAt.isBefore(LocalDateTime.now())) {
             AuthReqRespDTO response = new AuthReqRespDTO();
             response.setStatusCode(401);
-            response.setMessage("token expired");
+            response.setError("token expired");
             return response;
         }
 
