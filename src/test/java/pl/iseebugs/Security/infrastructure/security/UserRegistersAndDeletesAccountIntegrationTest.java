@@ -96,7 +96,7 @@ class UserRegistersAndDeletesAccountIntegrationTest extends BaseIntegrationTest 
     // Step 4: user made POST /api/auth/confirm with token="invalidToken" and system responses with status FORBIDDEN(403)
         // given && when
         log.info("Step 4.");
-        String badToken = "this.IsNot.AToken";
+        String badToken = "not.valid.token";
         ResultActions badConfirmTokenRegisterRequest = mockMvc.perform(get("/api/auth/confirm?token=" + badToken)
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
         );
@@ -107,7 +107,7 @@ class UserRegistersAndDeletesAccountIntegrationTest extends BaseIntegrationTest 
         AuthReqRespDTO badConfirmTokenResultDto = objectMapper.readValue(badConfirmTokenActionResultJson, AuthReqRespDTO.class);
         assertAll(
                 () -> assertThat(badConfirmTokenResultDto.getStatusCode()).isEqualTo(401),
-                () -> assertThat(badConfirmTokenResultDto.getMessage()).isEqualTo("token not found")
+                () -> assertThat(badConfirmTokenResultDto.getError()).isEqualTo("token not found")
 
         );
 
