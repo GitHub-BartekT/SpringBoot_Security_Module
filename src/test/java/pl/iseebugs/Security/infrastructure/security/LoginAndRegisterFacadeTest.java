@@ -1,10 +1,10 @@
 package pl.iseebugs.Security.infrastructure.security;
 
-import org.assertj.core.api.AssertionsForClassTypes;
 import org.junit.jupiter.api.Test;
+import org.mockito.MockedStatic;
+import org.mockito.Mockito;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.util.StringUtils;
 import pl.iseebugs.Security.domain.user.AppUser;
 import pl.iseebugs.Security.domain.user.AppUserRepository;
 import pl.iseebugs.Security.infrastructure.security.email.EmailSender;
@@ -16,7 +16,6 @@ import java.time.LocalDateTime;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.catchThrowable;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.AdditionalAnswers.returnsFirstArg;
 import static org.mockito.ArgumentMatchers.*;
@@ -25,7 +24,7 @@ import static org.mockito.Mockito.*;
 class LoginAndRegisterFacadeTest {
 
     @Test
-    void signUp_should_return_response_with_error_email_already_exists() {
+    void signUp_should_return_EmailConflictException_409() {
         //given
         var appUserRepository =mock(AppUserRepository.class);
         var passwordEncoder = mock(PasswordEncoder.class);
@@ -58,13 +57,14 @@ class LoginAndRegisterFacadeTest {
         //then
         assertAll(
                 () -> assertThat(response.getStatusCode()).isEqualTo(409),
-                () -> assertThat(response.getError())
-                        .isEqualTo("User with email: " + email + " already exists")
+                () -> assertThat(response.getError()).isEqualTo("EmailConflictException"),
+                () -> assertThat(response.getMessage())
+                        .isEqualTo("The email address already exists.")
         );
     }
 
     @Test
-    void signUp_should_signs_up_new_user() {
+    void signUp_should_signs_up_new_user_and_returns_created_201() {
         //given
         InMemoryAppUserRepository inMemoryAppUserRepository = new InMemoryAppUserRepository();
         var passwordEncoder = mock(PasswordEncoder.class);
@@ -97,14 +97,14 @@ class LoginAndRegisterFacadeTest {
 
         //then
         assertAll(
-                () -> assertThat(response.getStatusCode()).isEqualTo(200),
-                () -> assertThat(response.getMessage()).isEqualTo("User created successfully"),
+                () -> assertThat(response.getStatusCode()).isEqualTo(201),
+                () -> assertThat(response.getMessage()).isEqualTo("User created successfully."),
                 () -> assertThat(response.getExpirationTime()).isEqualTo("15 minutes")
         );
     }
 
     @Test
-    void confirmToken_should_return_token_not_found() {
+    void confirmToken_should_returns_BadCredentialException_401() {
         //given
         var appUserRepository =mock(AppUserRepository.class);
         var passwordEncoder = mock(PasswordEncoder.class);
@@ -130,9 +130,126 @@ class LoginAndRegisterFacadeTest {
         //then
         assertAll(
                 () -> assertThat(response.getStatusCode()).isEqualTo(401),
-                () -> assertThat(response.getError())
-                        .isEqualTo("token not found")
+                () -> assertThat(response.getError()).isEqualTo("BadCredentialsException"),
+                () -> assertThat(response.getMessage()).isEqualTo("Token not found.")
         );
+    }
+
+    @Test
+    void confirmToken_should_returns_Conflict_409() {
+        //given
+        var appUserRepository =mock(AppUserRepository.class);
+        var passwordEncoder = mock(PasswordEncoder.class);
+        var jwtUtils = mock(JWTUtils.class);
+        var authenticationManager = mock(AuthenticationManager.class);
+        var confirmationTokenService = mock(ConfirmationTokenService.class);
+        var emailSender = mock(EmailSender.class);
+
+        LocalDateTime tokenConfirmedAt = LocalDateTime.of(2024,6,3,12,30);
+        ConfirmationToken confirmationToken = new ConfirmationToken();
+        confirmationToken.setConfirmedAt(tokenConfirmedAt);
+
+        when(confirmationTokenService.getToken(anyString())).thenReturn(Optional.of(confirmationToken));
+        //system under test
+        var toTest = new LoginAndRegisterFacade(
+                appUserRepository,
+                passwordEncoder,
+                jwtUtils,
+                authenticationManager,
+                confirmationTokenService,
+                emailSender
+        );
+        //when
+        String token = "foo";
+        AuthReqRespDTO response = toTest.confirmToken(token);
+
+        //then
+        assertAll(
+                () -> assertThat(response.getStatusCode()).isEqualTo(409),
+                () -> assertThat(response.getError()).isEqualTo("RegistrationTokenConflictException"),
+                () -> assertThat(response.getMessage()).isEqualTo("Email already confirm.")
+        );
+    }
+
+    @Test
+    void confirmToken_should_returns_CredentialsExpiredException_403() {
+        //given
+        var appUserRepository =mock(AppUserRepository.class);
+        var passwordEncoder = mock(PasswordEncoder.class);
+        var jwtUtils = mock(JWTUtils.class);
+        var authenticationManager = mock(AuthenticationManager.class);
+        var confirmationTokenService = mock(ConfirmationTokenService.class);
+        var emailSender = mock(EmailSender.class);
+
+        LocalDateTime tokenExpiredAt = LocalDateTime.of(2024,6,3,12,30);
+        ConfirmationToken confirmationToken = new ConfirmationToken();
+        confirmationToken.setExpiresAt(tokenExpiredAt);
+        when(confirmationTokenService.getToken(anyString())).thenReturn(Optional.of(confirmationToken));
+        //system under test
+        var toTest = new LoginAndRegisterFacade(
+                appUserRepository,
+                passwordEncoder,
+                jwtUtils,
+                authenticationManager,
+                confirmationTokenService,
+                emailSender
+        );
+        //when
+        String token = "foo";
+        AuthReqRespDTO response = toTest.confirmToken(token);
+
+        //then
+        assertAll(
+                () -> assertThat(response.getStatusCode()).isEqualTo(403),
+                () -> assertThat(response.getError()).isEqualTo("CredentialsExpiredException"),
+                () -> assertThat(response.getMessage()).isEqualTo("Token expired.")
+        );
+    }
+
+    @Test
+    void confirmToken_should_confirms_and_returns_200() {
+        //given
+        var appUserRepository =mock(AppUserRepository.class);
+        var passwordEncoder = mock(PasswordEncoder.class);
+        var jwtUtils = mock(JWTUtils.class);
+        var authenticationManager = mock(AuthenticationManager.class);
+        var confirmationTokenService = mock(ConfirmationTokenService.class);
+        var emailSender = mock(EmailSender.class);
+
+        LocalDateTime tokenExpiresAt = LocalDateTime.of(2024,6,3,12,30);
+        AppUser appUser = new AppUser();
+        appUser.setEmail("bar");
+        ConfirmationToken confirmationToken = new ConfirmationToken();
+        confirmationToken.setExpiresAt(tokenExpiresAt);
+        confirmationToken.setAppUser(appUser);
+
+        when(confirmationTokenService.getToken(anyString())).thenReturn(Optional.of(confirmationToken));
+        doNothing().when(appUserRepository).enableAppUser(anyString());
+        LocalDateTime fixedNow = LocalDateTime.of(2024, 6, 3, 12,20);
+
+        // Stub LocalDateTime.now()
+        try (MockedStatic<LocalDateTime> mockedLocalDateTime = Mockito.mockStatic(LocalDateTime.class)) {
+            mockedLocalDateTime.when(LocalDateTime::now).thenReturn(fixedNow);
+
+            //system under test
+            var toTest = new LoginAndRegisterFacade(
+                    appUserRepository,
+                    passwordEncoder,
+                    jwtUtils,
+                    authenticationManager,
+                    confirmationTokenService,
+                    emailSender
+            );
+            //when
+            String token = "foo";
+            AuthReqRespDTO response = toTest.confirmToken(token);
+
+            //then
+            assertAll(
+                    () -> assertThat(response.getStatusCode()).isEqualTo(200),
+                    () -> assertThat(response.getMessage()).isEqualTo("User confirmed.")
+            );
+        }
     }
 
     @Test

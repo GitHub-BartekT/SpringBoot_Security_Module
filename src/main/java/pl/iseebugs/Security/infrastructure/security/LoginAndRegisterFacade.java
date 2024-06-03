@@ -3,7 +3,9 @@ package pl.iseebugs.Security.infrastructure.security;
 import lombok.AllArgsConstructor;
 import lombok.extern.java.Log;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -14,6 +16,7 @@ import pl.iseebugs.Security.infrastructure.security.projection.AuthReqRespDTO;
 import pl.iseebugs.Security.infrastructure.security.token.ConfirmationToken;
 import pl.iseebugs.Security.infrastructure.security.token.ConfirmationTokenService;
 
+import java.time.Clock;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.UUID;
@@ -41,7 +44,7 @@ class LoginAndRegisterFacade {
 
 
             if (appUserRepository.findByEmail(email).isPresent()) {
-                throw new RuntimeException("User with email: " + email + " already exists");
+                throw new EmailConflictException();
             }
 
             AppUserInfoDetails ourUserToSave = new AppUserInfoDetails(
@@ -65,9 +68,9 @@ class LoginAndRegisterFacade {
             responseDTO.setToken(token);
 
             if (ourUserResult.getId() != null){
-                responseDTO.setMessage("User created successfully");
+                responseDTO.setMessage("User created successfully.");
                 responseDTO.setExpirationTime("15 minutes");
-                responseDTO.setStatusCode(200);
+                responseDTO.setStatusCode(201);
 
                 String link = "http://localhost:8080/api/auth/confirm?token=" + token;
                 emailSender.send(
@@ -76,47 +79,49 @@ class LoginAndRegisterFacade {
             }
         } catch (Exception e){
             responseDTO.setStatusCode(409);
-            responseDTO.setError(e.getMessage());
+            responseDTO.setError(e.getClass().getSimpleName());
+            responseDTO.setMessage(e.getMessage());
         }
         return responseDTO;
     }
 
     AuthReqRespDTO confirmToken(final String token) {
         ConfirmationToken confirmationToken;
+        AuthReqRespDTO response = new AuthReqRespDTO();
+
         try {
             confirmationToken = confirmationTokenService
                     .getToken(token)
                     .orElseThrow(() ->
-                            new IllegalStateException("token not found"));
-        } catch (IllegalStateException e) {
-            AuthReqRespDTO response = new AuthReqRespDTO();
+                            new BadCredentialsException("Token not found."));
+        } catch (BadCredentialsException e) {
             response.setStatusCode(401);
-            response.setError("token not found");
+            response.setError(e.getClass().getSimpleName());
+            response.setMessage(e.getMessage());
             return response;
         }
 
         if (confirmationToken.getConfirmedAt() != null) {
-            AuthReqRespDTO response = new AuthReqRespDTO();
             response.setStatusCode(409);
-            response.setError("email already confirmed");
+            response.setError("RegistrationTokenConflictException");
+            response.setMessage("Email already confirm.");
             return response;
         }
 
         LocalDateTime expiredAt = confirmationToken.getExpiresAt();
 
         if (expiredAt.isBefore(LocalDateTime.now())) {
-            AuthReqRespDTO response = new AuthReqRespDTO();
-            response.setStatusCode(401);
-            response.setError("token expired");
+            response.setStatusCode(403);
+            response.setError("CredentialsExpiredException");
+            response.setMessage("Token expired.");
             return response;
         }
 
         confirmationTokenService.setConfirmedAt(token);
         appUserRepository.enableAppUser(
                 confirmationToken.getAppUser().getEmail());
-        AuthReqRespDTO response = new AuthReqRespDTO();
         response.setStatusCode(200);
-        response.setMessage("User confirmed");
+        response.setMessage("User confirmed.");
         return response;
     }
 

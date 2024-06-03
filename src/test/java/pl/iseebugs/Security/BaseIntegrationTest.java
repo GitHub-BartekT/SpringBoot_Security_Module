@@ -1,4 +1,4 @@
-package pl.iseebugs;
+package pl.iseebugs.Security;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.tomakehurst.wiremock.junit5.WireMockExtension;
@@ -63,6 +63,16 @@ public abstract class BaseIntegrationTest {
         ServerSetup setup = new ServerSetup(1025, "localhost", ServerSetup.PROTOCOL_SMTP);
         greenMail = new GreenMail(setup);
         greenMail.start();
+
+        System.setProperty("spring.mail.host", "localhost");
+        System.setProperty("spring.mail.port", "1025");
+        System.setProperty("spring.mail.username", "");
+        System.setProperty("spring.mail.password", "");
+        System.setProperty("spring.mail.properties.mail.smtp.auth", "false");
+        System.setProperty("spring.mail.properties.mail.smtp.starttls.enable", "true");
+        System.setProperty("spring.mail.properties.mail.smtp.connectiontimeout", "5000");
+        System.setProperty("spring.mail.properties.mail.smtp.timeout", "3000");
+        System.setProperty("spring.mail.properties.mail.smtp.writetimeout", "5000");
     }
 
     @AfterEach

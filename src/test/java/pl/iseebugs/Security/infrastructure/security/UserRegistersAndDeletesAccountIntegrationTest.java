@@ -6,7 +6,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.util.StringUtils;
-import pl.iseebugs.BaseIntegrationTest;
+import pl.iseebugs.Security.BaseIntegrationTest;
 import pl.iseebugs.Security.infrastructure.security.projection.AuthReqRespDTO;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -87,7 +87,8 @@ class UserRegistersAndDeletesAccountIntegrationTest extends BaseIntegrationTest 
 
         final AuthReqRespDTO finalConfirmResultDto = registerResultDto;
         assertAll(
-                () -> assertThat(finalConfirmResultDto.getMessage()).isEqualTo("User created successfully"),
+                () -> assertThat(finalConfirmResultDto.getStatusCode()).isEqualTo(201),
+                () -> assertThat(finalConfirmResultDto.getMessage()).isEqualTo("User created successfully."),
                 () -> assertThat(finalConfirmResultDto.getToken()).isNotBlank()
         );
 
@@ -107,8 +108,8 @@ class UserRegistersAndDeletesAccountIntegrationTest extends BaseIntegrationTest 
         AuthReqRespDTO badConfirmTokenResultDto = objectMapper.readValue(badConfirmTokenActionResultJson, AuthReqRespDTO.class);
         assertAll(
                 () -> assertThat(badConfirmTokenResultDto.getStatusCode()).isEqualTo(401),
-                () -> assertThat(badConfirmTokenResultDto.getError()).isEqualTo("token not found")
-
+                () -> assertThat(badConfirmTokenResultDto.getError()).isEqualTo("BadCredentialsException"),
+                () -> assertThat(badConfirmTokenResultDto.getMessage()).isEqualTo("Token not found.")
         );
 
 
@@ -126,7 +127,7 @@ class UserRegistersAndDeletesAccountIntegrationTest extends BaseIntegrationTest 
 
         assertAll(
                 () -> assertThat(confirmResultDto.getStatusCode()).isEqualTo(200),
-                () -> assertThat(confirmResultDto.getMessage()).isEqualTo("User confirmed")
+                () -> assertThat(confirmResultDto.getMessage()).isEqualTo("User confirmed.")
         );
 
 
