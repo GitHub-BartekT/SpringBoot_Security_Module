@@ -253,7 +253,15 @@ class LoginAndRegisterFacadeTest {
     }
 
     @Test
-    void signIn() {
+    void signIn_should_returns_UsernameNotFoundException_404() {
+    }
+
+    @Test
+    void signIn_should_returns_BadCredentialsException_401() {
+    }
+
+    @Test
+    void signIn_should_signs_in_user_and_returns_ok_200() {
     }
 
     @Test
