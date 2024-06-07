@@ -135,7 +135,9 @@ class LoginAndRegisterFacade {
                     new UsernamePasswordAuthenticationToken(
                             signingRequest.getEmail(),
                             signingRequest.getPassword()));
-            var user = appUserRepository.findByEmail(signingRequest.getEmail()).orElseThrow(() -> new UsernameNotFoundException("User not found after authentication"));
+            var user = appUserRepository.findByEmail(signingRequest
+                            .getEmail())
+                    .orElseThrow(() -> new UsernameNotFoundException("User not found after authentication."));
 
             UserDetails userToJWT = AppUserMapper.fromEntityToUserDetails(user);
             var jwt = jwtUtils.generateAccessToken(userToJWT);
@@ -148,11 +150,12 @@ class LoginAndRegisterFacade {
         } catch (BadCredentialsException e) {
             response.setStatusCode(401);
             log.info(e.getClass().getSimpleName() + ": " + e.getMessage());
-            response.setError("Invalid credentials.");
+            response.setError("BadCredentialsException");
         } catch (UsernameNotFoundException e) {
             response.setStatusCode(404);
             log.info(e.getClass().getSimpleName() + ": " + e.getMessage());
-            response.setError("User not found.");
+            response.setError(e.getClass().getSimpleName());
+            response.setMessage(e.getMessage());
         } catch (InternalAuthenticationServiceException e) {
             response.setStatusCode(500);
             log.info(e.getClass().getSimpleName() + ": " + e.getMessage());

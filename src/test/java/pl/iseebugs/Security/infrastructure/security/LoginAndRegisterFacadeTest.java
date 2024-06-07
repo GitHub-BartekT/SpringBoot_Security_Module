@@ -4,6 +4,9 @@ import org.junit.jupiter.api.Test;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import pl.iseebugs.Security.domain.user.AppUser;
 import pl.iseebugs.Security.domain.user.AppUserRepository;
@@ -253,11 +256,83 @@ class LoginAndRegisterFacadeTest {
     }
 
     @Test
-    void signIn_should_returns_UsernameNotFoundException_404() {
+    void signIn_should_returns_BadCredentialsException_401() {
+        //given
+        var appUserRepository =mock(AppUserRepository.class);
+        var passwordEncoder = mock(PasswordEncoder.class);
+        var jwtUtils = mock(JWTUtils.class);
+        var authenticationManager = mock(AuthenticationManager.class);
+        var confirmationTokenService = mock(ConfirmationTokenService.class);
+        var emailSender = mock(EmailSender.class);
+
+        when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class)))
+                .thenThrow(new BadCredentialsException("Bad credentials"));
+
+        //system under test
+        var toTest = new LoginAndRegisterFacade(
+                appUserRepository,
+                passwordEncoder,
+                jwtUtils,
+                authenticationManager,
+                confirmationTokenService,
+                emailSender
+        );
+
+        //when
+        AuthReqRespDTO request = new AuthReqRespDTO();
+        request.setFirstName("Foo");
+        request.setLastName("Bar");
+        request.setEmail("test@foo.com");
+        request.setPassword("foobar");
+
+        AuthReqRespDTO response = toTest.signIn(request);
+
+        //then
+        assertAll(
+                () -> assertThat(response.getStatusCode()).isEqualTo(401),
+                () -> assertThat(response.getError()).isEqualTo("BadCredentialsException")
+        );
     }
 
     @Test
-    void signIn_should_returns_BadCredentialsException_401() {
+    void signIn_should_returns_UsernameNotFoundException_404_when_user_not_found_after_authentication() {
+        //given
+        var appUserRepository =mock(AppUserRepository.class);
+        var passwordEncoder = mock(PasswordEncoder.class);
+        var jwtUtils = mock(JWTUtils.class);
+        var authenticationManager = mock(AuthenticationManager.class);
+        var confirmationTokenService = mock(ConfirmationTokenService.class);
+        var emailSender = mock(EmailSender.class);
+
+        //system under test
+        var toTest = new LoginAndRegisterFacade(
+                appUserRepository,
+                passwordEncoder,
+                jwtUtils,
+                authenticationManager,
+                confirmationTokenService,
+                emailSender
+        );
+
+        //when
+        AuthReqRespDTO request = new AuthReqRespDTO();
+        request.setFirstName("Foo");
+        request.setLastName("Bar");
+        request.setEmail("test@foo.com");
+        request.setPassword("foobar");
+
+        AuthReqRespDTO response = toTest.signIn(request);
+
+        //then
+        assertAll(
+                () -> assertThat(response.getStatusCode()).isEqualTo(404),
+                () -> assertThat(response.getError()).isEqualTo("UsernameNotFoundException"),
+                () -> assertThat(response.getMessage()).isEqualTo("User not found after authentication.")
+        );
+    }
+
+    @Test
+    void signIn_should_returns_BadCredentialsException_401d() {
     }
 
     @Test
