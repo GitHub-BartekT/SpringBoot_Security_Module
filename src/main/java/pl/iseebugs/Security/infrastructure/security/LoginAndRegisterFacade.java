@@ -4,9 +4,11 @@ import lombok.AllArgsConstructor;
 import lombok.extern.java.Log;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.InternalAuthenticationServiceException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import pl.iseebugs.Security.domain.user.AppUser;
@@ -133,7 +135,7 @@ class LoginAndRegisterFacade {
                     new UsernamePasswordAuthenticationToken(
                             signingRequest.getEmail(),
                             signingRequest.getPassword()));
-            var user = appUserRepository.findByEmail(signingRequest.getEmail()).orElseThrow();
+            var user = appUserRepository.findByEmail(signingRequest.getEmail()).orElseThrow(() -> new UsernameNotFoundException("User not found after authentication"));
 
             UserDetails userToJWT = AppUserMapper.fromEntityToUserDetails(user);
             var jwt = jwtUtils.generateAccessToken(userToJWT);
@@ -143,9 +145,22 @@ class LoginAndRegisterFacade {
             response.setRefreshToken(refreshToken);
             response.setExpirationTime("24Hr");
             response.setMessage("Successfully singed in");
-        }catch (Exception e){
+        } catch (BadCredentialsException e) {
+            response.setStatusCode(401);
+            log.info(e.getClass().getSimpleName() + ": " + e.getMessage());
+            response.setError("Invalid credentials.");
+        } catch (UsernameNotFoundException e) {
             response.setStatusCode(404);
-            response.setError(e.getMessage());
+            log.info(e.getClass().getSimpleName() + ": " + e.getMessage());
+            response.setError("User not found.");
+        } catch (InternalAuthenticationServiceException e) {
+            response.setStatusCode(500);
+            log.info(e.getClass().getSimpleName() + ": " + e.getMessage());
+            response.setError("Internal authentication service error.");
+        } catch (Exception e) {
+            response.setStatusCode(500);
+            log.info(e.getClass().getSimpleName() + ": " + e.getMessage());
+            response.setError("An unexpected error occurred.");
         }
         return response;
     }
