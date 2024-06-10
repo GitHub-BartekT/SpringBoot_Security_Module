@@ -46,7 +46,7 @@ class UserRegistersAndDeletesAccountIntegrationTest extends BaseIntegrationTest 
         AuthReqRespDTO confirmResultFailedDto = objectMapper.readValue(registerActionResultFailedJson, AuthReqRespDTO.class);
         assertAll(
                 () -> assertThat(confirmResultFailedDto.getStatusCode()).isEqualTo(401),
-                () -> assertThat(confirmResultFailedDto.getError()).isEqualTo("Bad credentials.")
+                () -> assertThat(confirmResultFailedDto.getError()).isEqualTo("BadCredentialsException")
         );
 
 
@@ -299,7 +299,7 @@ class UserRegistersAndDeletesAccountIntegrationTest extends BaseIntegrationTest 
         AuthReqRespDTO confirmResultFailedDtoNoUser = objectMapper.readValue(confirmActionResultFailedJsonNoUser, AuthReqRespDTO.class);
         assertAll(
                 () -> assertThat(confirmResultFailedDtoNoUser.getStatusCode()).isEqualTo(401),
-                () -> assertThat(confirmResultFailedDtoNoUser.getError()).isEqualTo("Bad credentials.")
+                () -> assertThat(confirmResultFailedDtoNoUser.getError()).isEqualTo("BadCredentialsException")
         );
     }
 }
