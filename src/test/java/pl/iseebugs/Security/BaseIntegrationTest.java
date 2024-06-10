@@ -22,7 +22,7 @@ import pl.iseebugs.Security.SecurityApplication;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
 
 @SpringBootTest(classes = SecurityApplication.class)
-@ActiveProfiles("integration")
+@ActiveProfiles("test")
 @AutoConfigureMockMvc
 @Testcontainers
 public abstract class BaseIntegrationTest {
