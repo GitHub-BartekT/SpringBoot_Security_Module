@@ -4,6 +4,10 @@ import org.junit.jupiter.api.Test;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import pl.iseebugs.Security.domain.user.AppUser;
 import pl.iseebugs.Security.domain.user.AppUserRepository;
@@ -253,7 +257,136 @@ class LoginAndRegisterFacadeTest {
     }
 
     @Test
-    void signIn() {
+    void signIn_should_returns_BadCredentialsException_401() {
+        //given
+        var appUserRepository =mock(AppUserRepository.class);
+        var passwordEncoder = mock(PasswordEncoder.class);
+        var jwtUtils = mock(JWTUtils.class);
+        var authenticationManager = mock(AuthenticationManager.class);
+        var confirmationTokenService = mock(ConfirmationTokenService.class);
+        var emailSender = mock(EmailSender.class);
+
+        when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class)))
+                .thenThrow(new BadCredentialsException("Bad credentials"));
+
+        //system under test
+        var toTest = new LoginAndRegisterFacade(
+                appUserRepository,
+                passwordEncoder,
+                jwtUtils,
+                authenticationManager,
+                confirmationTokenService,
+                emailSender
+        );
+
+        //when
+        AuthReqRespDTO request = new AuthReqRespDTO();
+        request.setFirstName("Foo");
+        request.setLastName("Bar");
+        request.setEmail("test@foo.com");
+        request.setPassword("foobar");
+
+        AuthReqRespDTO response = toTest.signIn(request);
+
+        //then
+        assertAll(
+                () -> assertThat(response.getStatusCode()).isEqualTo(401),
+                () -> assertThat(response.getError()).isEqualTo("BadCredentialsException")
+        );
+    }
+
+    @Test
+    void signIn_should_returns_UsernameNotFoundException_404_when_user_not_found_after_authentication() {
+        //given
+        var appUserRepository =mock(AppUserRepository.class);
+        var passwordEncoder = mock(PasswordEncoder.class);
+        var jwtUtils = mock(JWTUtils.class);
+        var authenticationManager = mock(AuthenticationManager.class);
+        var confirmationTokenService = mock(ConfirmationTokenService.class);
+        var emailSender = mock(EmailSender.class);
+
+        //system under test
+        var toTest = new LoginAndRegisterFacade(
+                appUserRepository,
+                passwordEncoder,
+                jwtUtils,
+                authenticationManager,
+                confirmationTokenService,
+                emailSender
+        );
+
+        //when
+        AuthReqRespDTO request = new AuthReqRespDTO();
+        request.setFirstName("Foo");
+        request.setLastName("Bar");
+        request.setEmail("test@foo.com");
+        request.setPassword("foobar");
+
+        AuthReqRespDTO response = toTest.signIn(request);
+
+        //then
+        assertAll(
+                () -> assertThat(response.getStatusCode()).isEqualTo(404),
+                () -> assertThat(response.getError()).isEqualTo("UsernameNotFoundException"),
+                () -> assertThat(response.getMessage()).isEqualTo("User not found after authentication.")
+        );
+    }
+
+    @Test
+    void signIn_should_signs_in_user_and_returns_ok_200() {
+        //given
+        var appUserRepository =mock(AppUserRepository.class);
+        var passwordEncoder = mock(PasswordEncoder.class);
+        var jwtUtils = mock(JWTUtils.class);
+        var authenticationManager = mock(AuthenticationManager.class);
+        var confirmationTokenService = mock(ConfirmationTokenService.class);
+        var emailSender = mock(EmailSender.class);
+
+        AuthReqRespDTO request = new AuthReqRespDTO();
+        request.setFirstName("Foo");
+        request.setLastName("Bar");
+        request.setEmail("test@foo.com");
+        request.setPassword("foobar");
+
+        AppUser user = new AppUser();
+        user.setEmail(request.getEmail());
+        user.setPassword(request.getPassword());
+        user.setFirstName(request.getFirstName());
+        user.setLastName(request.getLastName());
+        user.setRole("USER");
+        user.setEnabled(true);
+
+        when(appUserRepository.findByEmail(request.getEmail()))
+                .thenReturn(Optional.of(user));
+
+        UserDetails userDetails = AppUserMapper.fromEntityToUserDetails(user);
+
+        when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class)))
+                .thenReturn(new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities()));
+
+        when(jwtUtils.generateAccessToken(any(UserDetails.class))).thenReturn("jwt-token");
+        when(jwtUtils.generateRefreshToken(any(UserDetails.class))).thenReturn("refresh-token");
+
+        //system under test
+        var toTest = new LoginAndRegisterFacade(
+                appUserRepository,
+                passwordEncoder,
+                jwtUtils,
+                authenticationManager,
+                confirmationTokenService,
+                emailSender
+        );
+
+        //when
+        AuthReqRespDTO response = toTest.signIn(request);
+
+        //then
+        assertAll(
+                () -> assertThat(response.getStatusCode()).isEqualTo(200),
+                () -> assertThat(response.getToken()).isEqualTo("jwt-token"),
+                () -> assertThat(response.getRefreshToken()).isEqualTo("refresh-token"),
+                () -> assertThat(response.getMessage()).isEqualTo("Successfully singed in")
+        );
     }
 
     @Test

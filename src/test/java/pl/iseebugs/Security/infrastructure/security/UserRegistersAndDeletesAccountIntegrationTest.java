@@ -45,8 +45,8 @@ class UserRegistersAndDeletesAccountIntegrationTest extends BaseIntegrationTest 
         String registerActionResultFailedJson = registerActionResultFailed.getResponse().getContentAsString();
         AuthReqRespDTO confirmResultFailedDto = objectMapper.readValue(registerActionResultFailedJson, AuthReqRespDTO.class);
         assertAll(
-                () -> assertThat(confirmResultFailedDto.getStatusCode()).isEqualTo(404),
-                () -> assertThat(confirmResultFailedDto.getError()).isEqualTo("User not found")
+                () -> assertThat(confirmResultFailedDto.getStatusCode()).isEqualTo(401),
+                () -> assertThat(confirmResultFailedDto.getError()).isEqualTo("BadCredentialsException")
         );
 
 
@@ -298,8 +298,8 @@ class UserRegistersAndDeletesAccountIntegrationTest extends BaseIntegrationTest 
         String confirmActionResultFailedJsonNoUser = registerActionResultFailedNoUser.getResponse().getContentAsString();
         AuthReqRespDTO confirmResultFailedDtoNoUser = objectMapper.readValue(confirmActionResultFailedJsonNoUser, AuthReqRespDTO.class);
         assertAll(
-                () -> assertThat(confirmResultFailedDtoNoUser.getStatusCode()).isEqualTo(404),
-                () -> assertThat(confirmResultFailedDtoNoUser.getError()).isEqualTo("User not found")
+                () -> assertThat(confirmResultFailedDtoNoUser.getStatusCode()).isEqualTo(401),
+                () -> assertThat(confirmResultFailedDtoNoUser.getError()).isEqualTo("BadCredentialsException")
         );
     }
 }

@@ -3,13 +3,14 @@ package pl.iseebugs.Security.infrastructure.security;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import pl.iseebugs.Security.domain.user.AppUserRepository;
 import pl.iseebugs.Security.infrastructure.security.projection.AppUserReadModel;
 
 @Service
 class AppUserInfoService implements UserDetailsService {
-    private static final String USER_NOT_FOUND = "User not found";
+    private static final String USER_NOT_FOUND = "User not found.";
 
     AppUserRepository appUserRepository;
 
@@ -37,6 +38,6 @@ class AppUserInfoService implements UserDetailsService {
                         .roles(user.getRole())
                         .enable(user.getEnabled())
                         .build())
-                .orElseThrow(() -> new BadCredentialsException(USER_NOT_FOUND));
+                .orElseThrow(() -> new UsernameNotFoundException(USER_NOT_FOUND));
     }
 }
