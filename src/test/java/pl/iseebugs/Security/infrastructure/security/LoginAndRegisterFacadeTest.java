@@ -391,7 +391,7 @@ class LoginAndRegisterFacadeTest {
     }
 
     @Test
-    void refreshToken_should_returns_UserNotFoundException_404() {
+    void refreshToken_should_throws_UserNotFoundException_404() {
         //given
         var appUserRepository =mock(AppUserRepository.class);
         var passwordEncoder = mock(PasswordEncoder.class);
@@ -425,7 +425,7 @@ class LoginAndRegisterFacadeTest {
     }
 
     @Test
-    void refreshToken_should_returns_BadTokenTypeException(){
+    void refreshToken_should_throws_BadTokenTypeException(){
         //given
         var appUserRepository =mock(AppUserRepository.class);
         var passwordEncoder = mock(PasswordEncoder.class);
@@ -470,7 +470,7 @@ class LoginAndRegisterFacadeTest {
     }
 
     @Test
-    void refreshToken_should_returns_CredentialsExpiredException(){
+    void refreshToken_should_throws_CredentialsExpiredException(){
         //given
         var appUserRepository =mock(AppUserRepository.class);
         var passwordEncoder = mock(PasswordEncoder.class);
@@ -580,6 +580,18 @@ class LoginAndRegisterFacadeTest {
     }
 
     @Test
-    void deleteUser() {
+    void deleteUser_should_throws_UserNotFoundException() {
+    }
+
+    @Test
+    void deleteUser_should_throws_BadTokenTypeException() {
+    }
+
+    @Test
+    void deleteUser_should_throws_CredentialsExpiredException() {
+    }
+
+    @Test
+    void deleteUser_should_returns_accessToken_and_204(){
     }
 }
