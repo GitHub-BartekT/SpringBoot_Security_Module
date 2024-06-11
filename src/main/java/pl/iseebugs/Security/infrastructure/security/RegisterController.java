@@ -6,8 +6,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.CredentialsExpiredException;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.annotation.*;
-import pl.iseebugs.Security.domain.user.AppUser;
-import pl.iseebugs.Security.domain.user.AppUserNotFoundException;
 import pl.iseebugs.Security.infrastructure.security.projection.AuthReqRespDTO;
 
 @AllArgsConstructor
@@ -47,7 +45,7 @@ class RegisterController {
     }
 
     @DeleteMapping("/user/deleteUser")
-    ResponseEntity<AuthReqRespDTO> deleteUser(@RequestHeader("Authorization") String authHeader) throws AppUserNotFoundException {
+    ResponseEntity<AuthReqRespDTO> deleteUser(@RequestHeader("Authorization") String authHeader) throws BadTokenTypeException {
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
         }

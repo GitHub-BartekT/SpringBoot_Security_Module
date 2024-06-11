@@ -241,12 +241,17 @@ class LoginAndRegisterFacade {
         return responseDTO;
     }
 
-    AuthReqRespDTO deleteUser(String accessToken) {
+    AuthReqRespDTO deleteUser(String accessToken) throws BadTokenTypeException {
         AuthReqRespDTO response = new AuthReqRespDTO();
 
         String userEmail = jwtUtils.extractUsername(accessToken);
         AppUser user = appUserRepository.findByEmail(userEmail)
                 .orElseThrow(() -> new UsernameNotFoundException("User extracted from token not found."));
+
+        if (jwtUtils.isRefreshToken(accessToken)) {
+            log.info("User with email: " + userEmail + " used a token with invalid type.");
+            throw new BadTokenTypeException();
+        }
 
         confirmationTokenService.deleteConfirmationToken(user);
         appUserRepository.deleteByEmail(userEmail);
