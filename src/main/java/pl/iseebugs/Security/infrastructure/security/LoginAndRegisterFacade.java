@@ -201,7 +201,8 @@ class LoginAndRegisterFacade {
 
         String userEmail = jwtUtils.extractUsername(accessToken);
         AppUser toUpdate = appUserRepository.findByEmail(userEmail)
-                .orElseThrow(() -> new UsernameNotFoundException("User extracted from token not found."));
+                .orElseThrow(() ->
+                        new UsernameNotFoundException("User extracted from token not found."));
         UserDetails userToJWT = AppUserMapper.fromEntityToUserDetails(toUpdate);
 
         if (!jwtUtils.isTokenValid(accessToken, userToJWT)) {
@@ -211,28 +212,25 @@ class LoginAndRegisterFacade {
 
         AuthReqRespDTO responseDTO = new AuthReqRespDTO();
 
-        try {
-            String firstName = updateRequest.getFirstName();
-            String lastName = updateRequest.getLastName();
-            String password = passwordEncoder.encode(updateRequest.getPassword());
+        String firstName = updateRequest.getFirstName();
+        String lastName = updateRequest.getLastName();
+        String password = passwordEncoder.encode(updateRequest.getPassword());
 
-            if (password != null && !password.trim().isEmpty()) {
-                toUpdate.setPassword(passwordEncoder.encode(password));
-            }
-
-            toUpdate.setFirstName(firstName);
-            toUpdate.setLastName(lastName);
-
-            AppUser ourUserResult = appUserRepository.save(toUpdate);
-
-            if (ourUserResult.getId() != null){
-                responseDTO.setMessage("User update successfully");
-                responseDTO.setStatusCode(200);
-            }
-        } catch (Exception e){
-            responseDTO.setStatusCode(500);
-            responseDTO.setError(e.getMessage());
+        if (password != null && !password.trim().isEmpty()) {
+            toUpdate.setPassword(passwordEncoder.encode(password));
         }
+
+        toUpdate.setFirstName(firstName);
+        toUpdate.setLastName(lastName);
+        AppUser ourUserResult = appUserRepository.save(toUpdate);
+
+        if (ourUserResult.getId() != null){
+            responseDTO.setMessage("User update successfully");
+            responseDTO.setStatusCode(200);
+            responseDTO.setFirstName(ourUserResult.getFirstName());
+            responseDTO.setLastName(ourUserResult.getLastName());
+        }
+
         return responseDTO;
     }
 

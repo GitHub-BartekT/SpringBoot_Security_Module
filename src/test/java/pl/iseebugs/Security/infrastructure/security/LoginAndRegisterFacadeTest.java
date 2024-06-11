@@ -667,7 +667,6 @@ class LoginAndRegisterFacadeTest {
 
         when(jwtUtils.isTokenValid(anyString(), any(UserDetails.class))).thenReturn(false);
 
-
         //system under test
         var toTest = new LoginAndRegisterFacade(
                 appUserRepository,
@@ -690,9 +689,62 @@ class LoginAndRegisterFacadeTest {
     }
 
     @Test
-    void updateUser_should_throws_EmailConflictCredentials() {
-    }
+    void updateUser_should_returns_ok_200() throws Exception {
+        //given
+        var appUserRepository =mock(AppUserRepository.class);
+        var passwordEncoder = mock(PasswordEncoder.class);
+        var jwtUtils = mock(JWTUtils.class);
+        var authenticationManager = mock(AuthenticationManager.class);
+        var confirmationTokenService = mock(ConfirmationTokenService.class);
+        var emailSender = mock(EmailSender.class);
+        when(jwtUtils.isRefreshToken(anyString())).thenReturn(false);
+        when(jwtUtils.extractUsername(anyString())).thenReturn("foo-email");
+        when(jwtUtils.isTokenValid(anyString(), any(UserDetails.class))).thenReturn(true);
 
+        AppUser user = new AppUser();
+        user.setFirstName("Foo");
+        user.setLastName("Bar");
+        user.setEmail("test@foo.com");
+        user.setPassword("foobar");
+        user.setRole("USER");
+        user.setEnabled(true);
+
+        when(appUserRepository.findByEmail(anyString()))
+                .thenReturn(Optional.of(user));
+
+        user.setId(123L);
+        when(appUserRepository.save(user))
+                .thenReturn(user);
+        when(passwordEncoder.encode(anyString())).thenReturn("encodePassword");
+
+        //system under test
+        var toTest = new LoginAndRegisterFacade(
+                appUserRepository,
+                passwordEncoder,
+                jwtUtils,
+                authenticationManager,
+                confirmationTokenService,
+                emailSender
+        );
+
+        //when
+        String token = "foobar";
+        AuthReqRespDTO request = new AuthReqRespDTO();
+        request.setFirstName("foobar");
+        request.setLastName("barfoo");
+        request.setEmail("test@foo.com");
+        request.setPassword("pass");
+
+        AuthReqRespDTO response = toTest.updateUser(token, request);
+
+        //then
+        assertAll(
+                () -> assertThat(response.getStatusCode()).isEqualTo(200),
+                () -> assertThat(response.getMessage()).isEqualTo("User update successfully"),
+                () -> assertThat(response.getFirstName()).isEqualTo("foobar"),
+                () -> assertThat(response.getLastName()).isEqualTo("barfoo")
+                );
+    }
 
     @Test
     void deleteUser_should_throws_UserNotFoundException() {
