@@ -3,7 +3,6 @@ package pl.iseebugs.Security.infrastructure.security;
 import lombok.AllArgsConstructor;
 import lombok.extern.java.Log;
 import org.springframework.security.authentication.*;
-import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -15,9 +14,7 @@ import pl.iseebugs.Security.infrastructure.security.projection.AuthReqRespDTO;
 import pl.iseebugs.Security.infrastructure.security.token.ConfirmationToken;
 import pl.iseebugs.Security.infrastructure.security.token.ConfirmationTokenService;
 
-import java.time.Clock;
 import java.time.LocalDateTime;
-import java.util.HashMap;
 import java.util.UUID;
 
 @AllArgsConstructor
@@ -32,93 +29,75 @@ class LoginAndRegisterFacade {
     private final ConfirmationTokenService confirmationTokenService;
     private final EmailSender emailSender;
 
-    AuthReqRespDTO signUp(AuthReqRespDTO registrationRequest){
+    AuthReqRespDTO signUp(AuthReqRespDTO registrationRequest) throws EmailConflictException {
         AuthReqRespDTO responseDTO = new AuthReqRespDTO();
-        try {
-            String firstName = registrationRequest.getFirstName();
-            String lastName = registrationRequest.getLastName();
-            String email = registrationRequest.getEmail();
-            String password = passwordEncoder.encode(registrationRequest.getPassword());
-            String roles = "USER";
 
+        String firstName = registrationRequest.getFirstName();
+        String lastName = registrationRequest.getLastName();
+        String email = registrationRequest.getEmail();
+        String password = passwordEncoder.encode(registrationRequest.getPassword());
+        String roles = "USER";
 
-            if (appUserRepository.findByEmail(email).isPresent()) {
-                throw new EmailConflictException();
-            }
+        if (appUserRepository.findByEmail(email).isPresent()) {
+            throw new EmailConflictException();
+        }
 
-            AppUserInfoDetails ourUserToSave = new AppUserInfoDetails(
-                    firstName,
-                    lastName,
-                    email,
-                    password,
-                    roles);
-            AppUser ourUserResult = appUserRepository.save(ourUserToSave.toNewAppUser());
+        AppUserInfoDetails userToSave = new AppUserInfoDetails(
+                firstName,
+                lastName,
+                email,
+                password,
+                roles);
 
-            String token = UUID.randomUUID().toString();
+        AppUser ourUserResult = appUserRepository.save(userToSave.toNewAppUser());
 
-            ConfirmationToken confirmationToken = new ConfirmationToken(
-                    token,
-                    LocalDateTime.now(),
-                    LocalDateTime.now().plusMinutes(15),
-                    ourUserResult
-            );
+        String token = UUID.randomUUID().toString();
 
-            confirmationTokenService.saveConfirmationToken(confirmationToken);
-            responseDTO.setToken(token);
+        ConfirmationToken confirmationToken = new ConfirmationToken(
+                token,
+                LocalDateTime.now(),
+                LocalDateTime.now().plusMinutes(15),
+                ourUserResult
+        );
 
-            if (ourUserResult.getId() != null){
-                responseDTO.setMessage("User created successfully.");
-                responseDTO.setExpirationTime("15 minutes");
-                responseDTO.setStatusCode(201);
+        confirmationTokenService.saveConfirmationToken(confirmationToken);
+        responseDTO.setToken(token);
 
-                String link = "http://localhost:8080/api/auth/confirm?token=" + token;
-                emailSender.send(
-                        registrationRequest.getEmail(),
-                        buildEmail(registrationRequest.getFirstName(), link));
-            }
-        } catch (Exception e){
-            responseDTO.setStatusCode(409);
-            responseDTO.setError(e.getClass().getSimpleName());
-            responseDTO.setMessage(e.getMessage());
+        if (ourUserResult.getId() != null){
+            responseDTO.setMessage("User created successfully.");
+            responseDTO.setExpirationTime("15 minutes");
+            responseDTO.setStatusCode(201);
+
+            String link = "http://localhost:8080/api/auth/confirm?token=" + token;
+            emailSender.send(
+                    registrationRequest.getEmail(),
+                    buildEmail(registrationRequest.getFirstName(), link));
         }
         return responseDTO;
     }
 
-    AuthReqRespDTO confirmToken(final String token) {
+    AuthReqRespDTO confirmToken(final String token) throws TokenNotFoundException, RegistrationTokenConflictException {
         ConfirmationToken confirmationToken;
-        AuthReqRespDTO response = new AuthReqRespDTO();
-
-        try {
-            confirmationToken = confirmationTokenService
-                    .getToken(token)
-                    .orElseThrow(() ->
-                            new BadCredentialsException("Token not found."));
-        } catch (BadCredentialsException e) {
-            response.setStatusCode(401);
-            response.setError(e.getClass().getSimpleName());
-            response.setMessage(e.getMessage());
-            return response;
-        }
+        confirmationToken = confirmationTokenService.getToken(token)
+                .orElseThrow(TokenNotFoundException::new);
 
         if (confirmationToken.getConfirmedAt() != null) {
-            response.setStatusCode(409);
-            response.setError("RegistrationTokenConflictException");
-            response.setMessage("Email already confirm.");
-            return response;
+            log.info("Confirmation token already confirmed.");
+            throw new RegistrationTokenConflictException();
         }
 
+        AuthReqRespDTO response = new AuthReqRespDTO();
         LocalDateTime expiredAt = confirmationToken.getExpiresAt();
 
         if (expiredAt.isBefore(LocalDateTime.now())) {
-            response.setStatusCode(403);
-            response.setError("CredentialsExpiredException");
-            response.setMessage("Token expired.");
-            return response;
+            log.info("Token already confirmed.");
+            throw new CredentialsExpiredException("Token expired.");
         }
 
         confirmationTokenService.setConfirmedAt(token);
         appUserRepository.enableAppUser(
                 confirmationToken.getAppUser().getEmail());
+
         response.setStatusCode(200);
         response.setMessage("User confirmed.");
         return response;
@@ -132,28 +111,13 @@ class LoginAndRegisterFacade {
                     new UsernamePasswordAuthenticationToken(
                             signingRequest.getEmail(),
                             signingRequest.getPassword()));
-            var user = appUserRepository.findByEmail(signingRequest
-                            .getEmail())
-                    .orElseThrow(() -> new UsernameNotFoundException("User not found after authentication."));
-
-            UserDetails userToJWT = AppUserMapper.fromEntityToUserDetails(user);
-            var jwt = jwtUtils.generateAccessToken(userToJWT);
-            var refreshToken = jwtUtils.generateRefreshToken(userToJWT);
-            response.setStatusCode(200);
-            response.setToken(jwt);
-            response.setRefreshToken(refreshToken);
-            response.setExpirationTime("24Hr");
-            response.setMessage("Successfully singed in");
-        } catch (BadCredentialsException e) {
-            response.setStatusCode(401);
-            log.info(e.getClass().getSimpleName() + ": " + e.getMessage());
-            response.setError("BadCredentialsException");
         } catch (UsernameNotFoundException e) {
-            response.setStatusCode(404);
             log.info(e.getClass().getSimpleName() + ": " + e.getMessage());
-            response.setError(e.getClass().getSimpleName());
-            response.setMessage(e.getMessage());
-        } catch (InternalAuthenticationServiceException e) {
+            throw new UsernameNotFoundException("User not found.");
+        } catch (BadCredentialsException e) {
+            log.info(e.getClass().getSimpleName() + ": " + e.getMessage());
+            throw new BadCredentialsException("Bad credentials.");
+        }  catch (InternalAuthenticationServiceException e) {
             response.setStatusCode(500);
             log.info(e.getClass().getSimpleName() + ": " + e.getMessage());
             response.setError("Internal authentication service error.");
@@ -162,25 +126,39 @@ class LoginAndRegisterFacade {
             log.info(e.getClass().getSimpleName() + ": " + e.getMessage());
             response.setError("An unexpected error occurred.");
         }
+
+        var user = appUserRepository.findByEmail(signingRequest
+                        .getEmail())
+                .orElseThrow(() -> new UsernameNotFoundException("User not found after authentication."));
+
+        UserDetails userToJWT = AppUserMapper.fromEntityToUserDetails(user);
+        var jwt = jwtUtils.generateAccessToken(userToJWT);
+        var refreshToken = jwtUtils.generateRefreshToken(userToJWT);
+        response.setStatusCode(200);
+        response.setToken(jwt);
+        response.setRefreshToken(refreshToken);
+        response.setExpirationTime("24Hr");
+        response.setMessage("Successfully singed in");
         return response;
     }
 
     AuthReqRespDTO refreshToken(String refreshToken) throws Exception {
-        AuthReqRespDTO response = new AuthReqRespDTO();
+        if (!jwtUtils.isRefreshToken(refreshToken)) {
+            log.info("Bad token type provided.");
+            throw new BadTokenTypeException();
+        }
+        
         String userEmail = jwtUtils.extractUsername(refreshToken);
         AppUser user = appUserRepository.findByEmail(userEmail)
                 .orElseThrow(() -> new UsernameNotFoundException("User extracted from token not found."));
         UserDetails userToJWT = AppUserMapper.fromEntityToUserDetails(user);
-
-        if (!jwtUtils.isRefreshToken(refreshToken)) {
-            log.info("User with email: " + userEmail + " used a token with invalid type.");
-            throw new BadTokenTypeException();
-        }
-
+        
         if (!jwtUtils.isTokenValid(refreshToken, userToJWT)) {
             log.info("User with email: " + userEmail + " used an expired token.");
             throw new CredentialsExpiredException("Token expired.");
         }
+        
+        AuthReqRespDTO response = new AuthReqRespDTO();
 
         var jwt = jwtUtils.generateAccessToken(userToJWT);
         response.setStatusCode(200);
@@ -195,7 +173,7 @@ class LoginAndRegisterFacade {
 
     AuthReqRespDTO updateUser(String accessToken, AuthReqRespDTO updateRequest) throws Exception {
         if (jwtUtils.isRefreshToken(accessToken)) {
-            log.info("Attempting to update user data with an invalid token type.");
+            log.info("Bad token type provided.");
             throw new BadTokenTypeException();
         }
 
@@ -235,22 +213,24 @@ class LoginAndRegisterFacade {
     }
 
     AuthReqRespDTO deleteUser(String accessToken) throws Exception {
-        AuthReqRespDTO response = new AuthReqRespDTO();
-
-        String userEmail = jwtUtils.extractUsername(accessToken);
-        AppUser user = appUserRepository.findByEmail(userEmail)
-                .orElseThrow(() -> new UsernameNotFoundException("User extracted from token not found."));
-        UserDetails userToJWT = AppUserMapper.fromEntityToUserDetails(user);
-
         if (jwtUtils.isRefreshToken(accessToken)) {
-            log.info("User with email: " + userEmail + " used a token with invalid type.");
+            log.info("Bad token type provided");
             throw new BadTokenTypeException();
         }
+
+        String userEmail = jwtUtils.extractUsername(accessToken);
+        
+        AppUser user = appUserRepository.findByEmail(userEmail)
+                .orElseThrow(() ->
+                        new UsernameNotFoundException("User extracted from token not found."));
+        UserDetails userToJWT = AppUserMapper.fromEntityToUserDetails(user);
 
         if (!jwtUtils.isTokenValid(accessToken, userToJWT)) {
             log.info("User with email: " + userEmail + " used an expired token.");
             throw new CredentialsExpiredException("Token expired.");
         }
+
+        AuthReqRespDTO response = new AuthReqRespDTO();
 
         confirmationTokenService.deleteConfirmationToken(user);
         appUserRepository.deleteByEmail(userEmail);
