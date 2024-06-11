@@ -202,6 +202,12 @@ class LoginAndRegisterFacade {
         String userEmail = jwtUtils.extractUsername(accessToken);
         AppUser toUpdate = appUserRepository.findByEmail(userEmail)
                 .orElseThrow(() -> new UsernameNotFoundException("User extracted from token not found."));
+        UserDetails userToJWT = AppUserMapper.fromEntityToUserDetails(toUpdate);
+
+        if (!jwtUtils.isTokenValid(accessToken, userToJWT)) {
+            log.info("User with email: " + userEmail + " used an expired token.");
+            throw new CredentialsExpiredException("Token expired.");
+        }
 
         AuthReqRespDTO responseDTO = new AuthReqRespDTO();
 
