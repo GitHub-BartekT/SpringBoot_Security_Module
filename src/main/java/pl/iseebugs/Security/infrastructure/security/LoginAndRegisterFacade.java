@@ -2,10 +2,7 @@ package pl.iseebugs.Security.infrastructure.security;
 
 import lombok.AllArgsConstructor;
 import lombok.extern.java.Log;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.BadCredentialsException;
-import org.springframework.security.authentication.InternalAuthenticationServiceException;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.authentication.*;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -168,26 +165,30 @@ class LoginAndRegisterFacade {
         return response;
     }
 
-    AuthReqRespDTO refreshToken(String refreshToken){
+    AuthReqRespDTO refreshToken(String refreshToken) throws Exception {
         AuthReqRespDTO response = new AuthReqRespDTO();
         String ourEmail = jwtUtils.extractUsername(refreshToken);
-        AppUser user = appUserRepository.findByEmail(ourEmail).orElseThrow();
+        AppUser user = appUserRepository.findByEmail(ourEmail)
+                .orElseThrow(() -> new UsernameNotFoundException("User extracted from token not found."));
         UserDetails userToJWT = AppUserMapper.fromEntityToUserDetails(user);
 
-        if (jwtUtils.isTokenValid(refreshToken, userToJWT)
-                && jwtUtils.isRefreshToken(refreshToken)){
-            var jwt = jwtUtils.generateAccessToken(userToJWT);
-            response.setStatusCode(200);
-            response.setToken(jwt);
-            response.setRefreshToken(refreshToken);
-            response.setExpirationTime("60 min");
-            response.setMessage("Successfully Refreshed Token");
-        } else {
-        response.setStatusCode(401);
-        response.setMessage("Invalid Token");
-            log.info("User with email: " + ourEmail +
-                    " used invalid token.");
+
+        if (!jwtUtils.isRefreshToken(refreshToken)) {
+            log.info("User with email: " + ourEmail + " used a token with invalid type.");
+            throw new BadTokenTypeException();
         }
+
+        if (!jwtUtils.isTokenValid(refreshToken, userToJWT)) {
+            log.info("User with email: " + ourEmail + " used a expired token.");
+            throw new CredentialsExpiredException("Token expired.");
+        }
+
+        var jwt = jwtUtils.generateAccessToken(userToJWT);
+        response.setStatusCode(200);
+        response.setToken(jwt);
+        response.setRefreshToken(refreshToken);
+        response.setExpirationTime("60 min");
+        response.setMessage("Successfully Refreshed Token");
 
         log.info("User with email: " + ourEmail + " refreshed access token.");
         return response;
