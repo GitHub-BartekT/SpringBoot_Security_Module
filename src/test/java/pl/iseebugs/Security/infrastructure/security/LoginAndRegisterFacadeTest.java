@@ -425,7 +425,7 @@ class LoginAndRegisterFacadeTest {
     }
 
     @Test
-    void refreshToken_should_returns_BadTokenTypeException_403(){
+    void refreshToken_should_returns_BadTokenTypeException(){
         //given
         var appUserRepository =mock(AppUserRepository.class);
         var passwordEncoder = mock(PasswordEncoder.class);
@@ -470,7 +470,7 @@ class LoginAndRegisterFacadeTest {
     }
 
     @Test
-    void refreshToken_should_returns_CredentialsExpiredException_403(){
+    void refreshToken_should_returns_CredentialsExpiredException(){
         //given
         var appUserRepository =mock(AppUserRepository.class);
         var passwordEncoder = mock(PasswordEncoder.class);
@@ -519,7 +519,59 @@ class LoginAndRegisterFacadeTest {
 
     @Test
     void  refreshToken_should_returns_accessToken_and_200(){
+        //given
+        var appUserRepository =mock(AppUserRepository.class);
+        var passwordEncoder = mock(PasswordEncoder.class);
+        var jwtUtils = mock(JWTUtils.class);
+        var authenticationManager = mock(AuthenticationManager.class);
+        var confirmationTokenService = mock(ConfirmationTokenService.class);
+        var emailSender = mock(EmailSender.class);
 
+        when(jwtUtils.extractUsername(anyString())).thenReturn("foo-email");
+
+        AppUser user = new AppUser();
+        user.setFirstName("Foo");
+        user.setLastName("Bar");
+        user.setEmail("test@foo.com");
+        user.setPassword("foobar");
+        user.setRole("USER");
+        user.setEnabled(true);
+
+        when(appUserRepository.findByEmail(anyString()))
+                .thenReturn(Optional.of(user));
+
+        when(jwtUtils.isRefreshToken(anyString())).thenReturn(true);
+        when(jwtUtils.isTokenValid(anyString(), any(UserDetails.class))).thenReturn(true);
+        when(jwtUtils.generateAccessToken(any(UserDetails.class))).thenReturn("jwt-token");
+        when(jwtUtils.generateRefreshToken(any(UserDetails.class))).thenReturn("refresh-token");
+
+
+        //system under test
+        var toTest = new LoginAndRegisterFacade(
+                appUserRepository,
+                passwordEncoder,
+                jwtUtils,
+                authenticationManager,
+                confirmationTokenService,
+                emailSender
+        );
+
+        //when
+        AuthReqRespDTO request = new AuthReqRespDTO();
+        request.setFirstName("Foo");
+        request.setLastName("Bar");
+        request.setEmail("test@foo.com");
+        request.setPassword("foobar");
+
+        AuthReqRespDTO response = toTest.signIn(request);
+
+        //then
+        assertAll(
+                () -> assertThat(response.getStatusCode()).isEqualTo(200),
+                () -> assertThat(response.getToken()).isEqualTo("jwt-token"),
+                () -> assertThat(response.getRefreshToken()).isEqualTo("refresh-token"),
+                () -> assertThat(response.getMessage()).isEqualTo("Successfully singed in")
+        );
     }
 
 
