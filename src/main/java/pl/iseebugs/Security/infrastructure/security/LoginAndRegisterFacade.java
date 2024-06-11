@@ -168,10 +168,11 @@ class LoginAndRegisterFacade {
         return response;
     }
 
-    AuthReqRespDTO refreshToken(String refreshToken){
+    AuthReqRespDTO refreshToken(String refreshToken) throws UsernameNotFoundException{
         AuthReqRespDTO response = new AuthReqRespDTO();
         String ourEmail = jwtUtils.extractUsername(refreshToken);
-        AppUser user = appUserRepository.findByEmail(ourEmail).orElseThrow();
+        AppUser user = appUserRepository.findByEmail(ourEmail)
+                .orElseThrow(() -> new UsernameNotFoundException("User extracted from token not found."));
         UserDetails userToJWT = AppUserMapper.fromEntityToUserDetails(user);
 
         if (jwtUtils.isTokenValid(refreshToken, userToJWT)

@@ -20,6 +20,7 @@ import java.time.LocalDateTime;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.catchThrowable;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.AdditionalAnswers.returnsFirstArg;
 import static org.mockito.ArgumentMatchers.*;
@@ -391,6 +392,37 @@ class LoginAndRegisterFacadeTest {
 
     @Test
     void refreshToken_should_returns_UserNotFoundException_404() {
+        //given
+        var appUserRepository =mock(AppUserRepository.class);
+        var passwordEncoder = mock(PasswordEncoder.class);
+        var jwtUtils = mock(JWTUtils.class);
+        var authenticationManager = mock(AuthenticationManager.class);
+        var confirmationTokenService = mock(ConfirmationTokenService.class);
+        var emailSender = mock(EmailSender.class);
+
+        when(jwtUtils.extractUsername(anyString())).thenReturn("foo-email");
+
+        //system under test
+        var toTest = new LoginAndRegisterFacade(
+                appUserRepository,
+                passwordEncoder,
+                jwtUtils,
+                authenticationManager,
+                confirmationTokenService,
+                emailSender
+        );
+
+        //when
+        String request = "foobar";
+
+        Throwable e = catchThrowable(() -> toTest.refreshToken(request));
+
+        //then
+        assertAll(
+                () -> assertThat(e.getClass().getSimpleName()).isEqualTo("UsernameNotFoundException"),
+                () -> assertThat(e.getMessage()).isEqualTo("User extracted from token not found.")
+        );
+
     }
 
     @Test
