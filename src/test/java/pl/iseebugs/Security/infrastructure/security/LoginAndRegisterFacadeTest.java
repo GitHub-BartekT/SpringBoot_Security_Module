@@ -390,8 +390,24 @@ class LoginAndRegisterFacadeTest {
     }
 
     @Test
-    void refreshToken() {
+    void refreshToken_should_returns_UserNotFoundException_404() {
     }
+
+    @Test
+    void refreshToken_should_returns_CredentialsExpiredException_403(){
+
+    }
+
+    @Test
+    void refreshToken_should_returns_BadTokenTypeException_403(){
+
+    }
+
+    @Test
+    void  refreshToken_should_returns_accessToken_and_200(){
+
+    }
+
 
     @Test
     void updateUser() {
