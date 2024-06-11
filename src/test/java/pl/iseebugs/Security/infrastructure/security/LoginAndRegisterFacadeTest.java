@@ -31,7 +31,7 @@ import static org.mockito.Mockito.*;
 class LoginAndRegisterFacadeTest {
 
     @Test
-    void signUp_should_return_EmailConflictException_409() {
+    void signUp_should_throws_EmailConflictException(){
         //given
         var appUserRepository =mock(AppUserRepository.class);
         var passwordEncoder = mock(PasswordEncoder.class);
@@ -59,19 +59,17 @@ class LoginAndRegisterFacadeTest {
         request.setEmail(email);
         request.setPassword("foobar");
 
-        AuthReqRespDTO response = toTest.signUp(request);
+        Throwable e = catchThrowable(() -> toTest.signUp(request));
 
         //then
         assertAll(
-                () -> assertThat(response.getStatusCode()).isEqualTo(409),
-                () -> assertThat(response.getError()).isEqualTo("EmailConflictException"),
-                () -> assertThat(response.getMessage())
-                        .isEqualTo("The email address already exists.")
+                () -> assertThat(e).isInstanceOf(EmailConflictException.class),
+                () -> assertThat(e.getMessage()).isEqualTo("The email address already exists.")
         );
     }
 
     @Test
-    void signUp_should_signs_up_new_user_and_returns_created_201() {
+    void signUp_should_signs_up_new_user_and_returns_created_201() throws EmailConflictException {
         //given
         InMemoryAppUserRepository inMemoryAppUserRepository = new InMemoryAppUserRepository();
         var passwordEncoder = mock(PasswordEncoder.class);

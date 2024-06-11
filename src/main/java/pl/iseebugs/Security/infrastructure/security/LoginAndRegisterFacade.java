@@ -29,54 +29,49 @@ class LoginAndRegisterFacade {
     private final ConfirmationTokenService confirmationTokenService;
     private final EmailSender emailSender;
 
-    AuthReqRespDTO signUp(AuthReqRespDTO registrationRequest){
+    AuthReqRespDTO signUp(AuthReqRespDTO registrationRequest) throws EmailConflictException {
         AuthReqRespDTO responseDTO = new AuthReqRespDTO();
-        try {
-            String firstName = registrationRequest.getFirstName();
-            String lastName = registrationRequest.getLastName();
-            String email = registrationRequest.getEmail();
-            String password = passwordEncoder.encode(registrationRequest.getPassword());
-            String roles = "USER";
 
+        String firstName = registrationRequest.getFirstName();
+        String lastName = registrationRequest.getLastName();
+        String email = registrationRequest.getEmail();
+        String password = passwordEncoder.encode(registrationRequest.getPassword());
+        String roles = "USER";
 
-            if (appUserRepository.findByEmail(email).isPresent()) {
-                throw new EmailConflictException();
-            }
+        if (appUserRepository.findByEmail(email).isPresent()) {
+            throw new EmailConflictException();
+        }
 
-            AppUserInfoDetails ourUserToSave = new AppUserInfoDetails(
-                    firstName,
-                    lastName,
-                    email,
-                    password,
-                    roles);
-            AppUser ourUserResult = appUserRepository.save(ourUserToSave.toNewAppUser());
+        AppUserInfoDetails userToSave = new AppUserInfoDetails(
+                firstName,
+                lastName,
+                email,
+                password,
+                roles);
 
-            String token = UUID.randomUUID().toString();
+        AppUser ourUserResult = appUserRepository.save(userToSave.toNewAppUser());
 
-            ConfirmationToken confirmationToken = new ConfirmationToken(
-                    token,
-                    LocalDateTime.now(),
-                    LocalDateTime.now().plusMinutes(15),
-                    ourUserResult
-            );
+        String token = UUID.randomUUID().toString();
 
-            confirmationTokenService.saveConfirmationToken(confirmationToken);
-            responseDTO.setToken(token);
+        ConfirmationToken confirmationToken = new ConfirmationToken(
+                token,
+                LocalDateTime.now(),
+                LocalDateTime.now().plusMinutes(15),
+                ourUserResult
+        );
 
-            if (ourUserResult.getId() != null){
-                responseDTO.setMessage("User created successfully.");
-                responseDTO.setExpirationTime("15 minutes");
-                responseDTO.setStatusCode(201);
+        confirmationTokenService.saveConfirmationToken(confirmationToken);
+        responseDTO.setToken(token);
 
-                String link = "http://localhost:8080/api/auth/confirm?token=" + token;
-                emailSender.send(
-                        registrationRequest.getEmail(),
-                        buildEmail(registrationRequest.getFirstName(), link));
-            }
-        } catch (Exception e){
-            responseDTO.setStatusCode(409);
-            responseDTO.setError(e.getClass().getSimpleName());
-            responseDTO.setMessage(e.getMessage());
+        if (ourUserResult.getId() != null){
+            responseDTO.setMessage("User created successfully.");
+            responseDTO.setExpirationTime("15 minutes");
+            responseDTO.setStatusCode(201);
+
+            String link = "http://localhost:8080/api/auth/confirm?token=" + token;
+            emailSender.send(
+                    registrationRequest.getEmail(),
+                    buildEmail(registrationRequest.getFirstName(), link));
         }
         return responseDTO;
     }
@@ -226,6 +221,7 @@ class LoginAndRegisterFacade {
         }
 
         String userEmail = jwtUtils.extractUsername(accessToken);
+        
         AppUser user = appUserRepository.findByEmail(userEmail)
                 .orElseThrow(() ->
                         new UsernameNotFoundException("User extracted from token not found."));

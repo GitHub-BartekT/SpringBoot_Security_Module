@@ -21,7 +21,7 @@ class RegisterController {
     }
 
     @PostMapping("/signup")
-    public ResponseEntity<AuthReqRespDTO> signUp(@RequestBody AuthReqRespDTO signUpRequest){
+    public ResponseEntity<AuthReqRespDTO> signUp(@RequestBody AuthReqRespDTO signUpRequest) throws EmailConflictException {
         return  ResponseEntity.ok(loginAndRegisterFacade.signUp(signUpRequest));
     }
 
@@ -100,10 +100,19 @@ class RegisterController {
         return ResponseEntity.ok().body(response);
     }
 
-
-
     @ExceptionHandler(RegistrationTokenConflictException.class)
     ResponseEntity<AuthReqRespDTO> handlerRegistrationTokenConflictException(RegistrationTokenConflictException e){
+        AuthReqRespDTO response = new AuthReqRespDTO();
+        response.setStatusCode(409);
+        response.setError(e.getClass().getSimpleName());
+        response.setMessage(e.getMessage());
+        return ResponseEntity.ok().body(response);
+    }
+
+
+
+    @ExceptionHandler(EmailConflictException.class)
+    ResponseEntity<AuthReqRespDTO> handlerEmailConflictException(EmailConflictException e){
         AuthReqRespDTO response = new AuthReqRespDTO();
         response.setStatusCode(409);
         response.setError(e.getClass().getSimpleName());
