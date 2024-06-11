@@ -661,6 +661,50 @@ class LoginAndRegisterFacadeTest {
 
     @Test
     void deleteUser_should_throws_CredentialsExpiredException() {
+        //given
+        var appUserRepository =mock(AppUserRepository.class);
+        var passwordEncoder = mock(PasswordEncoder.class);
+        var jwtUtils = mock(JWTUtils.class);
+        var authenticationManager = mock(AuthenticationManager.class);
+        var confirmationTokenService = mock(ConfirmationTokenService.class);
+        var emailSender = mock(EmailSender.class);
+
+        when(jwtUtils.extractUsername(anyString())).thenReturn("foo-email");
+
+        AppUser user = new AppUser();
+        user.setFirstName("Foo");
+        user.setLastName("Bar");
+        user.setEmail("test@foo.com");
+        user.setPassword("foobar");
+        user.setRole("USER");
+        user.setEnabled(true);
+
+        when(appUserRepository.findByEmail(anyString()))
+                .thenReturn(Optional.of(user));
+
+        when(jwtUtils.isRefreshToken(anyString())).thenReturn(false);
+        when(jwtUtils.isTokenValid(anyString(), any(UserDetails.class))).thenReturn(false);
+
+
+        //system under test
+        var toTest = new LoginAndRegisterFacade(
+                appUserRepository,
+                passwordEncoder,
+                jwtUtils,
+                authenticationManager,
+                confirmationTokenService,
+                emailSender
+        );
+
+        //when
+        String request = "foobar";
+        Throwable e = catchThrowable(() -> toTest.deleteUser(request));
+
+        //then
+        assertAll(
+                () -> assertThat(e.getClass().getSimpleName()).isEqualTo("CredentialsExpiredException"),
+                () -> assertThat(e.getMessage()).isEqualTo("Token expired.")
+        );
     }
 
     @Test
