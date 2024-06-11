@@ -5,9 +5,11 @@ import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.CredentialsExpiredException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import pl.iseebugs.Security.domain.user.AppUser;
 import pl.iseebugs.Security.domain.user.AppUserRepository;
@@ -391,40 +393,6 @@ class LoginAndRegisterFacadeTest {
     }
 
     @Test
-    void refreshToken_should_throws_UserNotFoundException_404() {
-        //given
-        var appUserRepository =mock(AppUserRepository.class);
-        var passwordEncoder = mock(PasswordEncoder.class);
-        var jwtUtils = mock(JWTUtils.class);
-        var authenticationManager = mock(AuthenticationManager.class);
-        var confirmationTokenService = mock(ConfirmationTokenService.class);
-        var emailSender = mock(EmailSender.class);
-
-        when(jwtUtils.extractUsername(anyString())).thenReturn("foo-email");
-
-        //system under test
-        var toTest = new LoginAndRegisterFacade(
-                appUserRepository,
-                passwordEncoder,
-                jwtUtils,
-                authenticationManager,
-                confirmationTokenService,
-                emailSender
-        );
-
-        //when
-        String request = "foobar";
-
-        Throwable e = catchThrowable(() -> toTest.refreshToken(request));
-
-        //then
-        assertAll(
-                () -> assertThat(e.getClass().getSimpleName()).isEqualTo("UsernameNotFoundException"),
-                () -> assertThat(e.getMessage()).isEqualTo("User extracted from token not found.")
-        );
-    }
-
-    @Test
     void refreshToken_should_throws_BadTokenTypeException(){
         //given
         var appUserRepository =mock(AppUserRepository.class);
@@ -464,8 +432,43 @@ class LoginAndRegisterFacadeTest {
 
         //then
         assertAll(
-                () -> assertThat(e.getClass().getSimpleName()).isEqualTo("BadTokenTypeException"),
+                () -> assertThat(e).isInstanceOf(BadTokenTypeException.class),
                 () -> assertThat(e.getMessage()).isEqualTo("Invalid Token type.")
+        );
+    }
+
+    @Test
+    void refreshToken_should_throws_UserNotFoundException() {
+        //given
+        var appUserRepository =mock(AppUserRepository.class);
+        var passwordEncoder = mock(PasswordEncoder.class);
+        var jwtUtils = mock(JWTUtils.class);
+        var authenticationManager = mock(AuthenticationManager.class);
+        var confirmationTokenService = mock(ConfirmationTokenService.class);
+        var emailSender = mock(EmailSender.class);
+
+        when(jwtUtils.isRefreshToken(anyString())).thenReturn(true);
+        when(jwtUtils.extractUsername(anyString())).thenReturn("foo-email");
+
+        //system under test
+        var toTest = new LoginAndRegisterFacade(
+                appUserRepository,
+                passwordEncoder,
+                jwtUtils,
+                authenticationManager,
+                confirmationTokenService,
+                emailSender
+        );
+
+        //when
+        String request = "foobar";
+
+        Throwable e = catchThrowable(() -> toTest.refreshToken(request));
+
+        //then
+        assertAll(
+                () -> assertThat(e).isInstanceOf(UsernameNotFoundException.class),
+                () -> assertThat(e.getMessage()).isEqualTo("User extracted from token not found.")
         );
     }
 
@@ -512,7 +515,7 @@ class LoginAndRegisterFacadeTest {
 
         //then
         assertAll(
-                () -> assertThat(e.getClass().getSimpleName()).isEqualTo("CredentialsExpiredException"),
+                () -> assertThat(e).isInstanceOf(CredentialsExpiredException.class),
                 () -> assertThat(e.getMessage()).isEqualTo("Token expired.")
         );
     }
@@ -603,7 +606,7 @@ class LoginAndRegisterFacadeTest {
 
         //then
         assertAll(
-                () -> assertThat(e.getClass().getSimpleName()).isEqualTo("BadTokenTypeException"),
+                () -> assertThat(e).isInstanceOf(BadTokenTypeException.class),
                 () -> assertThat(e.getMessage()).isEqualTo("Invalid Token type.")
         );
     }
@@ -636,7 +639,7 @@ class LoginAndRegisterFacadeTest {
 
         //then
         assertAll(
-                () -> assertThat(e.getClass().getSimpleName()).isEqualTo("UsernameNotFoundException"),
+                () -> assertThat(e).isInstanceOf(UsernameNotFoundException.class),
                 () -> assertThat(e.getMessage()).isEqualTo("User extracted from token not found.")
         );
     }
@@ -683,7 +686,7 @@ class LoginAndRegisterFacadeTest {
 
         //then
         assertAll(
-                () -> assertThat(e.getClass().getSimpleName()).isEqualTo("CredentialsExpiredException"),
+                () -> assertThat(e).isInstanceOf(CredentialsExpiredException.class),
                 () -> assertThat(e.getMessage()).isEqualTo("Token expired.")
         );
     }
@@ -775,7 +778,7 @@ class LoginAndRegisterFacadeTest {
 
         //then
         assertAll(
-                () -> assertThat(e.getClass().getSimpleName()).isEqualTo("UsernameNotFoundException"),
+                () -> assertThat(e).isInstanceOf(UsernameNotFoundException.class),
                 () -> assertThat(e.getMessage()).isEqualTo("User extracted from token not found.")
         );
     }
@@ -821,7 +824,7 @@ class LoginAndRegisterFacadeTest {
 
         //then
         assertAll(
-                () -> assertThat(e.getClass().getSimpleName()).isEqualTo("BadTokenTypeException"),
+                () -> assertThat(e).isInstanceOf(BadTokenTypeException.class),
                 () -> assertThat(e.getMessage()).isEqualTo("Invalid Token type.")
         );
     }
@@ -869,7 +872,7 @@ class LoginAndRegisterFacadeTest {
 
         //then
         assertAll(
-                () -> assertThat(e.getClass().getSimpleName()).isEqualTo("CredentialsExpiredException"),
+                () -> assertThat(e).isInstanceOf(CredentialsExpiredException.class),
                 () -> assertThat(e.getMessage()).isEqualTo("Token expired.")
         );
     }

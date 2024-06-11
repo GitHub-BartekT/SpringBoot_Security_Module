@@ -166,21 +166,22 @@ class LoginAndRegisterFacade {
     }
 
     AuthReqRespDTO refreshToken(String refreshToken) throws Exception {
-        AuthReqRespDTO response = new AuthReqRespDTO();
+        if (!jwtUtils.isRefreshToken(refreshToken)) {
+            log.info("Bad token type provided.");
+            throw new BadTokenTypeException();
+        }
+        
         String userEmail = jwtUtils.extractUsername(refreshToken);
         AppUser user = appUserRepository.findByEmail(userEmail)
                 .orElseThrow(() -> new UsernameNotFoundException("User extracted from token not found."));
         UserDetails userToJWT = AppUserMapper.fromEntityToUserDetails(user);
-
-        if (!jwtUtils.isRefreshToken(refreshToken)) {
-            log.info("User with email: " + userEmail + " used a token with invalid type.");
-            throw new BadTokenTypeException();
-        }
-
+        
         if (!jwtUtils.isTokenValid(refreshToken, userToJWT)) {
             log.info("User with email: " + userEmail + " used an expired token.");
             throw new CredentialsExpiredException("Token expired.");
         }
+        
+        AuthReqRespDTO response = new AuthReqRespDTO();
 
         var jwt = jwtUtils.generateAccessToken(userToJWT);
         response.setStatusCode(200);
@@ -195,7 +196,7 @@ class LoginAndRegisterFacade {
 
     AuthReqRespDTO updateUser(String accessToken, AuthReqRespDTO updateRequest) throws Exception {
         if (jwtUtils.isRefreshToken(accessToken)) {
-            log.info("Attempting to update user data with an invalid token type.");
+            log.info("Bad token type provided.");
             throw new BadTokenTypeException();
         }
 
@@ -235,22 +236,23 @@ class LoginAndRegisterFacade {
     }
 
     AuthReqRespDTO deleteUser(String accessToken) throws Exception {
-        AuthReqRespDTO response = new AuthReqRespDTO();
+        if (jwtUtils.isRefreshToken(accessToken)) {
+            log.info("Bad token type provided");
+            throw new BadTokenTypeException();
+        }
 
         String userEmail = jwtUtils.extractUsername(accessToken);
         AppUser user = appUserRepository.findByEmail(userEmail)
-                .orElseThrow(() -> new UsernameNotFoundException("User extracted from token not found."));
+                .orElseThrow(() ->
+                        new UsernameNotFoundException("User extracted from token not found."));
         UserDetails userToJWT = AppUserMapper.fromEntityToUserDetails(user);
-
-        if (jwtUtils.isRefreshToken(accessToken)) {
-            log.info("User with email: " + userEmail + " used a token with invalid type.");
-            throw new BadTokenTypeException();
-        }
 
         if (!jwtUtils.isTokenValid(accessToken, userToJWT)) {
             log.info("User with email: " + userEmail + " used an expired token.");
             throw new CredentialsExpiredException("Token expired.");
         }
+
+        AuthReqRespDTO response = new AuthReqRespDTO();
 
         confirmationTokenService.deleteConfirmationToken(user);
         appUserRepository.deleteByEmail(userEmail);
