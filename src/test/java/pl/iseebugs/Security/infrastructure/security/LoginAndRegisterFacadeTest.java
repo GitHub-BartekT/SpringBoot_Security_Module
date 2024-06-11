@@ -708,7 +708,7 @@ class LoginAndRegisterFacadeTest {
     }
 
     @Test
-    void deleteUser_should_returns_accessToken_and_204() throws BadTokenTypeException {
+    void deleteUser_should_returns_accessToken_and_204() throws Exception {
         //given
         var appUserRepository =mock(AppUserRepository.class);
         var passwordEncoder = mock(PasswordEncoder.class);

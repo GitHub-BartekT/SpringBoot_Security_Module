@@ -241,7 +241,7 @@ class LoginAndRegisterFacade {
         return responseDTO;
     }
 
-    AuthReqRespDTO deleteUser(String accessToken) throws BadTokenTypeException {
+    AuthReqRespDTO deleteUser(String accessToken) throws Exception {
         AuthReqRespDTO response = new AuthReqRespDTO();
 
         String userEmail = jwtUtils.extractUsername(accessToken);
