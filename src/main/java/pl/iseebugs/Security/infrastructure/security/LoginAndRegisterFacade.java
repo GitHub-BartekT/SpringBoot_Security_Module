@@ -172,7 +172,6 @@ class LoginAndRegisterFacade {
                 .orElseThrow(() -> new UsernameNotFoundException("User extracted from token not found."));
         UserDetails userToJWT = AppUserMapper.fromEntityToUserDetails(user);
 
-
         if (!jwtUtils.isRefreshToken(refreshToken)) {
             log.info("User with email: " + ourEmail + " used a token with invalid type.");
             throw new BadTokenTypeException();
@@ -246,7 +245,9 @@ class LoginAndRegisterFacade {
         AuthReqRespDTO response = new AuthReqRespDTO();
 
         String userEmail = jwtUtils.extractUsername(accessToken);
-        AppUser user = appUserRepository.findByEmail(userEmail).orElseThrow();
+        AppUser user = appUserRepository.findByEmail(userEmail)
+                .orElseThrow(() -> new UsernameNotFoundException("User extracted from token not found."));
+
         confirmationTokenService.deleteConfirmationToken(user);
         appUserRepository.deleteByEmail(userEmail);
         response.setStatusCode(204);

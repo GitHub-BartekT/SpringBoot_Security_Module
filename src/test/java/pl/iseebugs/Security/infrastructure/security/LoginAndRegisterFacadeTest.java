@@ -581,6 +581,36 @@ class LoginAndRegisterFacadeTest {
 
     @Test
     void deleteUser_should_throws_UserNotFoundException() {
+        //given
+        var appUserRepository =mock(AppUserRepository.class);
+        var passwordEncoder = mock(PasswordEncoder.class);
+        var jwtUtils = mock(JWTUtils.class);
+        var authenticationManager = mock(AuthenticationManager.class);
+        var confirmationTokenService = mock(ConfirmationTokenService.class);
+        var emailSender = mock(EmailSender.class);
+
+        when(jwtUtils.extractUsername(anyString())).thenReturn("foo-email");
+
+        //system under test
+        var toTest = new LoginAndRegisterFacade(
+                appUserRepository,
+                passwordEncoder,
+                jwtUtils,
+                authenticationManager,
+                confirmationTokenService,
+                emailSender
+        );
+
+        //when
+        String request = "foobar";
+
+        Throwable e = catchThrowable(() -> toTest.deleteUser(request));
+
+        //then
+        assertAll(
+                () -> assertThat(e.getClass().getSimpleName()).isEqualTo("UsernameNotFoundException"),
+                () -> assertThat(e.getMessage()).isEqualTo("User extracted from token not found.")
+        );
     }
 
     @Test
