@@ -193,40 +193,24 @@ class LoginAndRegisterFacade {
         return response;
     }
 
-    AuthReqRespDTO updateUser(String refreshToken, AuthReqRespDTO updateRequest) {
-        String ourEmail = jwtUtils.extractUsername(refreshToken);
-        AppUser user = appUserRepository.findByEmail(ourEmail).orElseThrow();
+    AuthReqRespDTO updateUser(String accessToken, AuthReqRespDTO updateRequest) {
+        String userEmail = jwtUtils.extractUsername(accessToken);
+        AppUser toUpdate = appUserRepository.findByEmail(userEmail)
+                .orElseThrow(() -> new UsernameNotFoundException("User extracted from token not found."));
 
         AuthReqRespDTO responseDTO = new AuthReqRespDTO();
 
         try {
             String firstName = updateRequest.getFirstName();
             String lastName = updateRequest.getLastName();
-            String email = updateRequest.getEmail();
             String password = passwordEncoder.encode(updateRequest.getPassword());
-            String roles = user.getRole();
-            Boolean locked = user.getLocked();
-            Boolean enabled = user.getEnabled();
-
-
-            if (appUserRepository.findByEmail(email).isEmpty()) {
-               email = updateRequest.getEmail();
-            } else {
-                email = ourEmail;
-            }
-
-            AppUser toUpdate = appUserRepository.findByEmail(ourEmail).orElseThrow();
 
             if (password != null && !password.trim().isEmpty()) {
                 toUpdate.setPassword(passwordEncoder.encode(password));
             }
 
-            toUpdate.setEmail(email);
-            toUpdate.setRole(roles);
             toUpdate.setFirstName(firstName);
             toUpdate.setLastName(lastName);
-            toUpdate.setEnabled(enabled);
-            toUpdate.setLocked(locked);
 
             AppUser ourUserResult = appUserRepository.save(toUpdate);
 
