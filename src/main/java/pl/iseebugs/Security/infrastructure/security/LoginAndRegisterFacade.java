@@ -193,7 +193,7 @@ class LoginAndRegisterFacade {
         return response;
     }
 
-    AuthReqRespDTO updateUser(String accessToken, AuthReqRespDTO updateRequest) throws BadTokenTypeException {
+    AuthReqRespDTO updateUser(String accessToken, AuthReqRespDTO updateRequest) throws Exception {
         if (jwtUtils.isRefreshToken(accessToken)) {
             log.info("Attempting to update user data with an invalid token type.");
             throw new BadTokenTypeException();

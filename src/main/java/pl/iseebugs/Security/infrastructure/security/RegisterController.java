@@ -55,7 +55,7 @@ class RegisterController {
 
     @PutMapping("/user/updateUser")
     ResponseEntity<AuthReqRespDTO> updateUser(@RequestHeader("Authorization") String authHeader,
-                                              @RequestBody AuthReqRespDTO updateRequest) throws BadTokenTypeException {
+                                              @RequestBody AuthReqRespDTO updateRequest) throws Exception {
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
         }
