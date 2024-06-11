@@ -3,7 +3,6 @@ package pl.iseebugs.Security.infrastructure.security;
 import lombok.AllArgsConstructor;
 import lombok.extern.java.Log;
 import org.springframework.security.authentication.*;
-import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -15,9 +14,7 @@ import pl.iseebugs.Security.infrastructure.security.projection.AuthReqRespDTO;
 import pl.iseebugs.Security.infrastructure.security.token.ConfirmationToken;
 import pl.iseebugs.Security.infrastructure.security.token.ConfirmationTokenService;
 
-import java.time.Clock;
 import java.time.LocalDateTime;
-import java.util.HashMap;
 import java.util.UUID;
 
 @AllArgsConstructor
@@ -84,41 +81,28 @@ class LoginAndRegisterFacade {
         return responseDTO;
     }
 
-    AuthReqRespDTO confirmToken(final String token) {
+    AuthReqRespDTO confirmToken(final String token) throws TokenNotFoundException, RegistrationTokenConflictException {
         ConfirmationToken confirmationToken;
-        AuthReqRespDTO response = new AuthReqRespDTO();
-
-        try {
-            confirmationToken = confirmationTokenService
-                    .getToken(token)
-                    .orElseThrow(() ->
-                            new BadCredentialsException("Token not found."));
-        } catch (BadCredentialsException e) {
-            response.setStatusCode(401);
-            response.setError(e.getClass().getSimpleName());
-            response.setMessage(e.getMessage());
-            return response;
-        }
+        confirmationToken = confirmationTokenService.getToken(token)
+                .orElseThrow(TokenNotFoundException::new);
 
         if (confirmationToken.getConfirmedAt() != null) {
-            response.setStatusCode(409);
-            response.setError("RegistrationTokenConflictException");
-            response.setMessage("Email already confirm.");
-            return response;
+            log.info("Confirmation token already confirmed.");
+            throw new RegistrationTokenConflictException();
         }
 
+        AuthReqRespDTO response = new AuthReqRespDTO();
         LocalDateTime expiredAt = confirmationToken.getExpiresAt();
 
         if (expiredAt.isBefore(LocalDateTime.now())) {
-            response.setStatusCode(403);
-            response.setError("CredentialsExpiredException");
-            response.setMessage("Token expired.");
-            return response;
+            log.info("Token already confirmed.");
+            throw new CredentialsExpiredException("Token expired.");
         }
 
         confirmationTokenService.setConfirmedAt(token);
         appUserRepository.enableAppUser(
                 confirmationToken.getAppUser().getEmail());
+
         response.setStatusCode(200);
         response.setMessage("User confirmed.");
         return response;

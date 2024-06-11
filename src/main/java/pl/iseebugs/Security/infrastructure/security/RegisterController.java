@@ -26,7 +26,7 @@ class RegisterController {
     }
 
     @GetMapping(path = "/confirm")
-    public ResponseEntity<AuthReqRespDTO> confirm(@RequestParam("token") String token) {
+    public ResponseEntity<AuthReqRespDTO> confirm(@RequestParam("token") String token) throws RegistrationTokenConflictException, TokenNotFoundException {
         return ResponseEntity.ok(loginAndRegisterFacade.confirmToken(token));
     }
 
@@ -86,6 +86,26 @@ class RegisterController {
     ResponseEntity<AuthReqRespDTO> handlerCredentialsExpiredException(CredentialsExpiredException e){
         AuthReqRespDTO response = new AuthReqRespDTO();
         response.setStatusCode(403);
+        response.setError(e.getClass().getSimpleName());
+        response.setMessage(e.getMessage());
+        return ResponseEntity.ok().body(response);
+    }
+
+    @ExceptionHandler(TokenNotFoundException.class)
+    ResponseEntity<AuthReqRespDTO> handlerTokenNotFoundException(TokenNotFoundException e){
+        AuthReqRespDTO response = new AuthReqRespDTO();
+        response.setStatusCode(401);
+        response.setError(e.getClass().getSimpleName());
+        response.setMessage(e.getMessage());
+        return ResponseEntity.ok().body(response);
+    }
+
+
+
+    @ExceptionHandler(RegistrationTokenConflictException.class)
+    ResponseEntity<AuthReqRespDTO> handlerRegistrationTokenConflictException(RegistrationTokenConflictException e){
+        AuthReqRespDTO response = new AuthReqRespDTO();
+        response.setStatusCode(409);
         response.setError(e.getClass().getSimpleName());
         response.setMessage(e.getMessage());
         return ResponseEntity.ok().body(response);

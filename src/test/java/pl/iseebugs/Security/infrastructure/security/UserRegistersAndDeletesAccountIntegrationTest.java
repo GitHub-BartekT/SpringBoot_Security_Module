@@ -108,7 +108,7 @@ class UserRegistersAndDeletesAccountIntegrationTest extends BaseIntegrationTest 
         AuthReqRespDTO badConfirmTokenResultDto = objectMapper.readValue(badConfirmTokenActionResultJson, AuthReqRespDTO.class);
         assertAll(
                 () -> assertThat(badConfirmTokenResultDto.getStatusCode()).isEqualTo(401),
-                () -> assertThat(badConfirmTokenResultDto.getError()).isEqualTo("BadCredentialsException"),
+                () -> assertThat(badConfirmTokenResultDto.getError()).isEqualTo("TokenNotFoundException"),
                 () -> assertThat(badConfirmTokenResultDto.getMessage()).isEqualTo("Token not found.")
         );
 

@@ -111,7 +111,7 @@ class LoginAndRegisterFacadeTest {
     }
 
     @Test
-    void confirmToken_should_returns_BadCredentialException_401() {
+    void confirmToken_should_returns_BadCredentialException_401() throws RegistrationTokenConflictException, TokenNotFoundException {
         //given
         var appUserRepository =mock(AppUserRepository.class);
         var passwordEncoder = mock(PasswordEncoder.class);
@@ -132,18 +132,17 @@ class LoginAndRegisterFacadeTest {
         );
         //when
         String token = "foo";
-        AuthReqRespDTO response = toTest.confirmToken(token);
+        Throwable e = catchThrowable(() -> toTest.confirmToken(token));
 
         //then
         assertAll(
-                () -> assertThat(response.getStatusCode()).isEqualTo(401),
-                () -> assertThat(response.getError()).isEqualTo("BadCredentialsException"),
-                () -> assertThat(response.getMessage()).isEqualTo("Token not found.")
+                () -> assertThat(e).isInstanceOf(TokenNotFoundException.class),
+                () -> assertThat(e.getMessage()).isEqualTo("Token not found.")
         );
     }
 
     @Test
-    void confirmToken_should_returns_Conflict_409() {
+    void confirmToken_should_throws_Conflict() throws RegistrationTokenConflictException, TokenNotFoundException {
         //given
         var appUserRepository =mock(AppUserRepository.class);
         var passwordEncoder = mock(PasswordEncoder.class);
@@ -168,18 +167,17 @@ class LoginAndRegisterFacadeTest {
         );
         //when
         String token = "foo";
-        AuthReqRespDTO response = toTest.confirmToken(token);
+        Throwable e = catchThrowable(() -> toTest.confirmToken(token));
 
         //then
         assertAll(
-                () -> assertThat(response.getStatusCode()).isEqualTo(409),
-                () -> assertThat(response.getError()).isEqualTo("RegistrationTokenConflictException"),
-                () -> assertThat(response.getMessage()).isEqualTo("Email already confirm.")
+                () -> assertThat(e).isInstanceOf(RegistrationTokenConflictException.class),
+                () -> assertThat(e.getMessage()).isEqualTo("Token already confirmed.")
         );
     }
 
     @Test
-    void confirmToken_should_returns_CredentialsExpiredException_403() {
+    void confirmToken_should_returns_CredentialsExpiredException() throws RegistrationTokenConflictException, TokenNotFoundException {
         //given
         var appUserRepository =mock(AppUserRepository.class);
         var passwordEncoder = mock(PasswordEncoder.class);
@@ -203,13 +201,12 @@ class LoginAndRegisterFacadeTest {
         );
         //when
         String token = "foo";
-        AuthReqRespDTO response = toTest.confirmToken(token);
+        Throwable e = catchThrowable(() -> toTest.confirmToken(token));
 
         //then
         assertAll(
-                () -> assertThat(response.getStatusCode()).isEqualTo(403),
-                () -> assertThat(response.getError()).isEqualTo("CredentialsExpiredException"),
-                () -> assertThat(response.getMessage()).isEqualTo("Token expired.")
+                () -> assertThat(e).isInstanceOf(CredentialsExpiredException.class),
+                () -> assertThat(e.getMessage()).isEqualTo("Token expired.")
         );
     }
 
@@ -256,6 +253,8 @@ class LoginAndRegisterFacadeTest {
                     () -> assertThat(response.getStatusCode()).isEqualTo(200),
                     () -> assertThat(response.getMessage()).isEqualTo("User confirmed.")
             );
+        } catch (RegistrationTokenConflictException | TokenNotFoundException e) {
+            throw new RuntimeException(e);
         }
     }
 
