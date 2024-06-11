@@ -193,55 +193,48 @@ class LoginAndRegisterFacade {
         return response;
     }
 
-    AuthReqRespDTO updateUser(String refreshToken, AuthReqRespDTO updateRequest) {
-        String ourEmail = jwtUtils.extractUsername(refreshToken);
-        AppUser user = appUserRepository.findByEmail(ourEmail).orElseThrow();
+    AuthReqRespDTO updateUser(String accessToken, AuthReqRespDTO updateRequest) throws Exception {
+        if (jwtUtils.isRefreshToken(accessToken)) {
+            log.info("Attempting to update user data with an invalid token type.");
+            throw new BadTokenTypeException();
+        }
+
+        String userEmail = jwtUtils.extractUsername(accessToken);
+        AppUser toUpdate = appUserRepository.findByEmail(userEmail)
+                .orElseThrow(() ->
+                        new UsernameNotFoundException("User extracted from token not found."));
+        UserDetails userToJWT = AppUserMapper.fromEntityToUserDetails(toUpdate);
+
+        if (!jwtUtils.isTokenValid(accessToken, userToJWT)) {
+            log.info("User with email: " + userEmail + " used an expired token.");
+            throw new CredentialsExpiredException("Token expired.");
+        }
 
         AuthReqRespDTO responseDTO = new AuthReqRespDTO();
 
-        try {
-            String firstName = updateRequest.getFirstName();
-            String lastName = updateRequest.getLastName();
-            String email = updateRequest.getEmail();
-            String password = passwordEncoder.encode(updateRequest.getPassword());
-            String roles = user.getRole();
-            Boolean locked = user.getLocked();
-            Boolean enabled = user.getEnabled();
+        String firstName = updateRequest.getFirstName();
+        String lastName = updateRequest.getLastName();
+        String password = passwordEncoder.encode(updateRequest.getPassword());
 
-
-            if (appUserRepository.findByEmail(email).isEmpty()) {
-               email = updateRequest.getEmail();
-            } else {
-                email = ourEmail;
-            }
-
-            AppUser toUpdate = appUserRepository.findByEmail(ourEmail).orElseThrow();
-
-            if (password != null && !password.trim().isEmpty()) {
-                toUpdate.setPassword(passwordEncoder.encode(password));
-            }
-
-            toUpdate.setEmail(email);
-            toUpdate.setRole(roles);
-            toUpdate.setFirstName(firstName);
-            toUpdate.setLastName(lastName);
-            toUpdate.setEnabled(enabled);
-            toUpdate.setLocked(locked);
-
-            AppUser ourUserResult = appUserRepository.save(toUpdate);
-
-            if (ourUserResult.getId() != null){
-                responseDTO.setMessage("User update successfully");
-                responseDTO.setStatusCode(200);
-            }
-        } catch (Exception e){
-            responseDTO.setStatusCode(500);
-            responseDTO.setError(e.getMessage());
+        if (password != null && !password.trim().isEmpty()) {
+            toUpdate.setPassword(passwordEncoder.encode(password));
         }
+
+        toUpdate.setFirstName(firstName);
+        toUpdate.setLastName(lastName);
+        AppUser ourUserResult = appUserRepository.save(toUpdate);
+
+        if (ourUserResult.getId() != null){
+            responseDTO.setMessage("User update successfully");
+            responseDTO.setStatusCode(200);
+            responseDTO.setFirstName(ourUserResult.getFirstName());
+            responseDTO.setLastName(ourUserResult.getLastName());
+        }
+
         return responseDTO;
     }
 
-    AuthReqRespDTO deleteUser(String accessToken) throws BadTokenTypeException {
+    AuthReqRespDTO deleteUser(String accessToken) throws Exception {
         AuthReqRespDTO response = new AuthReqRespDTO();
 
         String userEmail = jwtUtils.extractUsername(accessToken);
