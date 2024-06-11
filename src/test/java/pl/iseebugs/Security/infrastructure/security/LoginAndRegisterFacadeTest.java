@@ -425,11 +425,6 @@ class LoginAndRegisterFacadeTest {
     }
 
     @Test
-    void refreshToken_should_returns_CredentialsExpiredException_403(){
-
-    }
-
-    @Test
     void refreshToken_should_returns_BadTokenTypeException_403(){
         //given
         var appUserRepository =mock(AppUserRepository.class);
@@ -471,6 +466,54 @@ class LoginAndRegisterFacadeTest {
         assertAll(
                 () -> assertThat(e.getClass().getSimpleName()).isEqualTo("BadTokenTypeException"),
                 () -> assertThat(e.getMessage()).isEqualTo("Invalid Token type.")
+        );
+    }
+
+    @Test
+    void refreshToken_should_returns_CredentialsExpiredException_403(){
+        //given
+        var appUserRepository =mock(AppUserRepository.class);
+        var passwordEncoder = mock(PasswordEncoder.class);
+        var jwtUtils = mock(JWTUtils.class);
+        var authenticationManager = mock(AuthenticationManager.class);
+        var confirmationTokenService = mock(ConfirmationTokenService.class);
+        var emailSender = mock(EmailSender.class);
+
+        when(jwtUtils.extractUsername(anyString())).thenReturn("foo-email");
+
+        AppUser user = new AppUser();
+        user.setFirstName("Foo");
+        user.setLastName("Bar");
+        user.setEmail("test@foo.com");
+        user.setPassword("foobar");
+        user.setRole("USER");
+        user.setEnabled(true);
+
+        when(appUserRepository.findByEmail(anyString()))
+                .thenReturn(Optional.of(user));
+
+        when(jwtUtils.isRefreshToken(anyString())).thenReturn(true);
+        when(jwtUtils.isTokenValid(anyString(), any(UserDetails.class))).thenReturn(false);
+
+
+        //system under test
+        var toTest = new LoginAndRegisterFacade(
+                appUserRepository,
+                passwordEncoder,
+                jwtUtils,
+                authenticationManager,
+                confirmationTokenService,
+                emailSender
+        );
+
+        //when
+        String request = "foobar";
+        Throwable e = catchThrowable(() -> toTest.refreshToken(request));
+
+        //then
+        assertAll(
+                () -> assertThat(e.getClass().getSimpleName()).isEqualTo("CredentialsExpiredException"),
+                () -> assertThat(e.getMessage()).isEqualTo("Token expired.")
         );
     }
 

@@ -3,6 +3,7 @@ package pl.iseebugs.Security.infrastructure.security;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.CredentialsExpiredException;
 import org.springframework.web.bind.annotation.*;
 import pl.iseebugs.Security.domain.user.AppUser;
 import pl.iseebugs.Security.domain.user.AppUserNotFoundException;
@@ -36,7 +37,7 @@ class RegisterController {
     }
 
     @PostMapping("/refresh")
-    public ResponseEntity<AuthReqRespDTO> refreshToken(@RequestHeader("Authorization") String authHeader) throws BadTokenTypeException {
+    public ResponseEntity<AuthReqRespDTO> refreshToken(@RequestHeader("Authorization") String authHeader) throws Exception {
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
         }
@@ -67,6 +68,15 @@ class RegisterController {
     ResponseEntity<AuthReqRespDTO> handlerBadTokenTypeException(BadTokenTypeException e){
         AuthReqRespDTO response = new AuthReqRespDTO();
         response.setStatusCode(401);
+        response.setError(e.getClass().getSimpleName());
+        response.setMessage(e.getMessage());
+        return ResponseEntity.ok().body(response);
+    }
+
+    @ExceptionHandler(CredentialsExpiredException.class)
+    ResponseEntity<AuthReqRespDTO> handlerCredentialsExpiredException(CredentialsExpiredException e){
+        AuthReqRespDTO response = new AuthReqRespDTO();
+        response.setStatusCode(403);
         response.setError(e.getClass().getSimpleName());
         response.setMessage(e.getMessage());
         return ResponseEntity.ok().body(response);
