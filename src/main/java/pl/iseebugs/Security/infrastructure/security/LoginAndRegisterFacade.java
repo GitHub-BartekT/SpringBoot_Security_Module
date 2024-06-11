@@ -193,7 +193,12 @@ class LoginAndRegisterFacade {
         return response;
     }
 
-    AuthReqRespDTO updateUser(String accessToken, AuthReqRespDTO updateRequest) {
+    AuthReqRespDTO updateUser(String accessToken, AuthReqRespDTO updateRequest) throws BadTokenTypeException {
+        if (jwtUtils.isRefreshToken(accessToken)) {
+            log.info("Attempting to update user data with an invalid token type.");
+            throw new BadTokenTypeException();
+        }
+
         String userEmail = jwtUtils.extractUsername(accessToken);
         AppUser toUpdate = appUserRepository.findByEmail(userEmail)
                 .orElseThrow(() -> new UsernameNotFoundException("User extracted from token not found."));
