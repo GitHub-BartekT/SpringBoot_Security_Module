@@ -708,6 +708,51 @@ class LoginAndRegisterFacadeTest {
     }
 
     @Test
-    void deleteUser_should_returns_accessToken_and_204(){
+    void deleteUser_should_returns_accessToken_and_204() throws BadTokenTypeException {
+        //given
+        var appUserRepository =mock(AppUserRepository.class);
+        var passwordEncoder = mock(PasswordEncoder.class);
+        var jwtUtils = mock(JWTUtils.class);
+        var authenticationManager = mock(AuthenticationManager.class);
+        var confirmationTokenService = mock(ConfirmationTokenService.class);
+        var emailSender = mock(EmailSender.class);
+
+        when(jwtUtils.extractUsername(anyString())).thenReturn("foo-email");
+
+        AppUser user = new AppUser();
+        user.setFirstName("Foo");
+        user.setLastName("Bar");
+        user.setEmail("test@foo.com");
+        user.setPassword("foobar");
+        user.setRole("USER");
+        user.setEnabled(true);
+
+        when(appUserRepository.findByEmail(anyString()))
+                .thenReturn(Optional.of(user));
+        doNothing().when(appUserRepository).deleteByEmail(anyString());
+        doNothing().when(confirmationTokenService).deleteConfirmationToken(any(AppUser.class));
+
+        when(jwtUtils.isRefreshToken(anyString())).thenReturn(false);
+        when(jwtUtils.isTokenValid(anyString(), any(UserDetails.class))).thenReturn(true);
+
+        //system under test
+        var toTest = new LoginAndRegisterFacade(
+                appUserRepository,
+                passwordEncoder,
+                jwtUtils,
+                authenticationManager,
+                confirmationTokenService,
+                emailSender
+        );
+
+        //when
+        String request = "foobar";
+        AuthReqRespDTO response = toTest.deleteUser(request);
+
+        //then
+        assertAll(
+                () -> assertThat(response.getStatusCode()).isEqualTo(204),
+                () -> assertThat(response.getMessage()).isEqualTo("Successfully deleted user")
+        );
     }
 }
