@@ -167,19 +167,18 @@ class LoginAndRegisterFacade {
 
     AuthReqRespDTO refreshToken(String refreshToken) throws Exception {
         AuthReqRespDTO response = new AuthReqRespDTO();
-        String ourEmail = jwtUtils.extractUsername(refreshToken);
-        AppUser user = appUserRepository.findByEmail(ourEmail)
+        String userEmail = jwtUtils.extractUsername(refreshToken);
+        AppUser user = appUserRepository.findByEmail(userEmail)
                 .orElseThrow(() -> new UsernameNotFoundException("User extracted from token not found."));
         UserDetails userToJWT = AppUserMapper.fromEntityToUserDetails(user);
 
-
         if (!jwtUtils.isRefreshToken(refreshToken)) {
-            log.info("User with email: " + ourEmail + " used a token with invalid type.");
+            log.info("User with email: " + userEmail + " used a token with invalid type.");
             throw new BadTokenTypeException();
         }
 
         if (!jwtUtils.isTokenValid(refreshToken, userToJWT)) {
-            log.info("User with email: " + ourEmail + " used a expired token.");
+            log.info("User with email: " + userEmail + " used an expired token.");
             throw new CredentialsExpiredException("Token expired.");
         }
 
@@ -190,7 +189,7 @@ class LoginAndRegisterFacade {
         response.setExpirationTime("60 min");
         response.setMessage("Successfully Refreshed Token");
 
-        log.info("User with email: " + ourEmail + " refreshed access token.");
+        log.info("User with email: " + userEmail + " refreshed access token.");
         return response;
     }
 
@@ -242,11 +241,24 @@ class LoginAndRegisterFacade {
         return responseDTO;
     }
 
-    AuthReqRespDTO deleteUser(String accessToken) {
+    AuthReqRespDTO deleteUser(String accessToken) throws BadTokenTypeException {
         AuthReqRespDTO response = new AuthReqRespDTO();
 
         String userEmail = jwtUtils.extractUsername(accessToken);
-        AppUser user = appUserRepository.findByEmail(userEmail).orElseThrow();
+        AppUser user = appUserRepository.findByEmail(userEmail)
+                .orElseThrow(() -> new UsernameNotFoundException("User extracted from token not found."));
+        UserDetails userToJWT = AppUserMapper.fromEntityToUserDetails(user);
+
+        if (jwtUtils.isRefreshToken(accessToken)) {
+            log.info("User with email: " + userEmail + " used a token with invalid type.");
+            throw new BadTokenTypeException();
+        }
+
+        if (!jwtUtils.isTokenValid(accessToken, userToJWT)) {
+            log.info("User with email: " + userEmail + " used an expired token.");
+            throw new CredentialsExpiredException("Token expired.");
+        }
+
         confirmationTokenService.deleteConfirmationToken(user);
         appUserRepository.deleteByEmail(userEmail);
         response.setStatusCode(204);
