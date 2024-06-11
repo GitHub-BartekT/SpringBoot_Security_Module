@@ -183,7 +183,7 @@ class UserRegistersAndDeletesAccountIntegrationTest extends BaseIntegrationTest 
         //then
         assertAll(
                 () -> assertThat(badRefreshResultDto.getStatusCode()).isEqualTo(401),
-                () -> assertThat(badRefreshResultDto.getMessage()).isEqualTo("Invalid Token")
+                () -> assertThat(badRefreshResultDto.getMessage()).isEqualTo("Invalid Token type.")
         );
 
 

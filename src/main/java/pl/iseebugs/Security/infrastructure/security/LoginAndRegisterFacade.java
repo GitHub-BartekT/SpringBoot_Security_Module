@@ -168,15 +168,20 @@ class LoginAndRegisterFacade {
         return response;
     }
 
-    AuthReqRespDTO refreshToken(String refreshToken) throws UsernameNotFoundException{
+    AuthReqRespDTO refreshToken(String refreshToken) throws UsernameNotFoundException, BadTokenTypeException {
         AuthReqRespDTO response = new AuthReqRespDTO();
         String ourEmail = jwtUtils.extractUsername(refreshToken);
         AppUser user = appUserRepository.findByEmail(ourEmail)
                 .orElseThrow(() -> new UsernameNotFoundException("User extracted from token not found."));
         UserDetails userToJWT = AppUserMapper.fromEntityToUserDetails(user);
 
-        if (jwtUtils.isTokenValid(refreshToken, userToJWT)
-                && jwtUtils.isRefreshToken(refreshToken)){
+
+        if (!jwtUtils.isRefreshToken(refreshToken)) {
+            log.info("User with email: " + ourEmail + " used a token with invalid type.");
+            throw new BadTokenTypeException();
+        }
+
+        if (jwtUtils.isTokenValid(refreshToken, userToJWT)){
             var jwt = jwtUtils.generateAccessToken(userToJWT);
             response.setStatusCode(200);
             response.setToken(jwt);

@@ -36,7 +36,7 @@ class RegisterController {
     }
 
     @PostMapping("/refresh")
-    public ResponseEntity<AuthReqRespDTO> refreshToken(@RequestHeader("Authorization") String authHeader){
+    public ResponseEntity<AuthReqRespDTO> refreshToken(@RequestHeader("Authorization") String authHeader) throws BadTokenTypeException {
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
         }
@@ -61,5 +61,14 @@ class RegisterController {
         }
         String refreshToken = authHeader.substring(7);
         return ResponseEntity.ok(loginAndRegisterFacade.updateUser(refreshToken, updateRequest));
+    }
+
+    @ExceptionHandler(BadTokenTypeException.class)
+    ResponseEntity<AuthReqRespDTO> handlerBadTokenTypeException(BadTokenTypeException e){
+        AuthReqRespDTO response = new AuthReqRespDTO();
+        response.setStatusCode(401);
+        response.setError(e.getClass().getSimpleName());
+        response.setMessage(e.getMessage());
+        return ResponseEntity.ok().body(response);
     }
 }
