@@ -3,6 +3,7 @@ package pl.iseebugs.Security.infrastructure.security;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.CredentialsExpiredException;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.annotation.*;
@@ -109,12 +110,19 @@ class RegisterController {
         return ResponseEntity.ok().body(response);
     }
 
-
-
     @ExceptionHandler(EmailConflictException.class)
     ResponseEntity<AuthReqRespDTO> handlerEmailConflictException(EmailConflictException e){
         AuthReqRespDTO response = new AuthReqRespDTO();
         response.setStatusCode(409);
+        response.setError(e.getClass().getSimpleName());
+        response.setMessage(e.getMessage());
+        return ResponseEntity.ok().body(response);
+    }
+
+    @ExceptionHandler(BadCredentialsException.class)
+    ResponseEntity<AuthReqRespDTO> handlerBadCredentialsException(BadCredentialsException e){
+        AuthReqRespDTO response = new AuthReqRespDTO();
+        response.setStatusCode(403);
         response.setError(e.getClass().getSimpleName());
         response.setMessage(e.getMessage());
         return ResponseEntity.ok().body(response);

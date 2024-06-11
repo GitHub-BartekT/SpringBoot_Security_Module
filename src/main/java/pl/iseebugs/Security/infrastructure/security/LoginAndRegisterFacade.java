@@ -111,28 +111,13 @@ class LoginAndRegisterFacade {
                     new UsernamePasswordAuthenticationToken(
                             signingRequest.getEmail(),
                             signingRequest.getPassword()));
-            var user = appUserRepository.findByEmail(signingRequest
-                            .getEmail())
-                    .orElseThrow(() -> new UsernameNotFoundException("User not found after authentication."));
-
-            UserDetails userToJWT = AppUserMapper.fromEntityToUserDetails(user);
-            var jwt = jwtUtils.generateAccessToken(userToJWT);
-            var refreshToken = jwtUtils.generateRefreshToken(userToJWT);
-            response.setStatusCode(200);
-            response.setToken(jwt);
-            response.setRefreshToken(refreshToken);
-            response.setExpirationTime("24Hr");
-            response.setMessage("Successfully singed in");
-        } catch (BadCredentialsException e) {
-            response.setStatusCode(401);
-            log.info(e.getClass().getSimpleName() + ": " + e.getMessage());
-            response.setError("BadCredentialsException");
         } catch (UsernameNotFoundException e) {
-            response.setStatusCode(404);
             log.info(e.getClass().getSimpleName() + ": " + e.getMessage());
-            response.setError(e.getClass().getSimpleName());
-            response.setMessage(e.getMessage());
-        } catch (InternalAuthenticationServiceException e) {
+            throw new UsernameNotFoundException("User not found.");
+        } catch (BadCredentialsException e) {
+            log.info(e.getClass().getSimpleName() + ": " + e.getMessage());
+            throw new BadCredentialsException("Bad credentials.");
+        }  catch (InternalAuthenticationServiceException e) {
             response.setStatusCode(500);
             log.info(e.getClass().getSimpleName() + ": " + e.getMessage());
             response.setError("Internal authentication service error.");
@@ -141,6 +126,19 @@ class LoginAndRegisterFacade {
             log.info(e.getClass().getSimpleName() + ": " + e.getMessage());
             response.setError("An unexpected error occurred.");
         }
+
+        var user = appUserRepository.findByEmail(signingRequest
+                        .getEmail())
+                .orElseThrow(() -> new UsernameNotFoundException("User not found after authentication."));
+
+        UserDetails userToJWT = AppUserMapper.fromEntityToUserDetails(user);
+        var jwt = jwtUtils.generateAccessToken(userToJWT);
+        var refreshToken = jwtUtils.generateRefreshToken(userToJWT);
+        response.setStatusCode(200);
+        response.setToken(jwt);
+        response.setRefreshToken(refreshToken);
+        response.setExpirationTime("24Hr");
+        response.setMessage("Successfully singed in");
         return response;
     }
 

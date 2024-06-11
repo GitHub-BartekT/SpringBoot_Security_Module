@@ -109,7 +109,7 @@ class LoginAndRegisterFacadeTest {
     }
 
     @Test
-    void confirmToken_should_returns_BadCredentialException_401() throws RegistrationTokenConflictException, TokenNotFoundException {
+    void confirmToken_should_throws_TokenNotFoundException(){
         //given
         var appUserRepository =mock(AppUserRepository.class);
         var passwordEncoder = mock(PasswordEncoder.class);
@@ -140,7 +140,7 @@ class LoginAndRegisterFacadeTest {
     }
 
     @Test
-    void confirmToken_should_throws_Conflict() throws RegistrationTokenConflictException, TokenNotFoundException {
+    void confirmToken_should_throws_RegistrationTokenConflictException(){
         //given
         var appUserRepository =mock(AppUserRepository.class);
         var passwordEncoder = mock(PasswordEncoder.class);
@@ -175,7 +175,7 @@ class LoginAndRegisterFacadeTest {
     }
 
     @Test
-    void confirmToken_should_returns_CredentialsExpiredException() throws RegistrationTokenConflictException, TokenNotFoundException {
+    void confirmToken_should_throws_CredentialsExpiredException(){
         //given
         var appUserRepository =mock(AppUserRepository.class);
         var passwordEncoder = mock(PasswordEncoder.class);
@@ -257,7 +257,7 @@ class LoginAndRegisterFacadeTest {
     }
 
     @Test
-    void signIn_should_returns_BadCredentialsException_401() {
+    void signIn_should_throws_BadCredentialsException() {
         //given
         var appUserRepository =mock(AppUserRepository.class);
         var passwordEncoder = mock(PasswordEncoder.class);
@@ -267,7 +267,7 @@ class LoginAndRegisterFacadeTest {
         var emailSender = mock(EmailSender.class);
 
         when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class)))
-                .thenThrow(new BadCredentialsException("Bad credentials"));
+                .thenThrow(new BadCredentialsException("Bad credentials."));
 
         //system under test
         var toTest = new LoginAndRegisterFacade(
@@ -286,17 +286,17 @@ class LoginAndRegisterFacadeTest {
         request.setEmail("test@foo.com");
         request.setPassword("foobar");
 
-        AuthReqRespDTO response = toTest.signIn(request);
+        Throwable e = catchThrowable(() -> toTest.signIn(request));
 
         //then
         assertAll(
-                () -> assertThat(response.getStatusCode()).isEqualTo(401),
-                () -> assertThat(response.getError()).isEqualTo("BadCredentialsException")
+                () -> assertThat(e).isInstanceOf(BadCredentialsException.class),
+                () -> assertThat(e.getMessage()).isEqualTo("Bad credentials.")
         );
     }
 
     @Test
-    void signIn_should_returns_UsernameNotFoundException_404_when_user_not_found_after_authentication() {
+    void signIn_should_returns_UsernameNotFoundException() {
         //given
         var appUserRepository =mock(AppUserRepository.class);
         var passwordEncoder = mock(PasswordEncoder.class);
@@ -305,6 +305,9 @@ class LoginAndRegisterFacadeTest {
         var confirmationTokenService = mock(ConfirmationTokenService.class);
         var emailSender = mock(EmailSender.class);
 
+        when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class)))
+                .thenThrow(new UsernameNotFoundException("User not found."));
+
         //system under test
         var toTest = new LoginAndRegisterFacade(
                 appUserRepository,
@@ -322,13 +325,12 @@ class LoginAndRegisterFacadeTest {
         request.setEmail("test@foo.com");
         request.setPassword("foobar");
 
-        AuthReqRespDTO response = toTest.signIn(request);
+        Throwable e = catchThrowable(() -> toTest.signIn(request));
 
         //then
         assertAll(
-                () -> assertThat(response.getStatusCode()).isEqualTo(404),
-                () -> assertThat(response.getError()).isEqualTo("UsernameNotFoundException"),
-                () -> assertThat(response.getMessage()).isEqualTo("User not found after authentication.")
+                () -> assertThat(e).isInstanceOf(UsernameNotFoundException.class),
+                () -> assertThat(e.getMessage()).isEqualTo("User not found.")
         );
     }
 
