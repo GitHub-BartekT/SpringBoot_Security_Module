@@ -9,7 +9,7 @@ email:
       welcome-text: "Welcome to ISeeBugs, ${name}!"
       text1: "Please activate your account using the link below."
       text2: "We are excited to have you."
-    activation-token-expired:
+    token-expired:
       subject: "Activation Token Expired"
       template: "authorization-email"
       welcome-text: "Maybe this time, ${name}!"

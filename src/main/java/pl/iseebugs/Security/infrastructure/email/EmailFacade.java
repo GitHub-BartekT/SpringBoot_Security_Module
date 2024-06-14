@@ -5,7 +5,6 @@ import jakarta.mail.internet.MimeMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.scheduling.annotation.Async;
@@ -13,10 +12,6 @@ import org.springframework.stereotype.Service;
 import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.Context;
 import pl.iseebugs.Security.infrastructure.security.projection.AuthReqRespDTO;
-
-import java.util.HashMap;
-import java.util.Locale;
-import java.util.Map;
 
 @Service
 public class EmailFacade implements EmailSender{
@@ -35,13 +30,9 @@ public class EmailFacade implements EmailSender{
         this.emailProperties = emailProperties;
     }
 
-    public void sendActivationEmail(AuthReqRespDTO userData, String link) throws InvalidEmailTypeException {
-        generateMailWithLinkHtml("activation", userData,  link);
-    }
-
-    private void generateMailWithLinkHtml(String type, AuthReqRespDTO userData, String link) throws InvalidEmailTypeException {
+    public void sendTemplateEmail(EmailType type, AuthReqRespDTO userData, String link) throws InvalidEmailTypeException {
         EmailProperties.EmailTemplate template =
-                emailProperties.getTemplates().get(type);
+                emailProperties.getTemplates().get(type.toString());
 
         if (template == null){
             throw new InvalidEmailTypeException("Invalid email type: " + type);

@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 import pl.iseebugs.Security.domain.user.AppUser;
 import pl.iseebugs.Security.domain.user.AppUserRepository;
 import pl.iseebugs.Security.infrastructure.email.EmailFacade;
+import pl.iseebugs.Security.infrastructure.email.EmailType;
 import pl.iseebugs.Security.infrastructure.email.InvalidEmailTypeException;
 import pl.iseebugs.Security.infrastructure.security.projection.AuthReqRespDTO;
 import pl.iseebugs.Security.infrastructure.security.token.ConfirmationToken;
@@ -71,8 +72,8 @@ class LoginAndRegisterFacade {
 
             String link = "http://localhost:8080/api/auth/confirm?token=" + token;
 
-
-            emailFacade.sendActivationEmail(
+            emailFacade.sendTemplateEmail(
+                    EmailType.ACTIVATION,
                     registrationRequest,
                     link);
         }
