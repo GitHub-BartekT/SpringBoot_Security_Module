@@ -7,6 +7,7 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.CredentialsExpiredException;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.annotation.*;
+import pl.iseebugs.Security.infrastructure.email.InvalidEmailTypeException;
 import pl.iseebugs.Security.infrastructure.security.projection.AuthReqRespDTO;
 
 @AllArgsConstructor
@@ -22,7 +23,7 @@ class RegisterController {
     }
 
     @PostMapping("/signup")
-    public ResponseEntity<AuthReqRespDTO> signUp(@RequestBody AuthReqRespDTO signUpRequest) throws EmailConflictException {
+    public ResponseEntity<AuthReqRespDTO> signUp(@RequestBody AuthReqRespDTO signUpRequest) throws EmailConflictException, InvalidEmailTypeException {
         return  ResponseEntity.ok(loginAndRegisterFacade.signUp(signUpRequest));
     }
 

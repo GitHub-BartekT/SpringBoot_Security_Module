@@ -24,7 +24,6 @@ class AuthExceptionalHandler {
         return ResponseEntity.ok().body(response);
     }
 
-
     @ExceptionHandler(BadTokenTypeException.class)
     ResponseEntity<AuthReqRespDTO> handlerBadTokenTypeException(BadTokenTypeException e){
         AuthReqRespDTO response = new AuthReqRespDTO();

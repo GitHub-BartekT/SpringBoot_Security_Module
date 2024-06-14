@@ -3,6 +3,7 @@ package pl.iseebugs.Security.infrastructure;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import pl.iseebugs.Security.infrastructure.email.InvalidEmailTypeException;
 import pl.iseebugs.Security.infrastructure.security.EmailConflictException;
 import pl.iseebugs.Security.infrastructure.security.projection.AuthReqRespDTO;
 
@@ -13,6 +14,15 @@ class GlobalExceptionalHandler {
     ResponseEntity<AuthReqRespDTO> handlerEmailConflictException(EmailConflictException e){
         AuthReqRespDTO response = new AuthReqRespDTO();
         response.setStatusCode(409);
+        response.setError(e.getClass().getSimpleName());
+        response.setMessage(e.getMessage());
+        return ResponseEntity.ok().body(response);
+    }
+
+    @ExceptionHandler(InvalidEmailTypeException.class)
+    ResponseEntity<AuthReqRespDTO> handlerInvalidEmailTypeException(InvalidEmailTypeException e){
+        AuthReqRespDTO response = new AuthReqRespDTO();
+        response.setStatusCode(500);
         response.setError(e.getClass().getSimpleName());
         response.setMessage(e.getMessage());
         return ResponseEntity.ok().body(response);

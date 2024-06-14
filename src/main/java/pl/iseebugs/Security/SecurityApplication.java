@@ -3,8 +3,11 @@ package pl.iseebugs.Security;
 import io.github.cdimascio.dotenv.Dotenv;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import pl.iseebugs.Security.infrastructure.email.EmailProperties;
 
 @SpringBootApplication
+@EnableConfigurationProperties(EmailProperties.class)
 public class SecurityApplication {
 
 	public static void main(String[] args) {
