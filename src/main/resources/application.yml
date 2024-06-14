@@ -19,6 +19,8 @@ spring:
     show-sql: false
 
   mail:
+    mailer: "no-reply@iseebugs.pl"
+
     host: localhost
     port: 1025
     username: hello

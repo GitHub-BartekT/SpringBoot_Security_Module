@@ -78,7 +78,7 @@ class LoginAndRegisterFacadeTest {
         var emailSender = mock(EmailSender.class);
         when(passwordEncoder.encode(anyString())).then(returnsFirstArg());
         doNothing().when(confirmationTokenService).saveConfirmationToken(any(ConfirmationToken.class));
-        doNothing().when(emailSender).send(anyString(),anyString());
+        doNothing().when(emailSender).send(anyString(), anyString(), anyString());
         //system under test
         var toTest = new LoginAndRegisterFacade(
                 inMemoryAppUserRepository,

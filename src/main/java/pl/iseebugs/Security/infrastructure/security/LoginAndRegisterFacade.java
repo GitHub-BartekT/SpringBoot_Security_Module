@@ -71,6 +71,7 @@ class LoginAndRegisterFacade {
             String link = "http://localhost:8080/api/auth/confirm?token=" + token;
             emailSender.send(
                     registrationRequest.getEmail(),
+                    "Confirm your email",
                     buildEmail(registrationRequest.getFirstName(), link));
         }
         return responseDTO;
