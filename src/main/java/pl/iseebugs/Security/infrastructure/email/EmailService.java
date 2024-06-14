@@ -1,4 +1,4 @@
-package pl.iseebugs.Security.infrastructure.security.email;
+package pl.iseebugs.Security.infrastructure.email;
 
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;

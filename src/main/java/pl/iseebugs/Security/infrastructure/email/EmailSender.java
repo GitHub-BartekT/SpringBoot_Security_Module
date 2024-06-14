@@ -1,4 +1,4 @@
-package pl.iseebugs.Security.infrastructure.security.email;
+package pl.iseebugs.Security.infrastructure.email;
 
 public interface EmailSender {
     void send(String to, String email);

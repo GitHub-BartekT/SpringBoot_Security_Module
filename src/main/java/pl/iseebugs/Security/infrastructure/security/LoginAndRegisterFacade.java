@@ -9,7 +9,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import pl.iseebugs.Security.domain.user.AppUser;
 import pl.iseebugs.Security.domain.user.AppUserRepository;
-import pl.iseebugs.Security.infrastructure.security.email.EmailSender;
+import pl.iseebugs.Security.infrastructure.email.EmailSender;
 import pl.iseebugs.Security.infrastructure.security.projection.AuthReqRespDTO;
 import pl.iseebugs.Security.infrastructure.security.token.ConfirmationToken;
 import pl.iseebugs.Security.infrastructure.security.token.ConfirmationTokenService;
