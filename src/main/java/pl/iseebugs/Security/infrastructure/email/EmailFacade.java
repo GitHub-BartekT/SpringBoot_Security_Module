@@ -4,6 +4,7 @@ import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
@@ -23,20 +24,36 @@ public class EmailFacade implements EmailSender{
     private final static Logger LOGGER = LoggerFactory
             .getLogger(EmailFacade.class);
 
-    @Value("${spring.mail.mailer}")
-    private String mailer;
     private final JavaMailSender mailSender;
     private final TemplateEngine templateEngine;
+    private final EmailProperties emailProperties;
 
-
-    public EmailFacade(final JavaMailSender mailSender, final TemplateEngine templateEngine) {
+    @Autowired
+    public EmailFacade(final JavaMailSender mailSender, final TemplateEngine templateEngine, final EmailProperties emailProperties) {
         this.mailSender = mailSender;
         this.templateEngine = templateEngine;
+        this.emailProperties = emailProperties;
     }
 
     public void sendActivationEmail(AuthReqRespDTO userData, String link) {
-        String mail = generateMailHtml(userData.getFirstName(), "activationEmail", link);
-        send(userData.getEmail(), "Confirm your email.", mail);
+        generateMailWithLinkHtml("activation", userData,  link);
+    }
+
+    private void generateMailWithLinkHtml(String type, AuthReqRespDTO userData, String link)
+    {
+        EmailProperties.EmailTemplate template =
+                emailProperties.getTemplates().get(type);
+
+        Context context = new Context();
+        String welcomeText = template.getWelcomeText().replace("${name}", userData.getFirstName());
+        context.setVariable("welcomeText", welcomeText);
+        context.setVariable("text1", template.getText1());
+        context.setVariable("link", link);
+        context.setVariable("text2", template.getText2());
+
+        String email = this.templateEngine.process(template.getTemplate(), context);
+
+        send(userData.getEmail(), template.getSubject(), email);
     }
 
     @Override
@@ -46,23 +63,14 @@ public class EmailFacade implements EmailSender{
             MimeMessage mimeMessage = mailSender.createMimeMessage();
             MimeMessageHelper helper =
                     new MimeMessageHelper(mimeMessage, "utf-8");
-            helper.setText(email, true);
+            helper.setFrom(emailProperties.getSender().getEmail());
             helper.setTo(to);
             helper.setSubject(subject);
-            helper.setFrom(mailer);
+            helper.setText(email, true);
             mailSender.send(mimeMessage);
         } catch (MessagingException e){
             LOGGER.error("Failed to send email.", e);
             throw new IllegalStateException("Failed to send email");
         }
-    }
-
-    private String generateMailHtml(String username, String template, String link)
-    {
-        Map<String, Object> variables = new HashMap<>();
-        variables.put("name", username);
-        variables.put("link", link);
-        String output = this.templateEngine.process(template, new Context(Locale.getDefault(), variables));
-        return output;
     }
 }

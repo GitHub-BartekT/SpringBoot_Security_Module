@@ -1,0 +1,36 @@
+email:
+  sender:
+    name: "ISeeBugs"
+    email: "no-reply@iseebugs.plm"
+  templates:
+    activation:
+      subject: "Activate Your Account"
+      template: "authorization-email"
+      welcome-text: "Welcome to ISeeBugs, ${name}!"
+      text1: "Please activate your account using the link below."
+      text2: "We are excited to have you."
+    expired:
+      subject: "Activation Token Expired"
+      template: "authorization-email"
+      welcome-text:
+      text1:
+      text2:
+    activation-successfully:
+      subject: "Account activated successfully!"
+      template: "success-email"
+      welcome-text:
+      text1:
+      text2:
+    reset-password:
+      subject: "Reset Your Password"
+      template: "authorization-email"
+      welcome-text:
+      text1:
+      text2:
+    delete-account:
+      subject: "Account deleted"
+      template: "success-email"
+      welcome-text:
+      text1:
+      text2:
+
