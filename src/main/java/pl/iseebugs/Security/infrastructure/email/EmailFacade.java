@@ -9,6 +9,13 @@ import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
+import org.thymeleaf.TemplateEngine;
+import org.thymeleaf.context.Context;
+import pl.iseebugs.Security.infrastructure.security.projection.AuthReqRespDTO;
+
+import java.util.HashMap;
+import java.util.Locale;
+import java.util.Map;
 
 @Service
 public class EmailFacade implements EmailSender{
@@ -19,9 +26,17 @@ public class EmailFacade implements EmailSender{
     @Value("${spring.mail.mailer}")
     private String mailer;
     private final JavaMailSender mailSender;
+    private final TemplateEngine templateEngine;
 
-    public EmailFacade(final JavaMailSender mailSender) {
+
+    public EmailFacade(final JavaMailSender mailSender, final TemplateEngine templateEngine) {
         this.mailSender = mailSender;
+        this.templateEngine = templateEngine;
+    }
+
+    public void sendActivationEmail(AuthReqRespDTO userData, String link) {
+        String mail = generateMailHtml(userData.getFirstName(), "activationEmail", link);
+        send(userData.getEmail(), "Confirm your email.", mail);
     }
 
     @Override
@@ -40,6 +55,14 @@ public class EmailFacade implements EmailSender{
             LOGGER.error("Failed to send email.", e);
             throw new IllegalStateException("Failed to send email");
         }
+    }
 
+    private String generateMailHtml(String username, String template, String link)
+    {
+        Map<String, Object> variables = new HashMap<>();
+        variables.put("name", username);
+        variables.put("link", link);
+        String output = this.templateEngine.process(template, new Context(Locale.getDefault(), variables));
+        return output;
     }
 }

@@ -12,7 +12,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import pl.iseebugs.Security.domain.user.AppUser;
 import pl.iseebugs.Security.domain.user.AppUserRepository;
-import pl.iseebugs.Security.infrastructure.email.EmailSender;
+import pl.iseebugs.Security.infrastructure.email.EmailFacade;
 import pl.iseebugs.Security.infrastructure.security.projection.AuthReqRespDTO;
 import pl.iseebugs.Security.infrastructure.security.token.ConfirmationToken;
 import pl.iseebugs.Security.infrastructure.security.token.ConfirmationTokenService;
@@ -37,7 +37,7 @@ class LoginAndRegisterFacadeTest {
         var jwtUtils = mock(JWTUtils.class);
         var authenticationManager = mock(AuthenticationManager.class);
         var confirmationTokenService = mock(ConfirmationTokenService.class);
-        var emailSender = mock(EmailSender.class);
+        var emailFacade = mock(EmailFacade.class);
         when(passwordEncoder.encode(anyString())).then(returnsFirstArg());
         when(appUserRepository.findByEmail(anyString())).thenReturn(Optional.of(new AppUser()));
         //system under test
@@ -47,7 +47,7 @@ class LoginAndRegisterFacadeTest {
                 jwtUtils,
                 authenticationManager,
                 confirmationTokenService,
-                emailSender
+                emailFacade
                 );
 
         //when
@@ -75,10 +75,10 @@ class LoginAndRegisterFacadeTest {
         var jwtUtils = mock(JWTUtils.class);
         var authenticationManager = mock(AuthenticationManager.class);
         var confirmationTokenService = mock(ConfirmationTokenService.class);
-        var emailSender = mock(EmailSender.class);
+        var emailFacade = mock(EmailFacade.class);
         when(passwordEncoder.encode(anyString())).then(returnsFirstArg());
         doNothing().when(confirmationTokenService).saveConfirmationToken(any(ConfirmationToken.class));
-        doNothing().when(emailSender).send(anyString(), anyString(), anyString());
+        doNothing().when(emailFacade).send(anyString(), anyString(), anyString());
         //system under test
         var toTest = new LoginAndRegisterFacade(
                 inMemoryAppUserRepository,
@@ -86,7 +86,7 @@ class LoginAndRegisterFacadeTest {
                 jwtUtils,
                 authenticationManager,
                 confirmationTokenService,
-                emailSender
+                emailFacade
         );
 
         //when
@@ -115,7 +115,7 @@ class LoginAndRegisterFacadeTest {
         var jwtUtils = mock(JWTUtils.class);
         var authenticationManager = mock(AuthenticationManager.class);
         var confirmationTokenService = mock(ConfirmationTokenService.class);
-        var emailSender = mock(EmailSender.class);
+        var emailFacade = mock(EmailFacade.class);
 
         when(confirmationTokenService.getToken(anyString())).thenReturn(Optional.empty());
         //system under test
@@ -125,7 +125,7 @@ class LoginAndRegisterFacadeTest {
                 jwtUtils,
                 authenticationManager,
                 confirmationTokenService,
-                emailSender
+                emailFacade
         );
         //when
         String token = "foo";
@@ -146,7 +146,7 @@ class LoginAndRegisterFacadeTest {
         var jwtUtils = mock(JWTUtils.class);
         var authenticationManager = mock(AuthenticationManager.class);
         var confirmationTokenService = mock(ConfirmationTokenService.class);
-        var emailSender = mock(EmailSender.class);
+        var emailFacade = mock(EmailFacade.class);
 
         LocalDateTime tokenConfirmedAt = LocalDateTime.of(2024,6,3,12,30);
         ConfirmationToken confirmationToken = new ConfirmationToken();
@@ -160,7 +160,7 @@ class LoginAndRegisterFacadeTest {
                 jwtUtils,
                 authenticationManager,
                 confirmationTokenService,
-                emailSender
+                emailFacade
         );
         //when
         String token = "foo";
@@ -181,7 +181,7 @@ class LoginAndRegisterFacadeTest {
         var jwtUtils = mock(JWTUtils.class);
         var authenticationManager = mock(AuthenticationManager.class);
         var confirmationTokenService = mock(ConfirmationTokenService.class);
-        var emailSender = mock(EmailSender.class);
+        var emailFacade = mock(EmailFacade.class);
 
         LocalDateTime tokenExpiredAt = LocalDateTime.of(2024,6,3,12,30);
         ConfirmationToken confirmationToken = new ConfirmationToken();
@@ -194,7 +194,7 @@ class LoginAndRegisterFacadeTest {
                 jwtUtils,
                 authenticationManager,
                 confirmationTokenService,
-                emailSender
+                emailFacade
         );
         //when
         String token = "foo";
@@ -215,7 +215,7 @@ class LoginAndRegisterFacadeTest {
         var jwtUtils = mock(JWTUtils.class);
         var authenticationManager = mock(AuthenticationManager.class);
         var confirmationTokenService = mock(ConfirmationTokenService.class);
-        var emailSender = mock(EmailSender.class);
+        var emailFacade = mock(EmailFacade.class);
 
         LocalDateTime tokenExpiresAt = LocalDateTime.of(2024,6,3,12,30);
         AppUser appUser = new AppUser();
@@ -239,7 +239,7 @@ class LoginAndRegisterFacadeTest {
                     jwtUtils,
                     authenticationManager,
                     confirmationTokenService,
-                    emailSender
+                    emailFacade
             );
             //when
             String token = "foo";
@@ -263,7 +263,7 @@ class LoginAndRegisterFacadeTest {
         var jwtUtils = mock(JWTUtils.class);
         var authenticationManager = mock(AuthenticationManager.class);
         var confirmationTokenService = mock(ConfirmationTokenService.class);
-        var emailSender = mock(EmailSender.class);
+        var emailFacade = mock(EmailFacade.class);
 
         when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class)))
                 .thenThrow(new BadCredentialsException("Bad credentials."));
@@ -275,7 +275,7 @@ class LoginAndRegisterFacadeTest {
                 jwtUtils,
                 authenticationManager,
                 confirmationTokenService,
-                emailSender
+                emailFacade
         );
 
         //when
@@ -302,7 +302,7 @@ class LoginAndRegisterFacadeTest {
         var jwtUtils = mock(JWTUtils.class);
         var authenticationManager = mock(AuthenticationManager.class);
         var confirmationTokenService = mock(ConfirmationTokenService.class);
-        var emailSender = mock(EmailSender.class);
+        var emailFacade = mock(EmailFacade.class);
 
         when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class)))
                 .thenThrow(new UsernameNotFoundException("User not found."));
@@ -314,7 +314,7 @@ class LoginAndRegisterFacadeTest {
                 jwtUtils,
                 authenticationManager,
                 confirmationTokenService,
-                emailSender
+                emailFacade
         );
 
         //when
@@ -341,7 +341,7 @@ class LoginAndRegisterFacadeTest {
         var jwtUtils = mock(JWTUtils.class);
         var authenticationManager = mock(AuthenticationManager.class);
         var confirmationTokenService = mock(ConfirmationTokenService.class);
-        var emailSender = mock(EmailSender.class);
+        var emailFacade = mock(EmailFacade.class);
 
         AuthReqRespDTO request = new AuthReqRespDTO();
         request.setFirstName("Foo");
@@ -375,7 +375,7 @@ class LoginAndRegisterFacadeTest {
                 jwtUtils,
                 authenticationManager,
                 confirmationTokenService,
-                emailSender
+                emailFacade
         );
 
         //when
@@ -398,7 +398,7 @@ class LoginAndRegisterFacadeTest {
         var jwtUtils = mock(JWTUtils.class);
         var authenticationManager = mock(AuthenticationManager.class);
         var confirmationTokenService = mock(ConfirmationTokenService.class);
-        var emailSender = mock(EmailSender.class);
+        var emailFacade = mock(EmailFacade.class);
 
         when(jwtUtils.extractUsername(anyString())).thenReturn("foo-email");
 
@@ -420,7 +420,7 @@ class LoginAndRegisterFacadeTest {
                 jwtUtils,
                 authenticationManager,
                 confirmationTokenService,
-                emailSender
+                emailFacade
         );
 
         //when
@@ -443,7 +443,7 @@ class LoginAndRegisterFacadeTest {
         var jwtUtils = mock(JWTUtils.class);
         var authenticationManager = mock(AuthenticationManager.class);
         var confirmationTokenService = mock(ConfirmationTokenService.class);
-        var emailSender = mock(EmailSender.class);
+        var emailFacade = mock(EmailFacade.class);
 
         when(jwtUtils.isRefreshToken(anyString())).thenReturn(true);
         when(jwtUtils.extractUsername(anyString())).thenReturn("foo-email");
@@ -455,7 +455,7 @@ class LoginAndRegisterFacadeTest {
                 jwtUtils,
                 authenticationManager,
                 confirmationTokenService,
-                emailSender
+                emailFacade
         );
 
         //when
@@ -478,7 +478,7 @@ class LoginAndRegisterFacadeTest {
         var jwtUtils = mock(JWTUtils.class);
         var authenticationManager = mock(AuthenticationManager.class);
         var confirmationTokenService = mock(ConfirmationTokenService.class);
-        var emailSender = mock(EmailSender.class);
+        var emailFacade = mock(EmailFacade.class);
 
         when(jwtUtils.extractUsername(anyString())).thenReturn("foo-email");
 
@@ -504,7 +504,7 @@ class LoginAndRegisterFacadeTest {
                 jwtUtils,
                 authenticationManager,
                 confirmationTokenService,
-                emailSender
+                emailFacade
         );
 
         //when
@@ -526,7 +526,7 @@ class LoginAndRegisterFacadeTest {
         var jwtUtils = mock(JWTUtils.class);
         var authenticationManager = mock(AuthenticationManager.class);
         var confirmationTokenService = mock(ConfirmationTokenService.class);
-        var emailSender = mock(EmailSender.class);
+        var emailFacade = mock(EmailFacade.class);
 
         when(jwtUtils.extractUsername(anyString())).thenReturn("foo-email");
 
@@ -554,7 +554,7 @@ class LoginAndRegisterFacadeTest {
                 jwtUtils,
                 authenticationManager,
                 confirmationTokenService,
-                emailSender
+                emailFacade
         );
 
         //when
@@ -583,7 +583,7 @@ class LoginAndRegisterFacadeTest {
         var jwtUtils = mock(JWTUtils.class);
         var authenticationManager = mock(AuthenticationManager.class);
         var confirmationTokenService = mock(ConfirmationTokenService.class);
-        var emailSender = mock(EmailSender.class);
+        var emailFacade = mock(EmailFacade.class);
 
         when(jwtUtils.isRefreshToken(anyString())).thenReturn(true);
 
@@ -594,7 +594,7 @@ class LoginAndRegisterFacadeTest {
                 jwtUtils,
                 authenticationManager,
                 confirmationTokenService,
-                emailSender
+                emailFacade
         );
 
         //when
@@ -617,7 +617,7 @@ class LoginAndRegisterFacadeTest {
         var jwtUtils = mock(JWTUtils.class);
         var authenticationManager = mock(AuthenticationManager.class);
         var confirmationTokenService = mock(ConfirmationTokenService.class);
-        var emailSender = mock(EmailSender.class);
+        var emailFacade = mock(EmailFacade.class);
         when(jwtUtils.isRefreshToken(anyString())).thenReturn(false);
         when(jwtUtils.extractUsername(anyString())).thenReturn("foo-email");
 
@@ -628,7 +628,7 @@ class LoginAndRegisterFacadeTest {
                 jwtUtils,
                 authenticationManager,
                 confirmationTokenService,
-                emailSender
+                emailFacade
         );
 
         //when
@@ -650,7 +650,7 @@ class LoginAndRegisterFacadeTest {
         var jwtUtils = mock(JWTUtils.class);
         var authenticationManager = mock(AuthenticationManager.class);
         var confirmationTokenService = mock(ConfirmationTokenService.class);
-        var emailSender = mock(EmailSender.class);
+        var emailFacade = mock(EmailFacade.class);
         when(jwtUtils.isRefreshToken(anyString())).thenReturn(false);
         when(jwtUtils.extractUsername(anyString())).thenReturn("foo-email");
         when(jwtUtils.isTokenValid(anyString(), any(UserDetails.class))).thenReturn(false);
@@ -675,7 +675,7 @@ class LoginAndRegisterFacadeTest {
                 jwtUtils,
                 authenticationManager,
                 confirmationTokenService,
-                emailSender
+                emailFacade
         );
 
         //when
@@ -697,7 +697,7 @@ class LoginAndRegisterFacadeTest {
         var jwtUtils = mock(JWTUtils.class);
         var authenticationManager = mock(AuthenticationManager.class);
         var confirmationTokenService = mock(ConfirmationTokenService.class);
-        var emailSender = mock(EmailSender.class);
+        var emailFacade = mock(EmailFacade.class);
         when(jwtUtils.isRefreshToken(anyString())).thenReturn(false);
         when(jwtUtils.extractUsername(anyString())).thenReturn("foo-email");
         when(jwtUtils.isTokenValid(anyString(), any(UserDetails.class))).thenReturn(true);
@@ -725,7 +725,7 @@ class LoginAndRegisterFacadeTest {
                 jwtUtils,
                 authenticationManager,
                 confirmationTokenService,
-                emailSender
+                emailFacade
         );
 
         //when
@@ -755,7 +755,7 @@ class LoginAndRegisterFacadeTest {
         var jwtUtils = mock(JWTUtils.class);
         var authenticationManager = mock(AuthenticationManager.class);
         var confirmationTokenService = mock(ConfirmationTokenService.class);
-        var emailSender = mock(EmailSender.class);
+        var emailFacade = mock(EmailFacade.class);
 
         when(jwtUtils.extractUsername(anyString())).thenReturn("foo-email");
 
@@ -766,7 +766,7 @@ class LoginAndRegisterFacadeTest {
                 jwtUtils,
                 authenticationManager,
                 confirmationTokenService,
-                emailSender
+                emailFacade
         );
 
         //when
@@ -789,7 +789,7 @@ class LoginAndRegisterFacadeTest {
         var jwtUtils = mock(JWTUtils.class);
         var authenticationManager = mock(AuthenticationManager.class);
         var confirmationTokenService = mock(ConfirmationTokenService.class);
-        var emailSender = mock(EmailSender.class);
+        var emailFacade = mock(EmailFacade.class);
 
         when(jwtUtils.extractUsername(anyString())).thenReturn("foo-email");
         when(jwtUtils.isRefreshToken(anyString())).thenReturn(true);
@@ -812,7 +812,7 @@ class LoginAndRegisterFacadeTest {
                 jwtUtils,
                 authenticationManager,
                 confirmationTokenService,
-                emailSender
+                emailFacade
         );
 
         //when
@@ -835,7 +835,7 @@ class LoginAndRegisterFacadeTest {
         var jwtUtils = mock(JWTUtils.class);
         var authenticationManager = mock(AuthenticationManager.class);
         var confirmationTokenService = mock(ConfirmationTokenService.class);
-        var emailSender = mock(EmailSender.class);
+        var emailFacade = mock(EmailFacade.class);
 
         when(jwtUtils.extractUsername(anyString())).thenReturn("foo-email");
 
@@ -861,7 +861,7 @@ class LoginAndRegisterFacadeTest {
                 jwtUtils,
                 authenticationManager,
                 confirmationTokenService,
-                emailSender
+                emailFacade
         );
 
         //when
@@ -883,7 +883,7 @@ class LoginAndRegisterFacadeTest {
         var jwtUtils = mock(JWTUtils.class);
         var authenticationManager = mock(AuthenticationManager.class);
         var confirmationTokenService = mock(ConfirmationTokenService.class);
-        var emailSender = mock(EmailSender.class);
+        var emailFacade = mock(EmailFacade.class);
 
         when(jwtUtils.extractUsername(anyString())).thenReturn("foo-email");
 
@@ -910,7 +910,7 @@ class LoginAndRegisterFacadeTest {
                 jwtUtils,
                 authenticationManager,
                 confirmationTokenService,
-                emailSender
+                emailFacade
         );
 
         //when
