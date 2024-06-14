@@ -35,14 +35,17 @@ public class EmailFacade implements EmailSender{
         this.emailProperties = emailProperties;
     }
 
-    public void sendActivationEmail(AuthReqRespDTO userData, String link) {
+    public void sendActivationEmail(AuthReqRespDTO userData, String link) throws InvalidEmailTypeException {
         generateMailWithLinkHtml("activation", userData,  link);
     }
 
-    private void generateMailWithLinkHtml(String type, AuthReqRespDTO userData, String link)
-    {
+    private void generateMailWithLinkHtml(String type, AuthReqRespDTO userData, String link) throws InvalidEmailTypeException {
         EmailProperties.EmailTemplate template =
                 emailProperties.getTemplates().get(type);
+
+        if (template == null){
+            throw new InvalidEmailTypeException("Invalid email type: " + type);
+        }
 
         Context context = new Context();
         String welcomeText = template.getWelcomeText().replace("${name}", userData.getFirstName());

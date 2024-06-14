@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 import pl.iseebugs.Security.domain.user.AppUser;
 import pl.iseebugs.Security.domain.user.AppUserRepository;
 import pl.iseebugs.Security.infrastructure.email.EmailFacade;
+import pl.iseebugs.Security.infrastructure.email.InvalidEmailTypeException;
 import pl.iseebugs.Security.infrastructure.security.projection.AuthReqRespDTO;
 import pl.iseebugs.Security.infrastructure.security.token.ConfirmationToken;
 import pl.iseebugs.Security.infrastructure.security.token.ConfirmationTokenService;
@@ -29,7 +30,7 @@ class LoginAndRegisterFacade {
     private final ConfirmationTokenService confirmationTokenService;
     private final EmailFacade emailFacade;
 
-    AuthReqRespDTO signUp(AuthReqRespDTO registrationRequest) throws EmailConflictException {
+    AuthReqRespDTO signUp(AuthReqRespDTO registrationRequest) throws EmailConflictException, InvalidEmailTypeException {
         AuthReqRespDTO responseDTO = new AuthReqRespDTO();
 
         String firstName = registrationRequest.getFirstName();
