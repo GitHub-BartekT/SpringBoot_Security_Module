@@ -7,12 +7,22 @@
 <table>
   <tr>
     <td>
-      <p th:text="Hello ${name}!"></p>
+      <p th:text="'Hello ' + ${name} + '!'"></p>
+    </td>
+  </tr>
+  <tr>
+    <td>
+      <p th:text="'Click link below to activate!'"></p>
     </td>
   </tr>
   <tr>
     <td>
       <p th:text="${link}"></p>
+    </td>
+  </tr>
+  <tr>
+    <td>
+      Best regards!<br>
     </td>
   </tr>
 </table>
