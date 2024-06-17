@@ -80,7 +80,7 @@ class LoginAndRegisterFacade {
         return responseDTO;
     }
 
-    AuthReqRespDTO refreshConfirmationToken(String email) throws InvalidEmailTypeException, TokenNotFoundException {
+    AuthReqRespDTO refreshConfirmationToken(String email) throws InvalidEmailTypeException, TokenNotFoundException, RegistrationTokenConflictException {
         AuthReqRespDTO responseDTO = new AuthReqRespDTO();
         responseDTO.setEmail(email);
 
@@ -103,6 +103,9 @@ class LoginAndRegisterFacade {
             confirmationTokenService.saveConfirmationToken(confirmationToken);
             responseDTO.setToken(token);
 
+        } else if (confirmationTokenService.isConfirmed(email)){
+            log.info("Confirmation token already confirmed.");
+            throw new RegistrationTokenConflictException();
         } else {
             ConfirmationToken confirmationToken = confirmationTokenService.getTokenByEmail(email)
                     .orElseThrow(() -> new TokenNotFoundException("Confirmation token not found."));

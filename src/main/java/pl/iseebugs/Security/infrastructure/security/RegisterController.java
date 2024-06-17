@@ -32,6 +32,11 @@ class RegisterController {
         return ResponseEntity.ok(loginAndRegisterFacade.confirmToken(token));
     }
 
+    @GetMapping(path = "/confirm/refresh_token")
+    public ResponseEntity<AuthReqRespDTO> refreshConfirmationToken(@RequestParam("email") String email) throws TokenNotFoundException, InvalidEmailTypeException, RegistrationTokenConflictException {
+        return ResponseEntity.ok(loginAndRegisterFacade.refreshConfirmationToken(email));
+    }
+
     @PostMapping("/signin")
     public ResponseEntity<AuthReqRespDTO> signIn(@RequestBody AuthReqRespDTO signInRequest){
         return  ResponseEntity.ok(loginAndRegisterFacade.signIn(signInRequest));
