@@ -257,6 +257,26 @@ class LoginAndRegisterFacadeTest {
     }
 
     @Test
+    void refreshConfirmationToken_should_throws_UsernameNotFoundException(){
+
+    }
+
+    @Test
+    void refreshConfirmationToken_should_throws_RegistrationTokenConflictException(){
+
+    }
+
+    @Test
+    void refreshConfirmationToken_should_throws_TokenNotFoundException(){
+
+    }
+
+    @Test
+    void refreshConfirmationToken_should_returns_ok(){
+
+    }
+
+    @Test
     void signIn_should_throws_BadCredentialsException() {
         //given
         var appUserRepository =mock(AppUserRepository.class);

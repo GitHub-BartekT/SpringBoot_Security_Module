@@ -84,24 +84,23 @@ class LoginAndRegisterFacade {
         AuthReqRespDTO responseDTO = new AuthReqRespDTO();
         responseDTO.setEmail(email);
 
-        AppUser ourUserResult = appUserRepository.findByEmail(email).
+        AppUser appUserResult = appUserRepository.findByEmail(email).
                 orElseThrow(() -> new UsernameNotFoundException("Email not found."));
+        responseDTO.setFirstName(appUserResult.getFirstName());
+        responseDTO.setLastName(appUserResult.getLastName());
 
         String token = UUID.randomUUID().toString();
+        responseDTO.setToken(token);
 
         if (confirmationTokenService.getTokenByEmail(email).isEmpty()) {
-            responseDTO.setFirstName(ourUserResult.getFirstName());
-            responseDTO.setLastName(ourUserResult.getLastName());
-
             ConfirmationToken confirmationToken = new ConfirmationToken(
                     token,
                     LocalDateTime.now(),
                     LocalDateTime.now().plusMinutes(15),
-                    ourUserResult
+                    appUserResult
             );
-
             confirmationTokenService.saveConfirmationToken(confirmationToken);
-            responseDTO.setToken(token);
+            responseDTO.setStatusCode(201);
 
         } else if (confirmationTokenService.isConfirmed(email)){
             log.info("Confirmation token already confirmed.");
@@ -110,15 +109,14 @@ class LoginAndRegisterFacade {
             ConfirmationToken confirmationToken = confirmationTokenService.getTokenByEmail(email)
                     .orElseThrow(() -> new TokenNotFoundException("Confirmation token not found."));
 
-            confirmationToken.setToken(token);
             confirmationToken.setCreatedAt(LocalDateTime.now());
             confirmationToken.setExpiresAt(LocalDateTime.now().plusMinutes(15));
+            responseDTO.setStatusCode(204);
         }
 
-        if (ourUserResult.getId() != null){
+        if (appUserResult.getId() != null){
             responseDTO.setMessage("User created successfully.");
             responseDTO.setExpirationTime("15 minutes");
-            responseDTO.setStatusCode(201);
 
             String link = "http://localhost:8080/api/auth/confirm?token=" + token;
 
@@ -152,7 +150,6 @@ class LoginAndRegisterFacade {
         confirmationTokenService.setConfirmedAt(token);
         appUserRepository.enableAppUser(
                 confirmationToken.getAppUser().getEmail());
-
         response.setStatusCode(200);
         response.setMessage("User confirmed.");
         return response;
