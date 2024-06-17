@@ -80,6 +80,54 @@ class LoginAndRegisterFacade {
         return responseDTO;
     }
 
+    AuthReqRespDTO refreshConfirmationToken(String email) throws InvalidEmailTypeException, TokenNotFoundException {
+        AuthReqRespDTO responseDTO = new AuthReqRespDTO();
+        responseDTO.setEmail(email);
+
+        AppUser ourUserResult = appUserRepository.findByEmail(email).
+                orElseThrow(() -> new UsernameNotFoundException("Email not found."));
+
+        String token = UUID.randomUUID().toString();
+
+        if (confirmationTokenService.getTokenByEmail(email).isEmpty()) {
+            responseDTO.setFirstName(ourUserResult.getFirstName());
+            responseDTO.setLastName(ourUserResult.getLastName());
+
+            ConfirmationToken confirmationToken = new ConfirmationToken(
+                    token,
+                    LocalDateTime.now(),
+                    LocalDateTime.now().plusMinutes(15),
+                    ourUserResult
+            );
+
+            confirmationTokenService.saveConfirmationToken(confirmationToken);
+            responseDTO.setToken(token);
+
+        } else {
+            ConfirmationToken confirmationToken = confirmationTokenService.getTokenByEmail(email)
+                    .orElseThrow(() -> new TokenNotFoundException("Confirmation token not found."));
+
+            confirmationToken.setToken(token);
+            confirmationToken.setCreatedAt(LocalDateTime.now());
+            confirmationToken.setExpiresAt(LocalDateTime.now().plusMinutes(15));
+        }
+
+        if (ourUserResult.getId() != null){
+            responseDTO.setMessage("User created successfully.");
+            responseDTO.setExpirationTime("15 minutes");
+            responseDTO.setStatusCode(201);
+
+            String link = "http://localhost:8080/api/auth/confirm?token=" + token;
+
+            emailFacade.sendTemplateEmail(
+                    EmailType.ACTIVATION,
+                    responseDTO,
+                    link);
+        }
+
+        return responseDTO;
+    }
+
     AuthReqRespDTO confirmToken(final String token) throws TokenNotFoundException, RegistrationTokenConflictException {
         ConfirmationToken confirmationToken;
         confirmationToken = confirmationTokenService.getToken(token)

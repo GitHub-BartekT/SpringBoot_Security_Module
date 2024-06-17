@@ -5,7 +5,6 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
-import pl.iseebugs.Security.domain.user.AppUser;
 
 import java.time.LocalDateTime;
 import java.util.Optional;
@@ -14,6 +13,11 @@ import java.util.Optional;
 public interface ConfirmationTokenRepository extends JpaRepository<ConfirmationToken, Long> {
 
     Optional<ConfirmationToken> findByToken(String token);
+
+    @Transactional
+    @Modifying
+    @Query("SELECT c FROM ConfirmationToken c WHERE c.appUser.email = ?1")
+    Optional<ConfirmationToken> findTokenByEmail(String token);
 
     @Transactional
     @Modifying
@@ -27,4 +31,5 @@ public interface ConfirmationTokenRepository extends JpaRepository<ConfirmationT
     @Modifying
     @Query("DELETE FROM ConfirmationToken c WHERE c.appUser.id = ?1")
     void deleteByAppUserId(Long id);
+
 }

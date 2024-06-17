@@ -21,6 +21,10 @@ public class ConfirmationTokenService {
         return confirmationTokenRepository.findByToken(token);
     }
 
+    public Optional<ConfirmationToken> getTokenByEmail(String token) {
+        return confirmationTokenRepository.findTokenByEmail(token);
+    }
+
     public int setConfirmedAt(String token) {
         return confirmationTokenRepository.updateConfirmedAt(
                 token, LocalDateTime.now());
