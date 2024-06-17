@@ -323,13 +323,73 @@ class LoginAndRegisterFacadeTest {
     }
 
     @Test
-    void refreshConfirmationToken_should_throws_TokenNotFoundException(){
+    void refreshConfirmationToken_should_throws_ok_and_201() throws TokenNotFoundException, RegistrationTokenConflictException, InvalidEmailTypeException {
+        //given
+        var appUserRepository =mock(AppUserRepository.class);
+        var passwordEncoder = mock(PasswordEncoder.class);
+        var jwtUtils = mock(JWTUtils.class);
+        var authenticationManager = mock(AuthenticationManager.class);
+        var confirmationTokenService = mock(ConfirmationTokenService.class);
+        var emailFacade = mock(EmailFacade.class);
 
+        //system under test
+        var toTest = new LoginAndRegisterFacade(
+                appUserRepository,
+                passwordEncoder,
+                jwtUtils,
+                authenticationManager,
+                confirmationTokenService,
+                emailFacade
+        );
+        //when
+        when(appUserRepository.findByEmail(anyString())).thenReturn(Optional.of(new AppUser()));
+        when(confirmationTokenService.isConfirmed(anyString())).thenReturn(false);
+        when(confirmationTokenService.getTokenByEmail(anyString())).thenReturn(Optional.empty());
+        doNothing().when(confirmationTokenService).saveConfirmationToken(any(ConfirmationToken.class));
+
+        String email = "foo@mail.com";
+        AuthReqRespDTO response = toTest.refreshConfirmationToken(email);
+
+        //then
+        assertAll(
+                () -> assertThat(response.getStatusCode()).isEqualTo(201),
+                () -> assertThat(response.getMessage()).isEqualTo("Generated new confirmation token.")
+        );
     }
 
     @Test
-    void refreshConfirmationToken_should_returns_ok(){
+    void refreshConfirmationToken_should_returns_ok_and_204() throws TokenNotFoundException, RegistrationTokenConflictException, InvalidEmailTypeException {
+        //given
+        var appUserRepository =mock(AppUserRepository.class);
+        var passwordEncoder = mock(PasswordEncoder.class);
+        var jwtUtils = mock(JWTUtils.class);
+        var authenticationManager = mock(AuthenticationManager.class);
+        var confirmationTokenService = mock(ConfirmationTokenService.class);
+        var emailFacade = mock(EmailFacade.class);
 
+        //system under test
+        var toTest = new LoginAndRegisterFacade(
+                appUserRepository,
+                passwordEncoder,
+                jwtUtils,
+                authenticationManager,
+                confirmationTokenService,
+                emailFacade
+        );
+        //when
+        when(appUserRepository.findByEmail(anyString())).thenReturn(Optional.of(new AppUser()));
+        when(confirmationTokenService.isConfirmed(anyString())).thenReturn(false);
+        when(confirmationTokenService.getTokenByEmail(anyString())).thenReturn(Optional.of(new ConfirmationToken()));
+        doNothing().when(confirmationTokenService).saveConfirmationToken(any(ConfirmationToken.class));
+
+        String email = "foo@mail.com";
+        AuthReqRespDTO response = toTest.refreshConfirmationToken(email);
+
+        //then
+        assertAll(
+                () -> assertThat(response.getStatusCode()).isEqualTo(204),
+                () -> assertThat(response.getMessage()).isEqualTo("Generated new confirmation token.")
+        );
     }
 
     @Test

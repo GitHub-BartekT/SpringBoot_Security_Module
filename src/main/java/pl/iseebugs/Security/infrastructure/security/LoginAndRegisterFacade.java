@@ -114,17 +114,15 @@ class LoginAndRegisterFacade {
             responseDTO.setStatusCode(204);
         }
 
-        if (appUserResult.getId() != null){
-            responseDTO.setMessage("User created successfully.");
-            responseDTO.setExpirationTime("15 minutes");
+        responseDTO.setMessage("Generated new confirmation token.");
+        responseDTO.setExpirationTime("15 minutes");
 
-            String link = "http://localhost:8080/api/auth/confirm?token=" + token;
+        String link = "http://localhost:8080/api/auth/confirm?token=" + token;
 
-            emailFacade.sendTemplateEmail(
-                    EmailType.ACTIVATION,
-                    responseDTO,
-                    link);
-        }
+        emailFacade.sendTemplateEmail(
+                EmailType.ACTIVATION,
+                responseDTO,
+                link);
 
         return responseDTO;
     }
