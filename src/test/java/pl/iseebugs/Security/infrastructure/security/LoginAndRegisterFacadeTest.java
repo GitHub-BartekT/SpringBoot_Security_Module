@@ -258,12 +258,68 @@ class LoginAndRegisterFacadeTest {
 
     @Test
     void refreshConfirmationToken_should_throws_UsernameNotFoundException(){
+        //given
+        var appUserRepository =mock(AppUserRepository.class);
+        var passwordEncoder = mock(PasswordEncoder.class);
+        var jwtUtils = mock(JWTUtils.class);
+        var authenticationManager = mock(AuthenticationManager.class);
+        var confirmationTokenService = mock(ConfirmationTokenService.class);
+        var emailFacade = mock(EmailFacade.class);
 
+        //system under test
+        var toTest = new LoginAndRegisterFacade(
+                appUserRepository,
+                passwordEncoder,
+                jwtUtils,
+                authenticationManager,
+                confirmationTokenService,
+                emailFacade
+        );
+        //when
+        when(appUserRepository.findByEmail(anyString())).thenReturn(Optional.empty());
+
+        String email = "foo@mail.com";
+        Throwable e = catchThrowable(() -> toTest.refreshConfirmationToken(email));
+
+        //then
+        assertAll(
+                () -> assertThat(e).isInstanceOf(UsernameNotFoundException.class),
+                () -> assertThat(e.getMessage()).isEqualTo("Email not found.")
+        );
     }
 
     @Test
-    void refreshConfirmationToken_should_throws_RegistrationTokenConflictException(){
+    void refreshConfirmationToken_should_throws_RegistrationTokenConflictException() throws TokenNotFoundException {
+        //given
+        var appUserRepository =mock(AppUserRepository.class);
+        var passwordEncoder = mock(PasswordEncoder.class);
+        var jwtUtils = mock(JWTUtils.class);
+        var authenticationManager = mock(AuthenticationManager.class);
+        var confirmationTokenService = mock(ConfirmationTokenService.class);
+        var emailFacade = mock(EmailFacade.class);
 
+        //system under test
+        var toTest = new LoginAndRegisterFacade(
+                appUserRepository,
+                passwordEncoder,
+                jwtUtils,
+                authenticationManager,
+                confirmationTokenService,
+                emailFacade
+        );
+        //when
+        when(appUserRepository.findByEmail(anyString())).thenReturn(Optional.of(new AppUser()));
+        when(confirmationTokenService.isConfirmed(anyString())).thenReturn(true);
+
+
+        String email = "foo@mail.com";
+        Throwable e = catchThrowable(() -> toTest.refreshConfirmationToken(email));
+
+        //then
+        assertAll(
+                () -> assertThat(e).isInstanceOf(RegistrationTokenConflictException.class),
+                () -> assertThat(e.getMessage()).isEqualTo("Confirmation token already confirmed.")
+        );
     }
 
     @Test

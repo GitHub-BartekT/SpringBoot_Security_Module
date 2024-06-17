@@ -92,7 +92,10 @@ class LoginAndRegisterFacade {
         String token = UUID.randomUUID().toString();
         responseDTO.setToken(token);
 
-        if (confirmationTokenService.getTokenByEmail(email).isEmpty()) {
+        if (confirmationTokenService.isConfirmed(email)){
+            log.info("Confirmation token already confirmed.");
+            throw new RegistrationTokenConflictException("Confirmation token already confirmed.");
+        } else if (confirmationTokenService.getTokenByEmail(email).isEmpty()) {
             ConfirmationToken confirmationToken = new ConfirmationToken(
                     token,
                     LocalDateTime.now(),
@@ -102,9 +105,6 @@ class LoginAndRegisterFacade {
             confirmationTokenService.saveConfirmationToken(confirmationToken);
             responseDTO.setStatusCode(201);
 
-        } else if (confirmationTokenService.isConfirmed(email)){
-            log.info("Confirmation token already confirmed.");
-            throw new RegistrationTokenConflictException();
         } else {
             ConfirmationToken confirmationToken = confirmationTokenService.getTokenByEmail(email)
                     .orElseThrow(() -> new TokenNotFoundException("Confirmation token not found."));
