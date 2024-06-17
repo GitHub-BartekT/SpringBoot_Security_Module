@@ -3,6 +3,7 @@ package pl.iseebugs.Security.infrastructure.security.token;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 import pl.iseebugs.Security.domain.user.AppUser;
+import pl.iseebugs.Security.infrastructure.security.TokenNotFoundException;
 
 import java.time.LocalDateTime;
 import java.util.Optional;
@@ -21,6 +22,10 @@ public class ConfirmationTokenService {
         return confirmationTokenRepository.findByToken(token);
     }
 
+    public Optional<ConfirmationToken> getTokenByEmail(String token) {
+        return confirmationTokenRepository.findTokenByEmail(token);
+    }
+
     public int setConfirmedAt(String token) {
         return confirmationTokenRepository.updateConfirmedAt(
                 token, LocalDateTime.now());
@@ -28,5 +33,11 @@ public class ConfirmationTokenService {
 
     public void deleteConfirmationToken(AppUser appUser){
         confirmationTokenRepository.deleteByAppUserId(appUser.getId());
+    }
+
+    public boolean isConfirmed(String email) throws TokenNotFoundException {
+        ConfirmationToken confirmationToken = confirmationTokenRepository.findTokenByEmail(email)
+                .orElseThrow(() -> new TokenNotFoundException("Confirmation token not found"));
+        return confirmationToken.getConfirmedAt().isBefore(LocalDateTime.now());
     }
 }
