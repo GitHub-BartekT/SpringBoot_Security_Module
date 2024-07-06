@@ -19,14 +19,16 @@ import java.util.function.Function;
 class JWTUtils {
 
     private final SecretKey Key;
-    private static final long EXPIRATION_REFRESH_TIME = 86400000; //24 hours or 86400 000 milliseconds
-    private static final long EXPIRATION_ACCESS_TIME = 3600000; //60 minutes or 3600 000 milliseconds
+    private static long EXPIRATION_REFRESH_TOKEN_TIME;
+    private static long EXPIRATION_ACCESS_TOKEN_TIME;
     private final AuthorizationProperties authorizationProperties;
 
     JWTUtils(final AuthorizationProperties authorizationProperties){
         this.authorizationProperties = authorizationProperties;
-        String secreteString = authorizationProperties.secret();
-        byte[] keyBytes = Base64.getDecoder().decode(secreteString.getBytes(StandardCharsets.UTF_8));
+        EXPIRATION_REFRESH_TOKEN_TIME = authorizationProperties.getExpirationRefreshTokenTime();
+        EXPIRATION_ACCESS_TOKEN_TIME = authorizationProperties.getExpirationAccessTokenTime();
+        String secretString = authorizationProperties.getSecret();
+        byte[] keyBytes = Base64.getDecoder().decode(secretString.getBytes(StandardCharsets.UTF_8));
         this.Key = new SecretKeySpec(keyBytes,"HmacSHA256");
     }
 
@@ -41,7 +43,7 @@ class JWTUtils {
     private String generateToken(UserDetails userDetails, Token tokenType){
         HashMap<String, Object> claims = new HashMap<>();
         claims.put("type", tokenType);
-        long tokenTime = tokenType.equals(Token.ACCESS) ? EXPIRATION_ACCESS_TIME : EXPIRATION_REFRESH_TIME;
+        long tokenTime = tokenType.equals(Token.ACCESS) ? EXPIRATION_ACCESS_TOKEN_TIME : EXPIRATION_REFRESH_TOKEN_TIME;
 
         log.info("Created " + tokenType + " token for user with email: " + userDetails.getUsername());
 

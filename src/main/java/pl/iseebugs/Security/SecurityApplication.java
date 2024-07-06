@@ -5,10 +5,11 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import pl.iseebugs.Security.infrastructure.email.EmailProperties;
+import pl.iseebugs.Security.infrastructure.security.AppProperties;
 import pl.iseebugs.Security.infrastructure.security.AuthorizationProperties;
 
 @SpringBootApplication
-@EnableConfigurationProperties({EmailProperties.class, AuthorizationProperties.class})
+@EnableConfigurationProperties({EmailProperties.class, AuthorizationProperties.class, AppProperties.class})
 public class SecurityApplication {
 
 	public static void main(String[] args) {

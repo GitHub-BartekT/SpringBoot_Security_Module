@@ -38,7 +38,7 @@ class RegisterController {
     }
 
     @PostMapping("/signin")
-    public ResponseEntity<AuthReqRespDTO> signIn(@RequestBody AuthReqRespDTO signInRequest){
+    public ResponseEntity<AuthReqRespDTO> signIn(@RequestBody AuthReqRespDTO signInRequest) throws TokenNotFoundException {
         return  ResponseEntity.ok(loginAndRegisterFacade.signIn(signInRequest));
     }
 

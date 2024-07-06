@@ -1,4 +1,3 @@
-
 spring:
   datasource:
     url: jdbc:tc:postgresql:latest:///testdb
@@ -23,3 +22,12 @@ spring:
           connectiontimeout: 5000
           timeout: 3000
           writetimeout: 5000
+
+auth:
+  secret: rk1aAhLGxQqOQ64WfnWP340qzQ0h9zX4QpC/5fR6GY4=
+  expiration-refresh-token-time: 86400000 # 24 hours or 86400 000 milliseconds
+  expiration-access-token-time: 3600000 # 60 minutes or 3600 000 milliseconds
+
+app:
+  uri: http://localhost
+  port: 8080
