@@ -165,24 +165,24 @@ class LoginAndRegisterFacade {
         String token = UUID.randomUUID().toString();
         responseDTO.setToken(token);
 
-        if (confirmationTokenService.isConfirmed(email)) {
-            log.info("Confirmation token already confirmed.");
-            throw new RegistrationTokenConflictException("Confirmation token already confirmed.");
-        } else if (confirmationTokenService.getTokenByEmail(email).isEmpty()) {
+        if (confirmationTokenService.getTokenByEmail(email).isEmpty()) {
             ConfirmationToken confirmationToken = new ConfirmationToken(
                     token,
                     LocalDateTime.now(),
-                    LocalDateTime.now().plusMinutes(15),
+                    LocalDateTime.now().plusMinutes(CONFIRMATION_ACCOUNT_TOKEN_EXPIRATION_TIME),
                     appUserResult
             );
             confirmationTokenService.saveConfirmationToken(confirmationToken);
             responseDTO.setStatusCode(201);
+        } else if (confirmationTokenService.isConfirmed(email)) {
+            log.info("Confirmation token already confirmed.");
+            throw new RegistrationTokenConflictException("Confirmation token already confirmed.");
         } else {
             ConfirmationToken confirmationToken = confirmationTokenService.getTokenByEmail(email)
                     .orElseThrow(() -> new TokenNotFoundException("Confirmation token not found."));
 
             confirmationToken.setCreatedAt(LocalDateTime.now());
-            confirmationToken.setExpiresAt(LocalDateTime.now().plusMinutes(15));
+            confirmationToken.setExpiresAt(LocalDateTime.now().plusMinutes(CONFIRMATION_ACCOUNT_TOKEN_EXPIRATION_TIME));
             responseDTO.setStatusCode(204);
         }
 

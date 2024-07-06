@@ -326,11 +326,12 @@ class LoginAndRegisterFacadeTest {
                 emailFacade,
                 appProperties
         );
-        //when
+
         when(appUserRepository.findByEmail(anyString())).thenReturn(Optional.of(new AppUser()));
+        when(confirmationTokenService.getTokenByEmail(anyString())).thenReturn(Optional.of(new ConfirmationToken()));
         when(confirmationTokenService.isConfirmed(anyString())).thenReturn(true);
 
-
+        //when
         String email = "foo@mail.com";
         Throwable e = catchThrowable(() -> toTest.refreshConfirmationToken(email));
 
@@ -363,6 +364,7 @@ class LoginAndRegisterFacadeTest {
                 emailFacade,
                 appProperties
         );
+
         //when
         when(appUserRepository.findByEmail(anyString())).thenReturn(Optional.of(new AppUser()));
         when(confirmationTokenService.isConfirmed(anyString())).thenReturn(false);
