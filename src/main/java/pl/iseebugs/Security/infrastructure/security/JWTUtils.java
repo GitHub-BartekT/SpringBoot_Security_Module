@@ -3,7 +3,6 @@ package pl.iseebugs.Security.infrastructure.security;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import lombok.extern.java.Log;
-import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
@@ -22,9 +21,11 @@ class JWTUtils {
     private final SecretKey Key;
     private static final long EXPIRATION_REFRESH_TIME = 86400000; //24 hours or 86400 000 milliseconds
     private static final long EXPIRATION_ACCESS_TIME = 3600000; //60 minutes or 3600 000 milliseconds
+    private final AuthorizationProperties authorizationProperties;
 
-    JWTUtils(){
-        String secreteString = "4564654654654654564879956465JHKJ456497891233";
+    JWTUtils(final AuthorizationProperties authorizationProperties){
+        this.authorizationProperties = authorizationProperties;
+        String secreteString = authorizationProperties.secret();
         byte[] keyBytes = Base64.getDecoder().decode(secreteString.getBytes(StandardCharsets.UTF_8));
         this.Key = new SecretKeySpec(keyBytes,"HmacSHA256");
     }

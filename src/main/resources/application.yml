@@ -5,7 +5,7 @@ server:
 
 spring:
   datasource:
-    url: jdbc:postgresql://localhost:5432/auth
+    url: jdbc:postgresql://${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DB_NAME}
     username: ${POSTGRES_USER:postgres}
     password: ${POSTGRES_PASSWORD:pass}
     driver-class-name: org.postgresql.Driver
@@ -19,12 +19,10 @@ spring:
     show-sql: false
 
   mail:
-    mailer: "no-reply@iseebugs.pl"
-
-    host: localhost
-    port: 1025
-    username: hello
-    password: hello
+    host: ${MAIL_HOST}
+    port: ${MAIL_PORT}
+    username: ${MAIL_USERNAME}
+    password: ${MAIL_PASS}
 
     properties:
       mail:
@@ -39,3 +37,6 @@ spring:
           writetimeout: 5000
   config:
     import: "classpath:email-config.yml"
+
+auth:
+  secret: ${SECRET}

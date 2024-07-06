@@ -80,53 +80,6 @@ class LoginAndRegisterFacade {
         return responseDTO;
     }
 
-    AuthReqRespDTO refreshConfirmationToken(String email) throws InvalidEmailTypeException, TokenNotFoundException, RegistrationTokenConflictException {
-        AuthReqRespDTO responseDTO = new AuthReqRespDTO();
-        responseDTO.setEmail(email);
-
-        AppUser appUserResult = appUserRepository.findByEmail(email).
-                orElseThrow(() -> new UsernameNotFoundException("Email not found."));
-        responseDTO.setFirstName(appUserResult.getFirstName());
-        responseDTO.setLastName(appUserResult.getLastName());
-
-        String token = UUID.randomUUID().toString();
-        responseDTO.setToken(token);
-
-        if (confirmationTokenService.isConfirmed(email)){
-            log.info("Confirmation token already confirmed.");
-            throw new RegistrationTokenConflictException("Confirmation token already confirmed.");
-        } else if (confirmationTokenService.getTokenByEmail(email).isEmpty()) {
-            ConfirmationToken confirmationToken = new ConfirmationToken(
-                    token,
-                    LocalDateTime.now(),
-                    LocalDateTime.now().plusMinutes(15),
-                    appUserResult
-            );
-            confirmationTokenService.saveConfirmationToken(confirmationToken);
-            responseDTO.setStatusCode(201);
-
-        } else {
-            ConfirmationToken confirmationToken = confirmationTokenService.getTokenByEmail(email)
-                    .orElseThrow(() -> new TokenNotFoundException("Confirmation token not found."));
-
-            confirmationToken.setCreatedAt(LocalDateTime.now());
-            confirmationToken.setExpiresAt(LocalDateTime.now().plusMinutes(15));
-            responseDTO.setStatusCode(204);
-        }
-
-        responseDTO.setMessage("Generated new confirmation token.");
-        responseDTO.setExpirationTime("15 minutes");
-
-        String link = "http://localhost:8080/api/auth/confirm?token=" + token;
-
-        emailFacade.sendTemplateEmail(
-                EmailType.ACTIVATION,
-                responseDTO,
-                link);
-
-        return responseDTO;
-    }
-
     AuthReqRespDTO confirmToken(final String token) throws TokenNotFoundException, RegistrationTokenConflictException {
         ConfirmationToken confirmationToken;
         confirmationToken = confirmationTokenService.getToken(token)
@@ -190,6 +143,53 @@ class LoginAndRegisterFacade {
         response.setExpirationTime("24Hr");
         response.setMessage("Successfully singed in");
         return response;
+    }
+
+    AuthReqRespDTO refreshConfirmationToken(String email) throws InvalidEmailTypeException, TokenNotFoundException, RegistrationTokenConflictException {
+        AuthReqRespDTO responseDTO = new AuthReqRespDTO();
+        responseDTO.setEmail(email);
+
+        AppUser appUserResult = appUserRepository.findByEmail(email).
+                orElseThrow(() -> new UsernameNotFoundException("Email not found."));
+        responseDTO.setFirstName(appUserResult.getFirstName());
+        responseDTO.setLastName(appUserResult.getLastName());
+
+        String token = UUID.randomUUID().toString();
+        responseDTO.setToken(token);
+
+        if (confirmationTokenService.isConfirmed(email)){
+            log.info("Confirmation token already confirmed.");
+            throw new RegistrationTokenConflictException("Confirmation token already confirmed.");
+        } else if (confirmationTokenService.getTokenByEmail(email).isEmpty()) {
+            ConfirmationToken confirmationToken = new ConfirmationToken(
+                    token,
+                    LocalDateTime.now(),
+                    LocalDateTime.now().plusMinutes(15),
+                    appUserResult
+            );
+            confirmationTokenService.saveConfirmationToken(confirmationToken);
+            responseDTO.setStatusCode(201);
+
+        } else {
+            ConfirmationToken confirmationToken = confirmationTokenService.getTokenByEmail(email)
+                    .orElseThrow(() -> new TokenNotFoundException("Confirmation token not found."));
+
+            confirmationToken.setCreatedAt(LocalDateTime.now());
+            confirmationToken.setExpiresAt(LocalDateTime.now().plusMinutes(15));
+            responseDTO.setStatusCode(204);
+        }
+
+        responseDTO.setMessage("Generated new confirmation token.");
+        responseDTO.setExpirationTime("15 minutes");
+
+        String link = "http://localhost:8080/api/auth/confirm?token=" + token;
+
+        emailFacade.sendTemplateEmail(
+                EmailType.ACTIVATION,
+                responseDTO,
+                link);
+
+        return responseDTO;
     }
 
     AuthReqRespDTO refreshToken(String refreshToken) throws Exception {

@@ -1,7 +1,7 @@
 email:
   sender:
     name: "ISeeBugs"
-    email: "no-reply@iseebugs.plm"
+    email: "no-reply@iseebugs.pl"
   templates:
     activation:
       subject: "Activate Your Account"
