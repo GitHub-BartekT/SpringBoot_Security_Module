@@ -18,6 +18,7 @@ import pl.iseebugs.Security.infrastructure.security.projection.AuthReqRespDTO;
 import pl.iseebugs.Security.infrastructure.security.token.ConfirmationToken;
 import pl.iseebugs.Security.infrastructure.security.token.ConfirmationTokenService;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Optional;
 
@@ -417,51 +418,6 @@ class LoginAndRegisterFacadeTest {
     }
 
     @Test
-    void signIn_should_throws_BadCredentialsException() {
-        //given
-        var appUserRepository = mock(AppUserRepository.class);
-        var passwordEncoder = mock(PasswordEncoder.class);
-        var jwtUtils = mock(JWTUtils.class);
-        var authenticationManager = mock(AuthenticationManager.class);
-        var confirmationTokenService = mock(ConfirmationTokenService.class);
-        var emailFacade = mock(EmailFacade.class);
-        var appProperties = mock(AppProperties.class);
-
-        when(appUserRepository.findByEmail(anyString())).thenReturn(Optional.of(new AppUser()));
-
-        ConfirmationToken confirmationToken = new ConfirmationToken();
-        when(confirmationTokenService.getTokenByEmail(anyString())).thenReturn(Optional.of(confirmationToken));
-        when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class)))
-                .thenThrow(new BadCredentialsException("Bad credentials."));
-
-        //system under test
-        var toTest = new LoginAndRegisterFacade(
-                appUserRepository,
-                passwordEncoder,
-                jwtUtils,
-                authenticationManager,
-                confirmationTokenService,
-                emailFacade,
-                appProperties
-        );
-
-        //when
-        AuthReqRespDTO request = new AuthReqRespDTO();
-        request.setFirstName("Foo");
-        request.setLastName("Bar");
-        request.setEmail("test@foo.com");
-        request.setPassword("foobar");
-
-        Throwable e = catchThrowable(() -> toTest.signIn(request));
-
-        //then
-        assertAll(
-                () -> assertThat(e).isInstanceOf(BadCredentialsException.class),
-                () -> assertThat(e.getMessage()).isEqualTo("Bad credentials.")
-        );
-    }
-
-    @Test
     void signIn_should_returns_UsernameNotFoundException() {
         //given
         var appUserRepository = mock(AppUserRepository.class);
@@ -502,6 +458,96 @@ class LoginAndRegisterFacadeTest {
     }
 
     @Test
+    void signIn_should_throws_BadCredentialsException_when_token_not_found() {
+        //given
+        var appUserRepository = mock(AppUserRepository.class);
+        var passwordEncoder = mock(PasswordEncoder.class);
+        var jwtUtils = mock(JWTUtils.class);
+        var authenticationManager = mock(AuthenticationManager.class);
+        var confirmationTokenService = mock(ConfirmationTokenService.class);
+        var emailFacade = mock(EmailFacade.class);
+        var appProperties = mock(AppProperties.class);
+
+        when(appUserRepository.findByEmail(anyString())).thenReturn(Optional.of(new AppUser()));
+        LocalDateTime tokenExpiredAt = LocalDateTime.of(2024, 6, 3, 12, 30);
+        ConfirmationToken confirmationToken = new ConfirmationToken();
+        confirmationToken.setExpiresAt(tokenExpiredAt);
+
+        when(confirmationTokenService.getTokenByEmail(anyString())).thenReturn(Optional.of(confirmationToken));
+
+        //system under test
+        var toTest = new LoginAndRegisterFacade(
+                appUserRepository,
+                passwordEncoder,
+                jwtUtils,
+                authenticationManager,
+                confirmationTokenService,
+                emailFacade,
+                appProperties
+        );
+
+        //when
+        AuthReqRespDTO request = new AuthReqRespDTO();
+        request.setFirstName("Foo");
+        request.setLastName("Bar");
+        request.setEmail("test@foo.com");
+        request.setPassword("foobar");
+
+        Throwable e = catchThrowable(() -> toTest.signIn(request));
+
+        //then
+        assertAll(
+                () -> assertThat(e).isInstanceOf(BadCredentialsException.class),
+                () -> assertThat(e.getMessage()).isEqualTo("Registration not confirmed.")
+        );
+    }
+
+    @Test
+    void signIn_should_throws_CredentialsExpiredException() {
+        //given
+        var appUserRepository = mock(AppUserRepository.class);
+        var passwordEncoder = mock(PasswordEncoder.class);
+        var jwtUtils = mock(JWTUtils.class);
+        var authenticationManager = mock(AuthenticationManager.class);
+        var confirmationTokenService = mock(ConfirmationTokenService.class);
+        var emailFacade = mock(EmailFacade.class);
+        var appProperties = mock(AppProperties.class);
+
+        when(appUserRepository.findByEmail(anyString())).thenReturn(Optional.of(new AppUser()));
+        LocalDateTime tokenExpiresAt = LocalDateTime.now().plusDays(5);
+        ConfirmationToken confirmationToken = new ConfirmationToken();
+        confirmationToken.setExpiresAt(tokenExpiresAt);
+
+        when(confirmationTokenService.getTokenByEmail(anyString())).thenReturn(Optional.of(confirmationToken));
+
+        //system under test
+        var toTest = new LoginAndRegisterFacade(
+                appUserRepository,
+                passwordEncoder,
+                jwtUtils,
+                authenticationManager,
+                confirmationTokenService,
+                emailFacade,
+                appProperties
+        );
+
+        //when
+        AuthReqRespDTO request = new AuthReqRespDTO();
+        request.setFirstName("Foo");
+        request.setLastName("Bar");
+        request.setEmail("test@foo.com");
+        request.setPassword("foobar");
+
+        Throwable e = catchThrowable(() -> toTest.signIn(request));
+
+        //then
+        assertAll(
+                () -> assertThat(e).isInstanceOf(CredentialsExpiredException.class),
+                () -> assertThat(e.getMessage()).isEqualTo("Token expired.")
+        );
+    }
+
+    @Test
     void signIn_should_signs_in_user_and_returns_ok_200() throws TokenNotFoundException {
         //given
         var appUserRepository = mock(AppUserRepository.class);
@@ -525,15 +571,21 @@ class LoginAndRegisterFacadeTest {
         user.setLastName(request.getLastName());
         user.setRole("USER");
         user.setEnabled(true);
-
         when(appUserRepository.findByEmail(request.getEmail()))
                 .thenReturn(Optional.of(user));
+
+        LocalDateTime toConfirmedAt = LocalDateTime.of(2024, 6, 3, 12, 30);
+        LocalDateTime tokenExpiredAt = LocalDateTime.of(2024, 6, 3, 12, 30);
+        ConfirmationToken confirmationToken = new ConfirmationToken();
+        confirmationToken.setConfirmedAt(toConfirmedAt);
+        confirmationToken.setExpiresAt(tokenExpiredAt);
+        when(confirmationTokenService.getTokenByEmail(request.getEmail()))
+                .thenReturn(Optional.of(confirmationToken));
 
         UserDetails userDetails = AppUserMapper.fromEntityToUserDetails(user);
 
         when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class)))
                 .thenReturn(new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities()));
-        when(confirmationTokenService.getTokenByEmail(anyString())).thenReturn(Optional.of(new ConfirmationToken()));
 
         when(jwtUtils.generateAccessToken(any(UserDetails.class))).thenReturn("jwt-token");
         when(jwtUtils.generateRefreshToken(any(UserDetails.class))).thenReturn("refresh-token");
@@ -699,7 +751,7 @@ class LoginAndRegisterFacadeTest {
     }
 
     @Test
-    void refreshToken_should_returns_accessToken_and_200() throws TokenNotFoundException {
+    void refreshToken_should_returns_accessToken_and_200() throws Exception {
         //given
         var appUserRepository = mock(AppUserRepository.class);
         var passwordEncoder = mock(PasswordEncoder.class);
@@ -726,8 +778,6 @@ class LoginAndRegisterFacadeTest {
         when(jwtUtils.isRefreshToken(anyString())).thenReturn(true);
         when(jwtUtils.isTokenValid(anyString(), any(UserDetails.class))).thenReturn(true);
         when(jwtUtils.generateAccessToken(any(UserDetails.class))).thenReturn("jwt-token");
-        when(jwtUtils.generateRefreshToken(any(UserDetails.class))).thenReturn("refresh-token");
-        when(confirmationTokenService.getTokenByEmail(anyString())).thenReturn(Optional.of(new ConfirmationToken()));
 
         //system under test
         var toTest = new LoginAndRegisterFacade(
@@ -741,20 +791,15 @@ class LoginAndRegisterFacadeTest {
         );
 
         //when
-        AuthReqRespDTO request = new AuthReqRespDTO();
-        request.setFirstName("Foo");
-        request.setLastName("Bar");
-        request.setEmail("test@foo.com");
-        request.setPassword("foobar");
-
-        AuthReqRespDTO response = toTest.signIn(request);
+        String requestToken = "someToken";
+        AuthReqRespDTO response = toTest.refreshToken(requestToken);
 
         //then
         assertAll(
                 () -> assertThat(response.getStatusCode()).isEqualTo(200),
                 () -> assertThat(response.getToken()).isEqualTo("jwt-token"),
-                () -> assertThat(response.getRefreshToken()).isEqualTo("refresh-token"),
-                () -> assertThat(response.getMessage()).isEqualTo("Successfully singed in")
+                () -> assertThat(response.getRefreshToken()).isEqualTo(requestToken),
+                () -> assertThat(response.getMessage()).isEqualTo("Successfully Refreshed Token")
         );
     }
 

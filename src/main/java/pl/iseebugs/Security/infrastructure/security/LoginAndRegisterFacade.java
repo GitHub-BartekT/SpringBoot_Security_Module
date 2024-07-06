@@ -3,6 +3,7 @@ package pl.iseebugs.Security.infrastructure.security;
 import lombok.AllArgsConstructor;
 import lombok.extern.java.Log;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.CredentialsExpiredException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -33,7 +34,7 @@ class LoginAndRegisterFacade {
     private final ConfirmationTokenService confirmationTokenService;
     private final EmailFacade emailFacade;
     private final AppProperties appProperties;
-   private static Long CONFIRMATION_ACCOUNT_TOKEN_EXPIRATION_TIME = 15L;
+    private static Long CONFIRMATION_ACCOUNT_TOKEN_EXPIRATION_TIME = 15L;
 
     AuthReqRespDTO signUp(AuthReqRespDTO registrationRequest) throws EmailConflictException, InvalidEmailTypeException {
         AuthReqRespDTO responseDTO = new AuthReqRespDTO();
@@ -123,9 +124,22 @@ class LoginAndRegisterFacade {
         ConfirmationToken confirmationToken = confirmationTokenService.getTokenByEmail(email)
                 .orElseThrow(() -> new TokenNotFoundException("Confirmation token not found."));
 
+        LocalDateTime expiredAt = confirmationToken.getExpiresAt();
+
+        //TODO: tests
+        if (confirmationToken.getConfirmedAt() == null) {
+            if (expiredAt.isBefore(LocalDateTime.now())) {
+                log.info("Confirmation token not confirmed.");
+                throw new BadCredentialsException("Registration not confirmed.");
+            } else {
+                log.info("Token expired.");
+                throw new CredentialsExpiredException("Token expired.");
+            }
+        }
+
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
-                        signingRequest.getEmail(),
+                        email,
                         signingRequest.getPassword()));
 
         UserDetails userToJWT = AppUserMapper.fromEntityToUserDetails(user);
