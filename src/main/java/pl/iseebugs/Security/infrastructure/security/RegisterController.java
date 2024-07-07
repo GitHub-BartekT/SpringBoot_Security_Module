@@ -69,4 +69,9 @@ class RegisterController {
         String refreshToken = authHeader.substring(7);
         return ResponseEntity.ok(loginAndRegisterFacade.updateUser(refreshToken, updateRequest));
     }
+
+    @GetMapping(path = "/delete-confirm")
+    public ResponseEntity<AuthReqRespDTO> deleteConfirm(@RequestParam("token") String token) throws RegistrationTokenConflictException, TokenNotFoundException {
+        return ResponseEntity.ok(loginAndRegisterFacade.confirmDeleteToken(token));
+    }
 }

@@ -15,6 +15,8 @@ import pl.iseebugs.Security.domain.user.AppUserRepository;
 import pl.iseebugs.Security.infrastructure.email.EmailFacade;
 import pl.iseebugs.Security.infrastructure.email.EmailType;
 import pl.iseebugs.Security.infrastructure.email.InvalidEmailTypeException;
+import pl.iseebugs.Security.infrastructure.security.deleteToken.DeleteToken;
+import pl.iseebugs.Security.infrastructure.security.deleteToken.DeleteTokenService;
 import pl.iseebugs.Security.infrastructure.security.projection.AuthReqRespDTO;
 import pl.iseebugs.Security.infrastructure.security.token.ConfirmationToken;
 import pl.iseebugs.Security.infrastructure.security.token.ConfirmationTokenService;
@@ -32,9 +34,12 @@ class LoginAndRegisterFacade {
     private final JWTUtils jwtUtils;
     private final AuthenticationManager authenticationManager;
     private final ConfirmationTokenService confirmationTokenService;
+    private final DeleteTokenService deleteTokenService;
     private final EmailFacade emailFacade;
     private final AppProperties appProperties;
     private static Long CONFIRMATION_ACCOUNT_TOKEN_EXPIRATION_TIME = 15L;
+    private static Long DELETE_ACCOUNT_TOKEN_EXPIRATION_TIME = 1440L;
+
 
     AuthReqRespDTO signUp(AuthReqRespDTO registrationRequest) throws EmailConflictException, InvalidEmailTypeException {
         AuthReqRespDTO responseDTO = new AuthReqRespDTO();
@@ -74,7 +79,6 @@ class LoginAndRegisterFacade {
             responseDTO.setMessage("User created successfully.");
             responseDTO.setExpirationTime("15 minutes");
             responseDTO.setStatusCode(201);
-
 
             String link = createUrl("/api/auth/confirm?token=", token);
 
@@ -283,13 +287,70 @@ class LoginAndRegisterFacade {
             throw new CredentialsExpiredException("Token expired.");
         }
 
-        AuthReqRespDTO response = new AuthReqRespDTO();
+        AuthReqRespDTO responseDTO = new AuthReqRespDTO();
+        responseDTO.setFirstName(user.getFirstName());
+        responseDTO.setEmail(user.getEmail());
 
-        confirmationTokenService.deleteConfirmationToken(user);
-        appUserRepository.deleteByEmail(userEmail);
+        String token = UUID.randomUUID().toString();
+
+        DeleteToken deleteToken = deleteTokenService.getTokenByEmail(userEmail).isPresent() ?
+                deleteTokenService.getTokenByEmail(userEmail).orElseThrow(TokenNotFoundException::new) :
+                new DeleteToken();
+
+        deleteToken.setToken(token);
+        deleteToken.setCreatedAt(LocalDateTime.now());
+        deleteToken.setExpiresAt(LocalDateTime.now().plusMinutes(DELETE_ACCOUNT_TOKEN_EXPIRATION_TIME));
+        deleteToken.setAppUser(user);
+
+        deleteTokenService.saveDeleteToken(deleteToken);
+        responseDTO.setToken(token);
+
+        responseDTO.setMessage("Delete confirmation mail created successfully.");
+        responseDTO.setExpirationTime("24 hours");
+        responseDTO.setStatusCode(201);
+
+        String link = createUrl("/api/auth/delete-confirm?token=", token);
+
+        emailFacade.sendTemplateEmail(
+                EmailType.DELETE,
+                responseDTO,
+                link);
+
+        return responseDTO;
+    }
+
+    AuthReqRespDTO confirmDeleteToken(final String token) throws TokenNotFoundException {
+        DeleteToken deleteToken;
+        deleteToken = deleteTokenService.getToken(token)
+                .orElseThrow(TokenNotFoundException::new);
+
+        AuthReqRespDTO response = new AuthReqRespDTO();
+        LocalDateTime expiredAt = deleteToken.getExpiresAt();
+
+        if (expiredAt.isBefore(LocalDateTime.now())) {
+            log.info("Token expired.");
+            throw new CredentialsExpiredException("Token expired.");
+        }
+
+        deleteTokenService.setConfirmedAt(token);
+
+        anonymization(deleteToken.getAppUser().getEmail());
+
         response.setStatusCode(204);
-        response.setMessage("Successfully deleted user");
+        response.setMessage("User account successfully deleted.");
         return response;
+    }
+
+    private void anonymization(final String email) {
+        AppUser user = appUserRepository.findByEmail(email)
+                .orElseThrow(() ->
+                        new UsernameNotFoundException("User not found."));
+        user.setRole("DELETED");
+        user.setFirstName(UUID.randomUUID().toString());
+        user.setLastName(UUID.randomUUID().toString());
+        user.setPassword(UUID.randomUUID().toString());
+        user.setEmail(UUID.randomUUID().toString());
+        appUserRepository.save(user);
     }
 
     private String createUrl(final String endpoint, final String token) {

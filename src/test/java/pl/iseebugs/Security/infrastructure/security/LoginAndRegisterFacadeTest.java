@@ -14,9 +14,11 @@ import pl.iseebugs.Security.domain.user.AppUser;
 import pl.iseebugs.Security.domain.user.AppUserRepository;
 import pl.iseebugs.Security.infrastructure.email.EmailFacade;
 import pl.iseebugs.Security.infrastructure.email.InvalidEmailTypeException;
+import pl.iseebugs.Security.infrastructure.security.deleteToken.DeleteTokenService;
 import pl.iseebugs.Security.infrastructure.security.projection.AuthReqRespDTO;
 import pl.iseebugs.Security.infrastructure.security.token.ConfirmationToken;
 import pl.iseebugs.Security.infrastructure.security.token.ConfirmationTokenService;
+import pl.iseebugs.Security.infrastructure.security.InMemoryAppUserRepository;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -30,6 +32,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
+
 class LoginAndRegisterFacadeTest {
 
     @Test
@@ -40,6 +43,7 @@ class LoginAndRegisterFacadeTest {
         var jwtUtils = mock(JWTUtils.class);
         var authenticationManager = mock(AuthenticationManager.class);
         var confirmationTokenService = mock(ConfirmationTokenService.class);
+        var deleteTokenService = mock(DeleteTokenService.class);
         var emailFacade = mock(EmailFacade.class);
         var appProperties = mock(AppProperties.class);
 
@@ -52,6 +56,7 @@ class LoginAndRegisterFacadeTest {
                 jwtUtils,
                 authenticationManager,
                 confirmationTokenService,
+                deleteTokenService,
                 emailFacade,
                 appProperties
         );
@@ -81,6 +86,7 @@ class LoginAndRegisterFacadeTest {
         var jwtUtils = mock(JWTUtils.class);
         var authenticationManager = mock(AuthenticationManager.class);
         var confirmationTokenService = mock(ConfirmationTokenService.class);
+        var deleteTokenService = mock(DeleteTokenService.class);
         var emailFacade = mock(EmailFacade.class);
         var appProperties = mock(AppProperties.class);
         when(passwordEncoder.encode(anyString())).then(returnsFirstArg());
@@ -93,6 +99,7 @@ class LoginAndRegisterFacadeTest {
                 jwtUtils,
                 authenticationManager,
                 confirmationTokenService,
+                deleteTokenService,
                 emailFacade,
                 appProperties
         );
@@ -123,6 +130,7 @@ class LoginAndRegisterFacadeTest {
         var jwtUtils = mock(JWTUtils.class);
         var authenticationManager = mock(AuthenticationManager.class);
         var confirmationTokenService = mock(ConfirmationTokenService.class);
+        var deleteTokenService = mock(DeleteTokenService.class);
         var emailFacade = mock(EmailFacade.class);
         var appProperties = mock(AppProperties.class);
 
@@ -134,6 +142,7 @@ class LoginAndRegisterFacadeTest {
                 jwtUtils,
                 authenticationManager,
                 confirmationTokenService,
+                deleteTokenService,
                 emailFacade,
                 appProperties
         );
@@ -156,6 +165,7 @@ class LoginAndRegisterFacadeTest {
         var jwtUtils = mock(JWTUtils.class);
         var authenticationManager = mock(AuthenticationManager.class);
         var confirmationTokenService = mock(ConfirmationTokenService.class);
+        var deleteTokenService = mock(DeleteTokenService.class);
         var emailFacade = mock(EmailFacade.class);
         var appProperties = mock(AppProperties.class);
 
@@ -171,6 +181,7 @@ class LoginAndRegisterFacadeTest {
                 jwtUtils,
                 authenticationManager,
                 confirmationTokenService,
+                deleteTokenService,
                 emailFacade,
                 appProperties
         );
@@ -193,6 +204,7 @@ class LoginAndRegisterFacadeTest {
         var jwtUtils = mock(JWTUtils.class);
         var authenticationManager = mock(AuthenticationManager.class);
         var confirmationTokenService = mock(ConfirmationTokenService.class);
+        var deleteTokenService = mock(DeleteTokenService.class);
         var emailFacade = mock(EmailFacade.class);
         var appProperties = mock(AppProperties.class);
 
@@ -207,6 +219,7 @@ class LoginAndRegisterFacadeTest {
                 jwtUtils,
                 authenticationManager,
                 confirmationTokenService,
+                deleteTokenService,
                 emailFacade,
                 appProperties
         );
@@ -229,6 +242,7 @@ class LoginAndRegisterFacadeTest {
         var jwtUtils = mock(JWTUtils.class);
         var authenticationManager = mock(AuthenticationManager.class);
         var confirmationTokenService = mock(ConfirmationTokenService.class);
+        var deleteTokenService = mock(DeleteTokenService.class);
         var emailFacade = mock(EmailFacade.class);
         var appProperties = mock(AppProperties.class);
 
@@ -254,6 +268,7 @@ class LoginAndRegisterFacadeTest {
                     jwtUtils,
                     authenticationManager,
                     confirmationTokenService,
+                    deleteTokenService,
                     emailFacade,
                     appProperties
             );
@@ -279,6 +294,7 @@ class LoginAndRegisterFacadeTest {
         var jwtUtils = mock(JWTUtils.class);
         var authenticationManager = mock(AuthenticationManager.class);
         var confirmationTokenService = mock(ConfirmationTokenService.class);
+        var deleteTokenService = mock(DeleteTokenService.class);
         var emailFacade = mock(EmailFacade.class);
         var appProperties = mock(AppProperties.class);
 
@@ -289,6 +305,7 @@ class LoginAndRegisterFacadeTest {
                 jwtUtils,
                 authenticationManager,
                 confirmationTokenService,
+                deleteTokenService,
                 emailFacade,
                 appProperties
         );
@@ -313,6 +330,7 @@ class LoginAndRegisterFacadeTest {
         var jwtUtils = mock(JWTUtils.class);
         var authenticationManager = mock(AuthenticationManager.class);
         var confirmationTokenService = mock(ConfirmationTokenService.class);
+        var deleteTokenService = mock(DeleteTokenService.class);
         var emailFacade = mock(EmailFacade.class);
         var appProperties = mock(AppProperties.class);
 
@@ -323,6 +341,7 @@ class LoginAndRegisterFacadeTest {
                 jwtUtils,
                 authenticationManager,
                 confirmationTokenService,
+                deleteTokenService,
                 emailFacade,
                 appProperties
         );
@@ -350,6 +369,7 @@ class LoginAndRegisterFacadeTest {
         var jwtUtils = mock(JWTUtils.class);
         var authenticationManager = mock(AuthenticationManager.class);
         var confirmationTokenService = mock(ConfirmationTokenService.class);
+        var deleteTokenService = mock(DeleteTokenService.class);
         var emailFacade = mock(EmailFacade.class);
         var appProperties = mock(AppProperties.class);
 
@@ -361,6 +381,7 @@ class LoginAndRegisterFacadeTest {
                 jwtUtils,
                 authenticationManager,
                 confirmationTokenService,
+                deleteTokenService,
                 emailFacade,
                 appProperties
         );
@@ -389,6 +410,7 @@ class LoginAndRegisterFacadeTest {
         var jwtUtils = mock(JWTUtils.class);
         var authenticationManager = mock(AuthenticationManager.class);
         var confirmationTokenService = mock(ConfirmationTokenService.class);
+        var deleteTokenService = mock(DeleteTokenService.class);
         var emailFacade = mock(EmailFacade.class);
         var appProperties = mock(AppProperties.class);
 
@@ -400,6 +422,7 @@ class LoginAndRegisterFacadeTest {
                 jwtUtils,
                 authenticationManager,
                 confirmationTokenService,
+                deleteTokenService,
                 emailFacade,
                 appProperties
         );
@@ -427,6 +450,7 @@ class LoginAndRegisterFacadeTest {
         var jwtUtils = mock(JWTUtils.class);
         var authenticationManager = mock(AuthenticationManager.class);
         var confirmationTokenService = mock(ConfirmationTokenService.class);
+        var deleteTokenService = mock(DeleteTokenService.class);
         var emailFacade = mock(EmailFacade.class);
         var appProperties = mock(AppProperties.class);
 
@@ -439,6 +463,7 @@ class LoginAndRegisterFacadeTest {
                 jwtUtils,
                 authenticationManager,
                 confirmationTokenService,
+                deleteTokenService,
                 emailFacade,
                 appProperties
         );
@@ -467,6 +492,7 @@ class LoginAndRegisterFacadeTest {
         var jwtUtils = mock(JWTUtils.class);
         var authenticationManager = mock(AuthenticationManager.class);
         var confirmationTokenService = mock(ConfirmationTokenService.class);
+        var deleteTokenService = mock(DeleteTokenService.class);
         var emailFacade = mock(EmailFacade.class);
         var appProperties = mock(AppProperties.class);
 
@@ -484,6 +510,7 @@ class LoginAndRegisterFacadeTest {
                 jwtUtils,
                 authenticationManager,
                 confirmationTokenService,
+                deleteTokenService,
                 emailFacade,
                 appProperties
         );
@@ -512,6 +539,7 @@ class LoginAndRegisterFacadeTest {
         var jwtUtils = mock(JWTUtils.class);
         var authenticationManager = mock(AuthenticationManager.class);
         var confirmationTokenService = mock(ConfirmationTokenService.class);
+        var deleteTokenService = mock(DeleteTokenService.class);
         var emailFacade = mock(EmailFacade.class);
         var appProperties = mock(AppProperties.class);
 
@@ -529,6 +557,7 @@ class LoginAndRegisterFacadeTest {
                 jwtUtils,
                 authenticationManager,
                 confirmationTokenService,
+                deleteTokenService,
                 emailFacade,
                 appProperties
         );
@@ -557,6 +586,7 @@ class LoginAndRegisterFacadeTest {
         var jwtUtils = mock(JWTUtils.class);
         var authenticationManager = mock(AuthenticationManager.class);
         var confirmationTokenService = mock(ConfirmationTokenService.class);
+        var deleteTokenService = mock(DeleteTokenService.class);
         var emailFacade = mock(EmailFacade.class);
         var appProperties = mock(AppProperties.class);
 
@@ -599,6 +629,7 @@ class LoginAndRegisterFacadeTest {
                 jwtUtils,
                 authenticationManager,
                 confirmationTokenService,
+                deleteTokenService,
                 emailFacade,
                 appProperties
         );
@@ -623,6 +654,7 @@ class LoginAndRegisterFacadeTest {
         var jwtUtils = mock(JWTUtils.class);
         var authenticationManager = mock(AuthenticationManager.class);
         var confirmationTokenService = mock(ConfirmationTokenService.class);
+        var deleteTokenService = mock(DeleteTokenService.class);
         var emailFacade = mock(EmailFacade.class);
         var appProperties = mock(AppProperties.class);
 
@@ -647,6 +679,7 @@ class LoginAndRegisterFacadeTest {
                 jwtUtils,
                 authenticationManager,
                 confirmationTokenService,
+                deleteTokenService,
                 emailFacade,
                 appProperties
         );
@@ -671,6 +704,7 @@ class LoginAndRegisterFacadeTest {
         var jwtUtils = mock(JWTUtils.class);
         var authenticationManager = mock(AuthenticationManager.class);
         var confirmationTokenService = mock(ConfirmationTokenService.class);
+        var deleteTokenService = mock(DeleteTokenService.class);
         var emailFacade = mock(EmailFacade.class);
         var appProperties = mock(AppProperties.class);
 
@@ -685,6 +719,7 @@ class LoginAndRegisterFacadeTest {
                 jwtUtils,
                 authenticationManager,
                 confirmationTokenService,
+                deleteTokenService,
                 emailFacade,
                 appProperties
         );
@@ -709,6 +744,7 @@ class LoginAndRegisterFacadeTest {
         var jwtUtils = mock(JWTUtils.class);
         var authenticationManager = mock(AuthenticationManager.class);
         var confirmationTokenService = mock(ConfirmationTokenService.class);
+        var deleteTokenService = mock(DeleteTokenService.class);
         var emailFacade = mock(EmailFacade.class);
         var appProperties = mock(AppProperties.class);
 
@@ -737,6 +773,7 @@ class LoginAndRegisterFacadeTest {
                 jwtUtils,
                 authenticationManager,
                 confirmationTokenService,
+                deleteTokenService,
                 emailFacade,
                 appProperties
         );
@@ -760,6 +797,7 @@ class LoginAndRegisterFacadeTest {
         var jwtUtils = mock(JWTUtils.class);
         var authenticationManager = mock(AuthenticationManager.class);
         var confirmationTokenService = mock(ConfirmationTokenService.class);
+        var deleteTokenService = mock(DeleteTokenService.class);
         var emailFacade = mock(EmailFacade.class);
         var appProperties = mock(AppProperties.class);
 
@@ -788,6 +826,7 @@ class LoginAndRegisterFacadeTest {
                 jwtUtils,
                 authenticationManager,
                 confirmationTokenService,
+                deleteTokenService,
                 emailFacade,
                 appProperties
         );
@@ -813,6 +852,7 @@ class LoginAndRegisterFacadeTest {
         var jwtUtils = mock(JWTUtils.class);
         var authenticationManager = mock(AuthenticationManager.class);
         var confirmationTokenService = mock(ConfirmationTokenService.class);
+        var deleteTokenService = mock(DeleteTokenService.class);
         var emailFacade = mock(EmailFacade.class);
         var appProperties = mock(AppProperties.class);
 
@@ -825,6 +865,7 @@ class LoginAndRegisterFacadeTest {
                 jwtUtils,
                 authenticationManager,
                 confirmationTokenService,
+                deleteTokenService,
                 emailFacade,
                 appProperties
         );
@@ -849,6 +890,7 @@ class LoginAndRegisterFacadeTest {
         var jwtUtils = mock(JWTUtils.class);
         var authenticationManager = mock(AuthenticationManager.class);
         var confirmationTokenService = mock(ConfirmationTokenService.class);
+        var deleteTokenService = mock(DeleteTokenService.class);
         var emailFacade = mock(EmailFacade.class);
         var appProperties = mock(AppProperties.class);
 
@@ -862,6 +904,7 @@ class LoginAndRegisterFacadeTest {
                 jwtUtils,
                 authenticationManager,
                 confirmationTokenService,
+                deleteTokenService,
                 emailFacade,
                 appProperties
         );
@@ -885,6 +928,7 @@ class LoginAndRegisterFacadeTest {
         var jwtUtils = mock(JWTUtils.class);
         var authenticationManager = mock(AuthenticationManager.class);
         var confirmationTokenService = mock(ConfirmationTokenService.class);
+        var deleteTokenService = mock(DeleteTokenService.class);
         var emailFacade = mock(EmailFacade.class);
         var appProperties = mock(AppProperties.class);
 
@@ -912,6 +956,7 @@ class LoginAndRegisterFacadeTest {
                 jwtUtils,
                 authenticationManager,
                 confirmationTokenService,
+                deleteTokenService,
                 emailFacade,
                 appProperties
         );
@@ -935,6 +980,7 @@ class LoginAndRegisterFacadeTest {
         var jwtUtils = mock(JWTUtils.class);
         var authenticationManager = mock(AuthenticationManager.class);
         var confirmationTokenService = mock(ConfirmationTokenService.class);
+        var deleteTokenService = mock(DeleteTokenService.class);
         var emailFacade = mock(EmailFacade.class);
         var appProperties = mock(AppProperties.class);
 
@@ -965,6 +1011,7 @@ class LoginAndRegisterFacadeTest {
                 jwtUtils,
                 authenticationManager,
                 confirmationTokenService,
+                deleteTokenService,
                 emailFacade,
                 appProperties
         );
@@ -996,6 +1043,7 @@ class LoginAndRegisterFacadeTest {
         var jwtUtils = mock(JWTUtils.class);
         var authenticationManager = mock(AuthenticationManager.class);
         var confirmationTokenService = mock(ConfirmationTokenService.class);
+        var deleteTokenService = mock(DeleteTokenService.class);
         var emailFacade = mock(EmailFacade.class);
         var appProperties = mock(AppProperties.class);
 
@@ -1009,6 +1057,7 @@ class LoginAndRegisterFacadeTest {
                 jwtUtils,
                 authenticationManager,
                 confirmationTokenService,
+                deleteTokenService,
                 emailFacade,
                 appProperties
         );
@@ -1033,6 +1082,7 @@ class LoginAndRegisterFacadeTest {
         var jwtUtils = mock(JWTUtils.class);
         var authenticationManager = mock(AuthenticationManager.class);
         var confirmationTokenService = mock(ConfirmationTokenService.class);
+        var deleteTokenService = mock(DeleteTokenService.class);
         var emailFacade = mock(EmailFacade.class);
         var appProperties = mock(AppProperties.class);
 
@@ -1058,6 +1108,7 @@ class LoginAndRegisterFacadeTest {
                 jwtUtils,
                 authenticationManager,
                 confirmationTokenService,
+                deleteTokenService,
                 emailFacade,
                 appProperties
         );
@@ -1082,6 +1133,7 @@ class LoginAndRegisterFacadeTest {
         var jwtUtils = mock(JWTUtils.class);
         var authenticationManager = mock(AuthenticationManager.class);
         var confirmationTokenService = mock(ConfirmationTokenService.class);
+        var deleteTokenService = mock(DeleteTokenService.class);
         var emailFacade = mock(EmailFacade.class);
         var appProperties = mock(AppProperties.class);
 
@@ -1110,6 +1162,7 @@ class LoginAndRegisterFacadeTest {
                 jwtUtils,
                 authenticationManager,
                 confirmationTokenService,
+                deleteTokenService,
                 emailFacade,
                 appProperties
         );
@@ -1133,6 +1186,7 @@ class LoginAndRegisterFacadeTest {
         var jwtUtils = mock(JWTUtils.class);
         var authenticationManager = mock(AuthenticationManager.class);
         var confirmationTokenService = mock(ConfirmationTokenService.class);
+        var deleteTokenService = mock(DeleteTokenService.class);
         var emailFacade = mock(EmailFacade.class);
         var appProperties = mock(AppProperties.class);
 
@@ -1162,6 +1216,7 @@ class LoginAndRegisterFacadeTest {
                 jwtUtils,
                 authenticationManager,
                 confirmationTokenService,
+                deleteTokenService,
                 emailFacade,
                 appProperties
         );
@@ -1172,8 +1227,8 @@ class LoginAndRegisterFacadeTest {
 
         //then
         assertAll(
-                () -> assertThat(response.getStatusCode()).isEqualTo(204),
-                () -> assertThat(response.getMessage()).isEqualTo("Successfully deleted user")
+                () -> assertThat(response.getStatusCode()).isEqualTo(201),
+                () -> assertThat(response.getMessage()).isEqualTo("Delete confirmation mail created successfully.")
         );
     }
 }

@@ -16,7 +16,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Function;
 
-class InMemoryAppUserRepository implements AppUserRepository {
+public class InMemoryAppUserRepository implements AppUserRepository {
     private final AtomicLong index = new AtomicLong(1);
     private final Map<Long, AppUser> map = new HashMap<>();
 

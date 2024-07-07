@@ -29,8 +29,8 @@ email:
       text2:
     delete-account:
       subject: "Account deleted"
-      template: "success-email"
-      welcome-text:
-      text1:
-      text2:
+      template: "authorization-email"
+      welcome-text: "Welcome to ISeeBugs, ${name}!"
+      text1: "Please click link to successfully delete your account"
+      text2: "See you soon."
 
