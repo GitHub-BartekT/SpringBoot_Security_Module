@@ -13,7 +13,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
@@ -221,7 +221,7 @@ class UserRegistersAndDeletesAccountIntegrationTest extends BaseIntegrationTest 
     // and system returned OK(200)
         // given && when
         log.info("Step 9.");
-        ResultActions updateRegisterRequest = mockMvc.perform(put("/api/auth/user/updateUser")
+        ResultActions updateRegisterRequest = mockMvc.perform(patch("/api/auth/users")
                 .header("Authorization", "Bearer " + newAccessToken)
                 .content("""
                         {
@@ -246,7 +246,7 @@ class UserRegistersAndDeletesAccountIntegrationTest extends BaseIntegrationTest 
     //Step 10:    User made DELETE /api/auth/deleteUser “Authorization: AAAA.BBBB.CCC” (refresh token)
     // and system returned UNAUTHORIZED(401)
         log.info("Step 10.");
-        ResultActions badDeleteRegisterRequest = mockMvc.perform(delete("/api/auth/user/deleteUser")
+        ResultActions badDeleteRegisterRequest = mockMvc.perform(delete("/api/auth/users")
                 .header("Authorization", "Bearer " + refreshToken)
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
         );
@@ -262,7 +262,7 @@ class UserRegistersAndDeletesAccountIntegrationTest extends BaseIntegrationTest 
     //Step 11: User made DELETE /api/auth/deleteUser with “Authorization: AAAA.BBBB.CCC”
     //and system returned OK(204)
         log.info("Step 11.");
-        ResultActions deleteRegisterRequest = mockMvc.perform(delete("/api/auth/user/deleteUser")
+        ResultActions deleteRegisterRequest = mockMvc.perform(delete("/api/auth/users")
                 .header("Authorization", "Bearer " + newAccessToken)
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
         );

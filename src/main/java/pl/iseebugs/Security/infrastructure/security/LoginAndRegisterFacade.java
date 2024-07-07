@@ -126,7 +126,6 @@ class LoginAndRegisterFacade {
 
         LocalDateTime expiredAt = confirmationToken.getExpiresAt();
 
-        //TODO: tests
         if (confirmationToken.getConfirmedAt() == null) {
             if (expiredAt.isBefore(LocalDateTime.now())) {
                 log.info("Confirmation token not confirmed.");
@@ -244,13 +243,13 @@ class LoginAndRegisterFacade {
 
         AuthReqRespDTO responseDTO = new AuthReqRespDTO();
 
-        String firstName = updateRequest.getFirstName();
-        String lastName = updateRequest.getLastName();
-        String password = passwordEncoder.encode(updateRequest.getPassword());
+        String firstName = updateRequest.getFirstName().isBlank() ?
+                toUpdate.getFirstName() :
+                updateRequest.getFirstName();
 
-        if (password != null && !password.trim().isEmpty()) {
-            toUpdate.setPassword(passwordEncoder.encode(password));
-        }
+        String lastName = updateRequest.getLastName().isBlank() ?
+                toUpdate.getLastName() :
+                updateRequest.getLastName();
 
         toUpdate.setFirstName(firstName);
         toUpdate.setLastName(lastName);

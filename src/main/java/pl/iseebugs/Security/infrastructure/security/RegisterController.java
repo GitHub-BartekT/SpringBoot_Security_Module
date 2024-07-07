@@ -32,7 +32,7 @@ class RegisterController {
         return ResponseEntity.ok(loginAndRegisterFacade.confirmToken(token));
     }
 
-    @GetMapping(path = "/confirm/refresh_token")
+    @GetMapping(path = "/confirm/refresh-confirmation-token")
     public ResponseEntity<AuthReqRespDTO> refreshConfirmationToken(@RequestParam("email") String email) throws TokenNotFoundException, InvalidEmailTypeException, RegistrationTokenConflictException {
         return ResponseEntity.ok(loginAndRegisterFacade.refreshConfirmationToken(email));
     }
@@ -51,7 +51,7 @@ class RegisterController {
         return ResponseEntity.ok(loginAndRegisterFacade.refreshToken(refreshToken));
     }
 
-    @DeleteMapping("/user/deleteUser")
+    @DeleteMapping("/users")
     ResponseEntity<AuthReqRespDTO> deleteUser(@RequestHeader("Authorization") String authHeader) throws Exception {
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
@@ -60,7 +60,7 @@ class RegisterController {
         return ResponseEntity.ok(loginAndRegisterFacade.deleteUser(accessToken));
     }
 
-    @PutMapping("/user/updateUser")
+    @PatchMapping("/users")
     ResponseEntity<AuthReqRespDTO> updateUser(@RequestHeader("Authorization") String authHeader,
                                               @RequestBody AuthReqRespDTO updateRequest) throws Exception {
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
