@@ -64,6 +64,10 @@ class JWTUtils {
         return Token.REFRESH.name().equals(extractClaims(token, claims -> claims.get("type")));
     }
 
+    public boolean isAccessToken(String token) {
+        return Token.ACCESS.name().equals(extractClaims(token, claims -> claims.get("type")));
+    }
+
     private <T> T extractClaims(String token, Function<Claims, T> claimsTFunction){
         return claimsTFunction.apply(Jwts.parser().verifyWith(Key).build().parseSignedClaims(token).getPayload());
     }

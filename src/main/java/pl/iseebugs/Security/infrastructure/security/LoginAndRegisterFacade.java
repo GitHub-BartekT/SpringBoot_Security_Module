@@ -24,6 +24,7 @@ import pl.iseebugs.Security.infrastructure.security.token.ConfirmationTokenServi
 import java.time.LocalDateTime;
 import java.util.UUID;
 
+
 @AllArgsConstructor
 @Service
 @Log
@@ -36,7 +37,7 @@ class LoginAndRegisterFacade {
     private final ConfirmationTokenService confirmationTokenService;
     private final DeleteTokenService deleteTokenService;
     private final EmailFacade emailFacade;
-    private final AppProperties appProperties;
+    private final LoginAndRegisterHelper helper;
     private static Long CONFIRMATION_ACCOUNT_TOKEN_EXPIRATION_TIME = 15L;
     private static Long DELETE_ACCOUNT_TOKEN_EXPIRATION_TIME = 1440L;
 
@@ -80,7 +81,7 @@ class LoginAndRegisterFacade {
             responseDTO.setExpirationTime("15 minutes");
             responseDTO.setStatusCode(201);
 
-            String link = createUrl("/api/auth/confirm?token=", token);
+            String link = helper.createUrl("/api/auth/confirm?token=", token);
 
             emailFacade.sendTemplateEmail(
                     EmailType.ACTIVATION,
@@ -192,7 +193,7 @@ class LoginAndRegisterFacade {
         responseDTO.setMessage("Generated new confirmation token.");
         responseDTO.setExpirationTime("15 minutes");
 
-        String link = createUrl("/api/auth/confirm?token=", token);
+        String link = helper.createUrl("/api/auth/confirm?token=", token);
 
         emailFacade.sendTemplateEmail(EmailType.ACTIVATION, responseDTO, link);
 
@@ -200,7 +201,7 @@ class LoginAndRegisterFacade {
     }
 
     AuthReqRespDTO refreshToken(String refreshToken) throws Exception {
-        validateIsTokenRefresh(refreshToken);
+        helper.validateIsTokenRefresh(refreshToken);
 
         String userEmail = jwtUtils.extractUsername(refreshToken);
         AppUser user = appUserRepository.findByEmail(userEmail)
@@ -226,7 +227,7 @@ class LoginAndRegisterFacade {
     }
 
     AuthReqRespDTO updateUser(String accessToken, AuthReqRespDTO updateRequest) throws Exception {
-        validateIsTokenAccess(accessToken);
+        helper.validateIsTokenAccess(accessToken);
 
         String userEmail = jwtUtils.extractUsername(accessToken);
         AppUser toUpdate = appUserRepository.findByEmail(userEmail)
@@ -267,7 +268,7 @@ class LoginAndRegisterFacade {
     }
 
     AuthReqRespDTO generateNewPassword(String accessToken) throws BadTokenTypeException, InvalidEmailTypeException {
-        validateIsTokenAccess(accessToken);
+        helper.validateIsTokenAccess(accessToken);
 
         String userEmail = jwtUtils.extractUsername(accessToken);
         AppUser toUpdate = appUserRepository.findByEmail(userEmail)
@@ -297,7 +298,7 @@ class LoginAndRegisterFacade {
     }
 
     AuthReqRespDTO deleteUser(String accessToken) throws Exception {
-        validateIsTokenAccess(accessToken);
+        helper.validateIsTokenAccess(accessToken);
 
         String userEmail = jwtUtils.extractUsername(accessToken);
 
@@ -333,7 +334,7 @@ class LoginAndRegisterFacade {
         responseDTO.setExpirationTime("24 hours");
         responseDTO.setStatusCode(201);
 
-        String link = createUrl("/api/auth/delete-confirm?token=", token);
+        String link = helper.createUrl("/api/auth/delete-confirm?token=", token);
 
         emailFacade.sendTemplateEmail(
                 EmailType.DELETE,
@@ -375,26 +376,5 @@ class LoginAndRegisterFacade {
         user.setPassword(UUID.randomUUID().toString());
         user.setEmail(UUID.randomUUID().toString());
         appUserRepository.save(user);
-    }
-
-    private String createUrl(final String endpoint, final String token) {
-        return appProperties.uri() + ":" +
-                appProperties.port() +
-                endpoint +
-                token;
-    }
-
-    private void validateIsTokenAccess(final String token) throws BadTokenTypeException {
-        if (jwtUtils.isRefreshToken(token)) {
-            log.info("Bad token type provided.");
-            throw new BadTokenTypeException();
-        }
-    }
-
-    private void validateIsTokenRefresh(final String token) throws BadTokenTypeException {
-        if (!jwtUtils.isRefreshToken(token)) {
-            log.info("Bad token type provided.");
-            throw new BadTokenTypeException();
-        }
     }
 }
