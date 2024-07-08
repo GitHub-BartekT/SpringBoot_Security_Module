@@ -1234,7 +1234,7 @@ class LoginAndRegisterFacadeTest {
     }
 
     @Test
-    void deleteConfirmToken_should_throws_CredentialsExpiredException() {
+    void confirmDeleteToken_should_throws_CredentialsExpiredException() {
         //given
         var appUserRepository = mock(AppUserRepository.class);
         var passwordEncoder = mock(PasswordEncoder.class);
@@ -1272,7 +1272,7 @@ class LoginAndRegisterFacadeTest {
     }
 
     @Test
-    void deleteConfirmToken_should_confirms_and_returns_200() {
+    void confirmDeleteToken_should_confirms_and_returns_200() {
         //given
         var appUserRepository = mock(AppUserRepository.class);
         var passwordEncoder = mock(PasswordEncoder.class);

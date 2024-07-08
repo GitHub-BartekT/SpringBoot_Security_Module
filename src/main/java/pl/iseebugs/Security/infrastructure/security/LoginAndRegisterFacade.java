@@ -200,10 +200,7 @@ class LoginAndRegisterFacade {
     }
 
     AuthReqRespDTO refreshToken(String refreshToken) throws Exception {
-        if (!jwtUtils.isRefreshToken(refreshToken)) {
-            log.info("Bad token type provided.");
-            throw new BadTokenTypeException();
-        }
+        validateIsTokenRefresh(refreshToken);
 
         String userEmail = jwtUtils.extractUsername(refreshToken);
         AppUser user = appUserRepository.findByEmail(userEmail)
@@ -229,10 +226,7 @@ class LoginAndRegisterFacade {
     }
 
     AuthReqRespDTO updateUser(String accessToken, AuthReqRespDTO updateRequest) throws Exception {
-        if (jwtUtils.isRefreshToken(accessToken)) {
-            log.info("Bad token type provided.");
-            throw new BadTokenTypeException();
-        }
+        validateIsTokenAccess(accessToken);
 
         String userEmail = jwtUtils.extractUsername(accessToken);
         AppUser toUpdate = appUserRepository.findByEmail(userEmail)
@@ -273,10 +267,7 @@ class LoginAndRegisterFacade {
     }
 
     AuthReqRespDTO generateNewPassword(String accessToken) throws BadTokenTypeException, InvalidEmailTypeException {
-        if (jwtUtils.isRefreshToken(accessToken)) {
-            log.info("Bad token type provided.");
-            throw new BadTokenTypeException();
-        }
+        validateIsTokenAccess(accessToken);
 
         String userEmail = jwtUtils.extractUsername(accessToken);
         AppUser toUpdate = appUserRepository.findByEmail(userEmail)
@@ -306,10 +297,7 @@ class LoginAndRegisterFacade {
     }
 
     AuthReqRespDTO deleteUser(String accessToken) throws Exception {
-        if (jwtUtils.isRefreshToken(accessToken)) {
-            log.info("Bad token type provided");
-            throw new BadTokenTypeException();
-        }
+        validateIsTokenAccess(accessToken);
 
         String userEmail = jwtUtils.extractUsername(accessToken);
 
@@ -394,5 +382,19 @@ class LoginAndRegisterFacade {
                 appProperties.port() +
                 endpoint +
                 token;
+    }
+
+    private void validateIsTokenAccess(final String token) throws BadTokenTypeException {
+        if (jwtUtils.isRefreshToken(token)) {
+            log.info("Bad token type provided.");
+            throw new BadTokenTypeException();
+        }
+    }
+
+    private void validateIsTokenRefresh(final String token) throws BadTokenTypeException {
+        if (!jwtUtils.isRefreshToken(token)) {
+            log.info("Bad token type provided.");
+            throw new BadTokenTypeException();
+        }
     }
 }
