@@ -297,6 +297,37 @@ class LoginAndRegisterFacade {
         return responseDTO;
     }
 
+    AuthReqRespDTO updatePassword(String accessToken, AuthReqRespDTO requestDTO) throws BadTokenTypeException, InvalidEmailTypeException {
+        helper.validateIsTokenAccess(accessToken);
+
+        String userEmail = jwtUtils.extractUsername(accessToken);
+        AppUser toUpdate = appUserRepository.findByEmail(userEmail)
+                .orElseThrow(() ->
+                        new UsernameNotFoundException("User extracted from token not found."));
+
+        String newPassword = requestDTO.getPassword();
+        String encodePassword = passwordEncoder.encode(newPassword);
+
+        toUpdate.setPassword(encodePassword);
+        appUserRepository.save(toUpdate);
+
+        AuthReqRespDTO responseDTO = new AuthReqRespDTO();
+
+        responseDTO.setMessage("Password changed successfully");
+        responseDTO.setStatusCode(200);
+        responseDTO.setFirstName(toUpdate.getFirstName());
+        responseDTO.setLastName(toUpdate.getLastName());
+        responseDTO.setEmail(toUpdate.getEmail());
+
+        emailFacade.sendTemplateEmail(
+                EmailType.RESET,
+                responseDTO,
+                newPassword);
+
+        return responseDTO;
+    }
+
+
     AuthReqRespDTO deleteUser(String accessToken) throws Exception {
         helper.validateIsTokenAccess(accessToken);
 

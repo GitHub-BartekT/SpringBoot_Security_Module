@@ -76,6 +76,15 @@ class RegisterController {
         return ResponseEntity.ok(loginAndRegisterFacade.generateNewPassword(accessToken));
     }
 
+    @PatchMapping("/users/password")
+    ResponseEntity<AuthReqRespDTO> generateNewPassword(@RequestHeader("Authorization") String authHeader, @RequestBody AuthReqRespDTO reqRespDTO) throws Exception {
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
+        }
+        String accessToken = authHeader.substring(7);
+        return ResponseEntity.ok(loginAndRegisterFacade.updatePassword(accessToken, reqRespDTO));
+    }
+
     @GetMapping("/delete-confirm")
     public ResponseEntity<AuthReqRespDTO> deleteConfirm(@RequestParam("token") String token) throws TokenNotFoundException {
         return ResponseEntity.ok(loginAndRegisterFacade.confirmDeleteToken(token));
