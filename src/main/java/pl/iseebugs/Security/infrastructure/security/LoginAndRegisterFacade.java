@@ -262,9 +262,45 @@ class LoginAndRegisterFacade {
         if (ourUserResult.getId() != null) {
             responseDTO.setMessage("User update successfully");
             responseDTO.setStatusCode(200);
+            responseDTO.setEmail(ourUserResult.getEmail());
+            responseDTO.setFirstName(ourUserResult.getFirstName());
+            responseDTO.setLastName(ourUserResult.getLastName());
             responseDTO.setFirstName(ourUserResult.getFirstName());
             responseDTO.setLastName(ourUserResult.getLastName());
         }
+
+        return responseDTO;
+    }
+
+    AuthReqRespDTO generateNewPassword(String accessToken) throws BadTokenTypeException, InvalidEmailTypeException {
+        if (jwtUtils.isRefreshToken(accessToken)) {
+            log.info("Bad token type provided.");
+            throw new BadTokenTypeException();
+        }
+
+        String userEmail = jwtUtils.extractUsername(accessToken);
+        AppUser toUpdate = appUserRepository.findByEmail(userEmail)
+                .orElseThrow(() ->
+                        new UsernameNotFoundException("User extracted from token not found."));
+
+        String newPassword = UUID.randomUUID().toString();
+        String encodePassword = passwordEncoder.encode(newPassword);
+
+        toUpdate.setPassword(encodePassword);
+        appUserRepository.save(toUpdate);
+
+        AuthReqRespDTO responseDTO = new AuthReqRespDTO();
+
+        responseDTO.setMessage("Password changed successfully");
+        responseDTO.setStatusCode(200);
+        responseDTO.setFirstName(toUpdate.getFirstName());
+        responseDTO.setLastName(toUpdate.getLastName());
+        responseDTO.setEmail(toUpdate.getEmail());
+
+        emailFacade.sendTemplateEmail(
+                EmailType.RESET,
+                responseDTO,
+                newPassword);
 
         return responseDTO;
     }

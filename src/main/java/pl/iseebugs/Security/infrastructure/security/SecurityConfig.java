@@ -48,8 +48,9 @@ class SecurityConfig {
                                 "/v3/api-docs/**",
                                 "/swagger-resources/**").permitAll()
                         .requestMatchers(
-                                "/api/auth/user/deleteUser",
-                                "/api/auth/user/updateUser")
+                                "/api/auth/users",
+                                "/api/auth/users/password",
+                                "/api/auth/users/delete-confirm")
                         .hasAnyAuthority("USER")
                         .anyRequest().authenticated())
                 .sessionManagement(manager -> manager.sessionCreationPolicy(SessionCreationPolicy.STATELESS))

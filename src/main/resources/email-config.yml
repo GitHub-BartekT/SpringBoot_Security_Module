@@ -23,10 +23,10 @@ email:
       text2:
     reset-password:
       subject: "Reset Your Password"
-      template: "authorization-email"
-      welcome-text:
-      text1:
-      text2:
+      template: "information-email"
+      welcome-text: "Welcome to ISeeBugs, ${name}!"
+      text1: "This is your new password:"
+      text2: "See you soon."
     delete-account:
       subject: "Account deleted"
       template: "authorization-email"

@@ -3,9 +3,6 @@ package pl.iseebugs.Security.infrastructure.security;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.authentication.BadCredentialsException;
-import org.springframework.security.authentication.CredentialsExpiredException;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.annotation.*;
 import pl.iseebugs.Security.infrastructure.email.InvalidEmailTypeException;
 import pl.iseebugs.Security.infrastructure.security.projection.AuthReqRespDTO;
@@ -70,8 +67,17 @@ class RegisterController {
         return ResponseEntity.ok(loginAndRegisterFacade.updateUser(refreshToken, updateRequest));
     }
 
-    @GetMapping(path = "/delete-confirm")
-    public ResponseEntity<AuthReqRespDTO> deleteConfirm(@RequestParam("token") String token) throws RegistrationTokenConflictException, TokenNotFoundException {
+    @PatchMapping("/users/forgotten-password")
+    ResponseEntity<AuthReqRespDTO> generateNewPassword(@RequestHeader("Authorization") String authHeader) throws Exception {
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
+        }
+        String accessToken = authHeader.substring(7);
+        return ResponseEntity.ok(loginAndRegisterFacade.generateNewPassword(accessToken));
+    }
+
+    @GetMapping("/delete-confirm")
+    public ResponseEntity<AuthReqRespDTO> deleteConfirm(@RequestParam("token") String token) throws TokenNotFoundException {
         return ResponseEntity.ok(loginAndRegisterFacade.confirmDeleteToken(token));
     }
 }
