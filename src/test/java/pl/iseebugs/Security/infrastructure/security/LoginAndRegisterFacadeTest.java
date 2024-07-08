@@ -14,6 +14,7 @@ import pl.iseebugs.Security.domain.user.AppUser;
 import pl.iseebugs.Security.domain.user.AppUserRepository;
 import pl.iseebugs.Security.infrastructure.email.EmailFacade;
 import pl.iseebugs.Security.infrastructure.email.InvalidEmailTypeException;
+import pl.iseebugs.Security.infrastructure.security.deleteToken.DeleteToken;
 import pl.iseebugs.Security.infrastructure.security.deleteToken.DeleteTokenService;
 import pl.iseebugs.Security.infrastructure.security.projection.AuthReqRespDTO;
 import pl.iseebugs.Security.infrastructure.security.token.ConfirmationToken;
@@ -1179,7 +1180,7 @@ class LoginAndRegisterFacadeTest {
     }
 
     @Test
-    void deleteUser_should_returns_accessToken_and_204() throws Exception {
+    void deleteUser_should_returns_accessToken_and_201() throws Exception {
         //given
         var appUserRepository = mock(AppUserRepository.class);
         var passwordEncoder = mock(PasswordEncoder.class);
@@ -1231,4 +1232,99 @@ class LoginAndRegisterFacadeTest {
                 () -> assertThat(response.getMessage()).isEqualTo("Delete confirmation mail created successfully.")
         );
     }
+
+    @Test
+    void deleteConfirmToken_should_throws_CredentialsExpiredException() {
+        //given
+        var appUserRepository = mock(AppUserRepository.class);
+        var passwordEncoder = mock(PasswordEncoder.class);
+        var jwtUtils = mock(JWTUtils.class);
+        var authenticationManager = mock(AuthenticationManager.class);
+        var confirmationTokenService = mock(ConfirmationTokenService.class);
+        var deleteTokenService = mock(DeleteTokenService.class);
+        var emailFacade = mock(EmailFacade.class);
+        var appProperties = mock(AppProperties.class);
+
+        LocalDateTime tokenExpiredAt = LocalDateTime.of(2024, 6, 3, 12, 30);
+        DeleteToken deleteToken = new DeleteToken();
+        deleteToken.setExpiresAt(tokenExpiredAt);
+        when(deleteTokenService.getToken(anyString())).thenReturn(Optional.of(deleteToken));
+        //system under test
+        var toTest = new LoginAndRegisterFacade(
+                appUserRepository,
+                passwordEncoder,
+                jwtUtils,
+                authenticationManager,
+                confirmationTokenService,
+                deleteTokenService,
+                emailFacade,
+                appProperties
+        );
+        //when
+        String token = "foo";
+        Throwable e = catchThrowable(() -> toTest.confirmDeleteToken(token));
+
+        //then
+        assertAll(
+                () -> assertThat(e).isInstanceOf(CredentialsExpiredException.class),
+                () -> assertThat(e.getMessage()).isEqualTo("Token expired.")
+        );
+    }
+
+    @Test
+    void deleteConfirmToken_should_confirms_and_returns_200() {
+        //given
+        var appUserRepository = mock(AppUserRepository.class);
+        var passwordEncoder = mock(PasswordEncoder.class);
+        var jwtUtils = mock(JWTUtils.class);
+        var authenticationManager = mock(AuthenticationManager.class);
+        var confirmationTokenService = mock(ConfirmationTokenService.class);
+        var deleteTokenService = mock(DeleteTokenService.class);
+        var emailFacade = mock(EmailFacade.class);
+        var appProperties = mock(AppProperties.class);
+
+        LocalDateTime tokenExpiresAt = LocalDateTime.of(2024, 6, 3, 12, 30);
+        AppUser appUser = new AppUser();
+        String email = "bar";
+        appUser.setEmail(email);
+        when(appUserRepository.findByEmail(anyString())).thenReturn(Optional.of(appUser));
+
+        DeleteToken deleteToken = new DeleteToken();
+        deleteToken.setExpiresAt(tokenExpiresAt);
+        deleteToken.setAppUser(appUser);
+
+        when(deleteTokenService.getToken(anyString())).thenReturn(Optional.of(deleteToken));
+        //doNothing().when(appUserRepository).enableAppUser(anyString());
+        LocalDateTime fixedNow = LocalDateTime.of(2024, 6, 3, 12, 20);
+
+        // Stub LocalDateTime.now()
+        try (MockedStatic<LocalDateTime> mockedLocalDateTime = Mockito.mockStatic(LocalDateTime.class)) {
+            mockedLocalDateTime.when(LocalDateTime::now).thenReturn(fixedNow);
+
+            //system under test
+            var toTest = new LoginAndRegisterFacade(
+                    appUserRepository,
+                    passwordEncoder,
+                    jwtUtils,
+                    authenticationManager,
+                    confirmationTokenService,
+                    deleteTokenService,
+                    emailFacade,
+                    appProperties
+            );
+            //when
+            String token = "foo";
+            AuthReqRespDTO response = toTest.confirmDeleteToken(token);
+
+            //then
+            assertAll(
+                    () -> assertThat(response.getStatusCode()).isEqualTo(204),
+                    () -> assertThat(response.getMessage()).isEqualTo("User account successfully deleted."),
+                    () -> assertThat(appUser.getEmail()).isNotEqualTo(email)
+            );
+        } catch (TokenNotFoundException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
 }
