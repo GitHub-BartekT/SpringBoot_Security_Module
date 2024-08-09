@@ -1,4 +1,4 @@
-package pl.iseebugs.Security.infrastructure.security.deleteToken;
+package pl.iseebugs.Security.domain.account.delete;
 
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;

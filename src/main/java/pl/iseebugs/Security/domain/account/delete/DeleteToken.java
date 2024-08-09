@@ -1,4 +1,4 @@
-package pl.iseebugs.Security.infrastructure.security.deleteToken;
+package pl.iseebugs.Security.domain.account.delete;
 
 import jakarta.persistence.*;
 import lombok.Getter;

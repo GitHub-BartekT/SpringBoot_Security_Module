@@ -1,4 +1,4 @@
-package pl.iseebugs.Security.infrastructure.security.token;
+package pl.iseebugs.Security.domain.account.create;
 
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;

@@ -1,4 +1,4 @@
-package pl.iseebugs.Security.infrastructure.security.token;
+package pl.iseebugs.Security.domain.account.create;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
