@@ -62,6 +62,7 @@ public class EmailFacade implements EmailSender{
             helper.setSubject(subject);
             helper.setText(email, true);
             mailSender.send(mimeMessage);
+            LOGGER.info("Mail sent to: " + to);
         } catch (MessagingException e){
             LOGGER.error("Failed to send email.", e);
             throw new IllegalStateException("Failed to send email");
