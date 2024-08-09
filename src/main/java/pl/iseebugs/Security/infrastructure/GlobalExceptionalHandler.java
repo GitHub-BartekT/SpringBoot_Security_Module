@@ -3,7 +3,7 @@ package pl.iseebugs.Security.infrastructure;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
-import pl.iseebugs.Security.infrastructure.email.InvalidEmailTypeException;
+import pl.iseebugs.Security.domain.email.InvalidEmailTypeException;
 import pl.iseebugs.Security.infrastructure.security.EmailConflictException;
 import pl.iseebugs.Security.infrastructure.security.projection.AuthReqRespDTO;
 

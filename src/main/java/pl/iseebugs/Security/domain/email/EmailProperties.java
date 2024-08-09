@@ -1,4 +1,4 @@
-package pl.iseebugs.Security.infrastructure.email;
+package pl.iseebugs.Security.domain.email;
 
 import lombok.Getter;
 import lombok.Setter;

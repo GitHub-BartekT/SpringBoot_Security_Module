@@ -1,4 +1,4 @@
-package pl.iseebugs.Security.infrastructure.email;
+package pl.iseebugs.Security.domain.email;
 
 public class InvalidEmailTypeException extends Exception{
     public InvalidEmailTypeException() {

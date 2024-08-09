@@ -1,4 +1,4 @@
-package pl.iseebugs.Security.infrastructure.email;
+package pl.iseebugs.Security.domain.email;
 
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;

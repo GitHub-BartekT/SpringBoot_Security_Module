@@ -12,16 +12,14 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import pl.iseebugs.Security.domain.user.AppUser;
 import pl.iseebugs.Security.domain.user.AppUserRepository;
-import pl.iseebugs.Security.infrastructure.email.EmailFacade;
-import pl.iseebugs.Security.infrastructure.email.InvalidEmailTypeException;
+import pl.iseebugs.Security.domain.email.EmailFacade;
+import pl.iseebugs.Security.domain.email.InvalidEmailTypeException;
 import pl.iseebugs.Security.infrastructure.security.deleteToken.DeleteToken;
 import pl.iseebugs.Security.infrastructure.security.deleteToken.DeleteTokenService;
 import pl.iseebugs.Security.infrastructure.security.projection.AuthReqRespDTO;
 import pl.iseebugs.Security.infrastructure.security.token.ConfirmationToken;
 import pl.iseebugs.Security.infrastructure.security.token.ConfirmationTokenService;
-import pl.iseebugs.Security.infrastructure.security.InMemoryAppUserRepository;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Optional;
 
