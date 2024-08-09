@@ -11,7 +11,11 @@ import java.util.Optional;
 @Repository
 @Transactional
 public interface AppUserRepository extends JpaRepository<AppUser,Long> {
+    @Query("SELECT a FROM AppUser a WHERE a.email = ?1")
     Optional<AppUser> findByEmail(String email);
+
+    @Query("SELECT a FROM AppUser a WHERE a.id = ?1")
+    Optional<AppUser> findById(Long id);
 
     @Transactional
     @Modifying
