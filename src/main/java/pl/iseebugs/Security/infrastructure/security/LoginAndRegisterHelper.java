@@ -2,6 +2,7 @@ package pl.iseebugs.Security.infrastructure.security;
 
 import lombok.extern.java.Log;
 import org.springframework.stereotype.Component;
+import pl.iseebugs.Security.domain.loginandregister.RegistrationTokenConflictException;
 
 @Log
 @Component
@@ -21,19 +22,19 @@ class LoginAndRegisterHelper {
                 token;
     }
 
-    void validateIsTokenAccess(final String token) throws BadTokenTypeException {
+    void validateIsTokenAccess(final String token) throws RegistrationTokenConflictException.BadTokenTypeException {
         if (jwtUtils.isAccessToken(token)) {
             return;
         }
         log.info("The provided token is not an access token.");
-        throw new BadTokenTypeException();
+        throw new RegistrationTokenConflictException.BadTokenTypeException();
     }
 
-    void validateIsTokenRefresh(final String token) throws BadTokenTypeException {
+    void validateIsTokenRefresh(final String token) throws RegistrationTokenConflictException.BadTokenTypeException {
         if (jwtUtils.isRefreshToken(token)) {
             return;
         }
         log.info("The provided token is not a refresh token.");
-        throw new BadTokenTypeException();
+        throw new RegistrationTokenConflictException.BadTokenTypeException();
     }
 }

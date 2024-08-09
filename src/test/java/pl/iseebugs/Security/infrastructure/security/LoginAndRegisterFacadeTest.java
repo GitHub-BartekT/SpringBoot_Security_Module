@@ -10,6 +10,8 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import pl.iseebugs.Security.domain.email.EmailSender;
+import pl.iseebugs.Security.domain.loginandregister.RegistrationTokenConflictException;
 import pl.iseebugs.Security.domain.user.AppUser;
 import pl.iseebugs.Security.domain.user.AppUserRepository;
 import pl.iseebugs.Security.domain.email.EmailFacade;
@@ -72,13 +74,13 @@ class LoginAndRegisterFacadeTest {
 
         //then
         assertAll(
-                () -> assertThat(e).isInstanceOf(EmailConflictException.class),
+                () -> assertThat(e).isInstanceOf(EmailSender.EmailConflictException.class),
                 () -> assertThat(e.getMessage()).isEqualTo("The email address already exists.")
         );
     }
 
     @Test
-    void signUp_should_signs_up_new_user_and_returns_created_201() throws EmailConflictException, InvalidEmailTypeException {
+    void signUp_should_signs_up_new_user_and_returns_created_201() throws EmailSender.EmailConflictException, InvalidEmailTypeException {
         //given
         InMemoryAppUserRepository inMemoryAppUserRepository = new InMemoryAppUserRepository();
         var passwordEncoder = mock(PasswordEncoder.class);

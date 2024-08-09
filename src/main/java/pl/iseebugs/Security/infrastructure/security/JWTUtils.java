@@ -5,6 +5,7 @@ import io.jsonwebtoken.Jwts;
 import lombok.extern.java.Log;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
+import pl.iseebugs.Security.domain.loginandregister.Token;
 
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;

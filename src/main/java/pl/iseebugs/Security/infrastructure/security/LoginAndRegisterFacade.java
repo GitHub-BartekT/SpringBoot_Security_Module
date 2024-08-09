@@ -10,6 +10,8 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import pl.iseebugs.Security.domain.email.EmailSender;
+import pl.iseebugs.Security.domain.loginandregister.RegistrationTokenConflictException;
 import pl.iseebugs.Security.domain.user.AppUser;
 import pl.iseebugs.Security.domain.user.AppUserRepository;
 import pl.iseebugs.Security.domain.email.EmailFacade;
@@ -28,7 +30,7 @@ import java.util.UUID;
 @AllArgsConstructor
 @Service
 @Log
-class LoginAndRegisterFacade {
+public class LoginAndRegisterFacade {
 
     private final AppUserRepository appUserRepository;
     private final PasswordEncoder passwordEncoder;
@@ -42,7 +44,7 @@ class LoginAndRegisterFacade {
     private static Long DELETE_ACCOUNT_TOKEN_EXPIRATION_TIME = 1440L;
 
 
-    AuthReqRespDTO signUp(AuthReqRespDTO registrationRequest) throws EmailConflictException, InvalidEmailTypeException {
+    AuthReqRespDTO signUp(AuthReqRespDTO registrationRequest) throws EmailSender.EmailConflictException, InvalidEmailTypeException {
         AuthReqRespDTO responseDTO = new AuthReqRespDTO();
 
         String firstName = registrationRequest.getFirstName();
@@ -52,7 +54,7 @@ class LoginAndRegisterFacade {
         String roles = "USER";
 
         if (appUserRepository.findByEmail(email).isPresent()) {
-            throw new EmailConflictException();
+            throw new EmailSender.EmailConflictException();
         }
 
         AppUserInfoDetails userToSave = new AppUserInfoDetails(
@@ -267,7 +269,7 @@ class LoginAndRegisterFacade {
         return responseDTO;
     }
 
-    AuthReqRespDTO generateNewPassword(String accessToken) throws BadTokenTypeException, InvalidEmailTypeException {
+    AuthReqRespDTO generateNewPassword(String accessToken) throws RegistrationTokenConflictException.BadTokenTypeException, InvalidEmailTypeException {
         helper.validateIsTokenAccess(accessToken);
 
         String userEmail = jwtUtils.extractUsername(accessToken);
@@ -297,7 +299,7 @@ class LoginAndRegisterFacade {
         return responseDTO;
     }
 
-    AuthReqRespDTO updatePassword(String accessToken, AuthReqRespDTO requestDTO) throws BadTokenTypeException, InvalidEmailTypeException {
+    AuthReqRespDTO updatePassword(String accessToken, AuthReqRespDTO requestDTO) throws RegistrationTokenConflictException.BadTokenTypeException, InvalidEmailTypeException {
         helper.validateIsTokenAccess(accessToken);
 
         String userEmail = jwtUtils.extractUsername(accessToken);

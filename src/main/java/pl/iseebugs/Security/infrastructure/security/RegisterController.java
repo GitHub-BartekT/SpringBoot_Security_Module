@@ -4,13 +4,15 @@ import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import pl.iseebugs.Security.domain.email.EmailSender;
 import pl.iseebugs.Security.domain.email.InvalidEmailTypeException;
+import pl.iseebugs.Security.domain.loginandregister.RegistrationTokenConflictException;
 import pl.iseebugs.Security.infrastructure.security.projection.AuthReqRespDTO;
 
 @AllArgsConstructor
 @RestController
 @RequestMapping("/api/auth")
-class RegisterController {
+public class RegisterController {
 
     LoginAndRegisterFacade loginAndRegisterFacade;
 
@@ -20,7 +22,7 @@ class RegisterController {
     }
 
     @PostMapping("/signup")
-    public ResponseEntity<AuthReqRespDTO> signUp(@RequestBody AuthReqRespDTO signUpRequest) throws EmailConflictException, InvalidEmailTypeException {
+    public ResponseEntity<AuthReqRespDTO> signUp(@RequestBody AuthReqRespDTO signUpRequest) throws EmailSender.EmailConflictException, InvalidEmailTypeException {
         return  ResponseEntity.ok(loginAndRegisterFacade.signUp(signUpRequest));
     }
 
