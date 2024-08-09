@@ -7,16 +7,17 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.CredentialsExpiredException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import pl.iseebugs.Security.domain.email.EmailSender;
 import pl.iseebugs.Security.domain.loginandregister.RegistrationTokenConflictException;
-import pl.iseebugs.Security.domain.user.AppUser;
-import pl.iseebugs.Security.domain.user.AppUserRepository;
+import pl.iseebugs.Security.domain.user.AppUserFacade;
+import pl.iseebugs.Security.domain.user.AppUserNotFoundException;
 import pl.iseebugs.Security.domain.email.EmailFacade;
 import pl.iseebugs.Security.domain.email.EmailType;
 import pl.iseebugs.Security.domain.email.InvalidEmailTypeException;
+import pl.iseebugs.Security.domain.user.dto.AppUserReadModel;
+import pl.iseebugs.Security.domain.user.dto.AppUserWriteModel;
 import pl.iseebugs.Security.infrastructure.security.deleteToken.DeleteToken;
 import pl.iseebugs.Security.infrastructure.security.deleteToken.DeleteTokenService;
 import pl.iseebugs.Security.infrastructure.security.projection.AuthReqRespDTO;
@@ -32,7 +33,7 @@ import java.util.UUID;
 @Log
 public class LoginAndRegisterFacade {
 
-    private final AppUserRepository appUserRepository;
+    private final AppUserFacade appUserFacade;
     private final PasswordEncoder passwordEncoder;
     private final JWTUtils jwtUtils;
     private final AuthenticationManager authenticationManager;
@@ -44,7 +45,7 @@ public class LoginAndRegisterFacade {
     private static Long DELETE_ACCOUNT_TOKEN_EXPIRATION_TIME = 1440L;
 
 
-    AuthReqRespDTO signUp(AuthReqRespDTO registrationRequest) throws EmailSender.EmailConflictException, InvalidEmailTypeException {
+    AuthReqRespDTO signUp(AuthReqRespDTO registrationRequest) throws EmailSender.EmailConflictException, InvalidEmailTypeException, AppUserNotFoundException {
         AuthReqRespDTO responseDTO = new AuthReqRespDTO();
 
         String firstName = registrationRequest.getFirstName();
@@ -53,7 +54,7 @@ public class LoginAndRegisterFacade {
         String password = passwordEncoder.encode(registrationRequest.getPassword());
         String roles = "USER";
 
-        if (appUserRepository.findByEmail(email).isPresent()) {
+        if (appUserFacade.existsByEmail(email)) {
             throw new EmailSender.EmailConflictException();
         }
 
@@ -64,7 +65,8 @@ public class LoginAndRegisterFacade {
                 password,
                 roles);
 
-        AppUser ourUserResult = appUserRepository.save(userToSave.toNewAppUser());
+        AppUserWriteModel userToCreate = AppUserMapperLogin.fromUserDetailsToAppUserReadModel(userToSave);
+        AppUserReadModel created = appUserFacade.create(userToCreate);
 
         String token = UUID.randomUUID().toString();
 
@@ -72,13 +74,13 @@ public class LoginAndRegisterFacade {
                 token,
                 LocalDateTime.now(),
                 LocalDateTime.now().plusMinutes(CONFIRMATION_ACCOUNT_TOKEN_EXPIRATION_TIME),
-                ourUserResult
+                created.id()
         );
 
         confirmationTokenService.saveConfirmationToken(confirmationToken);
         responseDTO.setToken(token);
 
-        if (ourUserResult.getId() != null) {
+        if (created.id() != null) {
             responseDTO.setMessage("User created successfully.");
             responseDTO.setExpirationTime("15 minutes");
             responseDTO.setStatusCode(201);
@@ -93,9 +95,9 @@ public class LoginAndRegisterFacade {
         return responseDTO;
     }
 
-    AuthReqRespDTO confirmToken(final String token) throws TokenNotFoundException, RegistrationTokenConflictException {
+    AuthReqRespDTO confirmToken(final String token) throws TokenNotFoundException, RegistrationTokenConflictException, AppUserNotFoundException {
         ConfirmationToken confirmationToken;
-        confirmationToken = confirmationTokenService.getToken(token)
+        confirmationToken = confirmationTokenService.getTokenByToken(token)
                 .orElseThrow(TokenNotFoundException::new);
 
         if (confirmationToken.getConfirmedAt() != null) {
@@ -112,23 +114,20 @@ public class LoginAndRegisterFacade {
         }
 
         confirmationTokenService.setConfirmedAt(token);
-        appUserRepository.enableAppUser(
-                confirmationToken.getAppUser().getEmail());
+        appUserFacade.enableAppUser(confirmationToken.getAppUserId());
         response.setStatusCode(200);
         response.setMessage("User confirmed.");
         return response;
     }
 
-    AuthReqRespDTO signIn(AuthReqRespDTO signingRequest) throws TokenNotFoundException {
+    AuthReqRespDTO signIn(AuthReqRespDTO signingRequest) throws TokenNotFoundException, AppUserNotFoundException {
         AuthReqRespDTO response = new AuthReqRespDTO();
         String email = signingRequest.getEmail();
         log.info("user email: " + email);
 
-        var user = appUserRepository
-                .findByEmail(email)
-                .orElseThrow(() -> new UsernameNotFoundException("User not found."));
+        var user = appUserFacade.findByEmail(email);
 
-        ConfirmationToken confirmationToken = confirmationTokenService.getTokenByEmail(email)
+        ConfirmationToken confirmationToken = confirmationTokenService.getTokenByUserId(user.id())
                 .orElseThrow(() -> new TokenNotFoundException("Confirmation token not found."));
 
         LocalDateTime expiredAt = confirmationToken.getExpiresAt();
@@ -148,7 +147,7 @@ public class LoginAndRegisterFacade {
                         email,
                         signingRequest.getPassword()));
 
-        UserDetails userToJWT = AppUserMapper.fromEntityToUserDetails(user);
+        UserDetails userToJWT = AppUserMapperLogin.fromAppUserReadModelToUserDetails(user);
         var jwt = jwtUtils.generateAccessToken(userToJWT);
         var refreshToken = jwtUtils.generateRefreshToken(userToJWT);
         response.setStatusCode(200);
@@ -159,32 +158,31 @@ public class LoginAndRegisterFacade {
         return response;
     }
 
-    AuthReqRespDTO refreshConfirmationToken(String email) throws InvalidEmailTypeException, TokenNotFoundException, RegistrationTokenConflictException {
+    AuthReqRespDTO refreshConfirmationToken(String email) throws InvalidEmailTypeException, TokenNotFoundException, RegistrationTokenConflictException, AppUserNotFoundException {
         AuthReqRespDTO responseDTO = new AuthReqRespDTO();
         responseDTO.setEmail(email);
 
-        AppUser appUserResult = appUserRepository.findByEmail(email).
-                orElseThrow(() -> new UsernameNotFoundException("Email not found."));
-        responseDTO.setFirstName(appUserResult.getFirstName());
-        responseDTO.setLastName(appUserResult.getLastName());
+        AppUserReadModel appUserResult = appUserFacade.findByEmail(email);
+        responseDTO.setFirstName(appUserResult.firstName());
+        responseDTO.setLastName(appUserResult.lastName());
 
         String token = UUID.randomUUID().toString();
         responseDTO.setToken(token);
 
-        if (confirmationTokenService.getTokenByEmail(email).isEmpty()) {
+        if (confirmationTokenService.getTokenByUserId(appUserResult.id()).isEmpty()) {
             ConfirmationToken confirmationToken = new ConfirmationToken(
                     token,
                     LocalDateTime.now(),
                     LocalDateTime.now().plusMinutes(CONFIRMATION_ACCOUNT_TOKEN_EXPIRATION_TIME),
-                    appUserResult
+                    appUserResult.id()
             );
             confirmationTokenService.saveConfirmationToken(confirmationToken);
             responseDTO.setStatusCode(201);
-        } else if (confirmationTokenService.isConfirmed(email)) {
+        } else if (confirmationTokenService.isConfirmed(appUserResult.id())) {
             log.info("Confirmation token already confirmed.");
             throw new RegistrationTokenConflictException("Confirmation token already confirmed.");
         } else {
-            ConfirmationToken confirmationToken = confirmationTokenService.getTokenByEmail(email)
+            ConfirmationToken confirmationToken = confirmationTokenService.getTokenByUserId(appUserResult.id())
                     .orElseThrow(() -> new TokenNotFoundException("Confirmation token not found."));
 
             confirmationToken.setCreatedAt(LocalDateTime.now());
@@ -206,9 +204,8 @@ public class LoginAndRegisterFacade {
         helper.validateIsTokenRefresh(refreshToken);
 
         String userEmail = jwtUtils.extractUsername(refreshToken);
-        AppUser user = appUserRepository.findByEmail(userEmail)
-                .orElseThrow(() -> new UsernameNotFoundException("User extracted from token not found."));
-        UserDetails userToJWT = AppUserMapper.fromEntityToUserDetails(user);
+        AppUserReadModel user = appUserFacade.findByEmail(userEmail);
+        UserDetails userToJWT = AppUserMapperLogin.fromAppUserReadModelToUserDetails(user);
 
         if (!jwtUtils.isTokenValid(refreshToken, userToJWT)) {
             log.info("User with email: " + userEmail + " used an expired token.");
@@ -232,10 +229,8 @@ public class LoginAndRegisterFacade {
         helper.validateIsTokenAccess(accessToken);
 
         String userEmail = jwtUtils.extractUsername(accessToken);
-        AppUser toUpdate = appUserRepository.findByEmail(userEmail)
-                .orElseThrow(() ->
-                        new UsernameNotFoundException("User extracted from token not found."));
-        UserDetails userToJWT = AppUserMapper.fromEntityToUserDetails(toUpdate);
+        AppUserReadModel appUserFromDataBase = appUserFacade.findByEmail(userEmail);
+        UserDetails userToJWT = AppUserMapperLogin.fromAppUserReadModelToUserDetails(appUserFromDataBase);
 
         if (!jwtUtils.isTokenValid(accessToken, userToJWT)) {
             log.info("User with email: " + userEmail + " used an expired token.");
@@ -245,51 +240,54 @@ public class LoginAndRegisterFacade {
         AuthReqRespDTO responseDTO = new AuthReqRespDTO();
 
         String firstName = updateRequest.getFirstName().isBlank() ?
-                toUpdate.getFirstName() :
+                appUserFromDataBase.firstName() :
                 updateRequest.getFirstName();
-
         String lastName = updateRequest.getLastName().isBlank() ?
-                toUpdate.getLastName() :
+                appUserFromDataBase.lastName() :
                 updateRequest.getLastName();
 
-        toUpdate.setFirstName(firstName);
-        toUpdate.setLastName(lastName);
-        AppUser ourUserResult = appUserRepository.save(toUpdate);
+        AppUserWriteModel toUpdate = AppUserWriteModel.builder()
+                .id(appUserFromDataBase.id())
+                .firstName(firstName)
+                .lastName(lastName)
+                .build();
 
-        if (ourUserResult.getId() != null) {
+        AppUserReadModel ourUserResult = appUserFacade.update(toUpdate);
+
+        if (ourUserResult.id() != null) {
             responseDTO.setMessage("User update successfully");
             responseDTO.setStatusCode(200);
-            responseDTO.setEmail(ourUserResult.getEmail());
-            responseDTO.setFirstName(ourUserResult.getFirstName());
-            responseDTO.setLastName(ourUserResult.getLastName());
-            responseDTO.setFirstName(ourUserResult.getFirstName());
-            responseDTO.setLastName(ourUserResult.getLastName());
+            responseDTO.setEmail(ourUserResult.email());
+            responseDTO.setFirstName(ourUserResult.firstName());
+            responseDTO.setLastName(ourUserResult.lastName());
         }
 
         return responseDTO;
     }
 
-    AuthReqRespDTO generateNewPassword(String accessToken) throws RegistrationTokenConflictException.BadTokenTypeException, InvalidEmailTypeException {
+    AuthReqRespDTO resetPasswordAndNotify(String accessToken) throws RegistrationTokenConflictException.BadTokenTypeException, InvalidEmailTypeException, AppUserNotFoundException {
         helper.validateIsTokenAccess(accessToken);
 
         String userEmail = jwtUtils.extractUsername(accessToken);
-        AppUser toUpdate = appUserRepository.findByEmail(userEmail)
-                .orElseThrow(() ->
-                        new UsernameNotFoundException("User extracted from token not found."));
+        AppUserReadModel appUserFromDB = appUserFacade.findByEmail(userEmail);
 
         String newPassword = UUID.randomUUID().toString();
         String encodePassword = passwordEncoder.encode(newPassword);
 
-        toUpdate.setPassword(encodePassword);
-        appUserRepository.save(toUpdate);
+        AppUserWriteModel toUpdate = AppUserWriteModel.builder()
+                .id(appUserFromDB.id())
+                .password(encodePassword)
+                .build();
+
+        AppUserReadModel updated = appUserFacade.update(toUpdate);
 
         AuthReqRespDTO responseDTO = new AuthReqRespDTO();
 
         responseDTO.setMessage("Password changed successfully");
         responseDTO.setStatusCode(200);
-        responseDTO.setFirstName(toUpdate.getFirstName());
-        responseDTO.setLastName(toUpdate.getLastName());
-        responseDTO.setEmail(toUpdate.getEmail());
+        responseDTO.setFirstName(updated.firstName());
+        responseDTO.setLastName(updated.lastName());
+        responseDTO.setEmail(updated.email());
 
         emailFacade.sendTemplateEmail(
                 EmailType.RESET,
@@ -299,27 +297,29 @@ public class LoginAndRegisterFacade {
         return responseDTO;
     }
 
-    AuthReqRespDTO updatePassword(String accessToken, AuthReqRespDTO requestDTO) throws RegistrationTokenConflictException.BadTokenTypeException, InvalidEmailTypeException {
+    AuthReqRespDTO updatePassword(String accessToken, AuthReqRespDTO requestDTO) throws RegistrationTokenConflictException.BadTokenTypeException, InvalidEmailTypeException, AppUserNotFoundException {
         helper.validateIsTokenAccess(accessToken);
 
         String userEmail = jwtUtils.extractUsername(accessToken);
-        AppUser toUpdate = appUserRepository.findByEmail(userEmail)
-                .orElseThrow(() ->
-                        new UsernameNotFoundException("User extracted from token not found."));
+        AppUserReadModel appUserFromDB = appUserFacade.findByEmail(userEmail);
 
         String newPassword = requestDTO.getPassword();
         String encodePassword = passwordEncoder.encode(newPassword);
 
-        toUpdate.setPassword(encodePassword);
-        appUserRepository.save(toUpdate);
+        AppUserWriteModel toUpdate = AppUserWriteModel.builder()
+                .id(appUserFromDB.id())
+                .password(encodePassword)
+                .build();
+
+        AppUserReadModel updated = appUserFacade.update(toUpdate);
 
         AuthReqRespDTO responseDTO = new AuthReqRespDTO();
 
         responseDTO.setMessage("Password changed successfully");
         responseDTO.setStatusCode(200);
-        responseDTO.setFirstName(toUpdate.getFirstName());
-        responseDTO.setLastName(toUpdate.getLastName());
-        responseDTO.setEmail(toUpdate.getEmail());
+        responseDTO.setFirstName(updated.firstName());
+        responseDTO.setLastName(updated.lastName());
+        responseDTO.setEmail(updated.email());
 
         emailFacade.sendTemplateEmail(
                 EmailType.RESET,
@@ -328,17 +328,14 @@ public class LoginAndRegisterFacade {
 
         return responseDTO;
     }
-
 
     AuthReqRespDTO deleteUser(String accessToken) throws Exception {
         helper.validateIsTokenAccess(accessToken);
 
         String userEmail = jwtUtils.extractUsername(accessToken);
 
-        AppUser user = appUserRepository.findByEmail(userEmail)
-                .orElseThrow(() ->
-                        new UsernameNotFoundException("User extracted from token not found."));
-        UserDetails userToJWT = AppUserMapper.fromEntityToUserDetails(user);
+        AppUserReadModel user = appUserFacade.findByEmail(userEmail);
+        UserDetails userToJWT = AppUserMapperLogin.fromAppUserReadModelToUserDetails(user);
 
         if (!jwtUtils.isTokenValid(accessToken, userToJWT)) {
             log.info("User with email: " + userEmail + " used an expired token.");
@@ -346,19 +343,19 @@ public class LoginAndRegisterFacade {
         }
 
         AuthReqRespDTO responseDTO = new AuthReqRespDTO();
-        responseDTO.setFirstName(user.getFirstName());
-        responseDTO.setEmail(user.getEmail());
+        responseDTO.setFirstName(user.firstName());
+        responseDTO.setEmail(user.email());
 
         String token = UUID.randomUUID().toString();
 
-        DeleteToken deleteToken = deleteTokenService.getTokenByEmail(userEmail).isPresent() ?
-                deleteTokenService.getTokenByEmail(userEmail).orElseThrow(TokenNotFoundException::new) :
+        DeleteToken deleteToken = deleteTokenService.getTokenByUserId(user.id()).isPresent() ?
+                deleteTokenService.getTokenByUserId(user.id()).orElseThrow(TokenNotFoundException::new) :
                 new DeleteToken();
 
         deleteToken.setToken(token);
         deleteToken.setCreatedAt(LocalDateTime.now());
         deleteToken.setExpiresAt(LocalDateTime.now().plusMinutes(DELETE_ACCOUNT_TOKEN_EXPIRATION_TIME));
-        deleteToken.setAppUser(user);
+        deleteToken.setAppUserId(user.id());
 
         deleteTokenService.saveDeleteToken(deleteToken);
         responseDTO.setToken(token);
@@ -377,7 +374,7 @@ public class LoginAndRegisterFacade {
         return responseDTO;
     }
 
-    AuthReqRespDTO confirmDeleteToken(final String token) throws TokenNotFoundException {
+    AuthReqRespDTO confirmDeleteToken(final String token) throws TokenNotFoundException, AppUserNotFoundException {
         DeleteToken deleteToken;
         deleteToken = deleteTokenService.getToken(token)
                 .orElseThrow(TokenNotFoundException::new);
@@ -392,22 +389,24 @@ public class LoginAndRegisterFacade {
 
         deleteTokenService.setConfirmedAt(token);
 
-        anonymization(deleteToken.getAppUser().getEmail());
+        anonymization(deleteToken.getAppUserId());
 
         response.setStatusCode(204);
         response.setMessage("User account successfully deleted.");
         return response;
     }
 
-    private void anonymization(final String email) {
-        AppUser user = appUserRepository.findByEmail(email)
-                .orElseThrow(() ->
-                        new UsernameNotFoundException("User not found."));
-        user.setRole("DELETED");
-        user.setFirstName(UUID.randomUUID().toString());
-        user.setLastName(UUID.randomUUID().toString());
-        user.setPassword(UUID.randomUUID().toString());
-        user.setEmail(UUID.randomUUID().toString());
-        appUserRepository.save(user);
+    private void anonymization(final Long id) throws AppUserNotFoundException {
+        AppUserReadModel user = appUserFacade.findUserById(id);
+        AppUserWriteModel toAnonymization = AppUserWriteModel.builder()
+                .id(user.id())
+                .role("DELETED")
+                .firstName(UUID.randomUUID().toString())
+                .lastName(UUID.randomUUID().toString())
+                .password(UUID.randomUUID().toString())
+                .email(UUID.randomUUID().toString())
+                .locked(true)
+                .build();
+        appUserFacade.update(toAnonymization);
     }
 }

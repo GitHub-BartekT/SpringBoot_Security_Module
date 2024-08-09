@@ -34,21 +34,15 @@ public class ConfirmationToken {
     @Column(nullable = false)
     private LocalDateTime expiresAt;
     private LocalDateTime confirmedAt;
-
-    @ManyToOne
-    @JoinColumn(
-            nullable = false,
-            name = "app_user_id"
-    )
-    private AppUser appUser;
+    private Long appUserId;
 
     public ConfirmationToken(final String token,
                              final LocalDateTime createdAt,
                              final LocalDateTime expiresAt,
-                             AppUser appUser) {
+                             final Long appUserId) {
         this.token = token;
         this.createdAt = createdAt;
         this.expiresAt = expiresAt;
-        this.appUser = appUser;
+        this.appUserId = appUserId;
     }
 }

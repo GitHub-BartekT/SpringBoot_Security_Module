@@ -14,8 +14,8 @@ public interface ConfirmationTokenRepository extends JpaRepository<ConfirmationT
 
     Optional<ConfirmationToken> findByToken(String token);
 
-    @Query("SELECT c FROM ConfirmationToken c WHERE c.appUser.email = ?1")
-    Optional<ConfirmationToken> findTokenByEmail(String email);
+    @Query("SELECT c FROM ConfirmationToken c WHERE c.appUserId = ?1")
+    Optional<ConfirmationToken> findTokenByEmail(Long id);
 
     @Transactional
     @Modifying
@@ -27,7 +27,7 @@ public interface ConfirmationTokenRepository extends JpaRepository<ConfirmationT
 
     @Transactional
     @Modifying
-    @Query("DELETE FROM ConfirmationToken c WHERE c.appUser.id = ?1")
+    @Query("DELETE FROM ConfirmationToken c WHERE c.appUserId = ?1")
     void deleteByAppUserId(Long id);
 
 }

@@ -4,7 +4,7 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import pl.iseebugs.Security.domain.user.AppUser;
-import pl.iseebugs.Security.infrastructure.security.projection.AppUserReadModel;
+import pl.iseebugs.Security.infrastructure.security.projection.AppUserReadModelSecurity;
 
 import java.util.Collection;
 import java.util.List;
@@ -32,7 +32,7 @@ class AppUserInfoDetails implements UserDetails {
         this.role = role;
     }
 
-    public AppUserInfoDetails(AppUserReadModel userReadModel){
+    public AppUserInfoDetails(AppUserReadModelSecurity userReadModel){
         this.firstName = userReadModel.getFirstName();
         this.lastName = userReadModel.getLastName();
         this.email = userReadModel.getEmail();
@@ -63,7 +63,7 @@ class AppUserInfoDetails implements UserDetails {
 
     @Override
     public boolean isAccountNonLocked() {
-        return true;
+        return !this.locked;
     }
 
     @Override
@@ -84,13 +84,14 @@ class AppUserInfoDetails implements UserDetails {
         return lastName;
     }
 
-    void setLocked(final Boolean locked) {
+    public void setLocked(final Boolean locked) {
         this.locked = locked;
     }
 
-    void setEnabled(final Boolean enabled) {
+    public void setEnabled(final Boolean enabled) {
         this.enabled = enabled;
     }
+
 
     AppUser toNewAppUser(){
             return AppUser.builder()

@@ -7,7 +7,7 @@ import lombok.Getter;
 @Getter
 @Builder
 @AllArgsConstructor
-public class AppUserReadModel {
+public class AppUserReadModelSecurity {
     private final String firstName;
     private final String lastName;
     private final String email;

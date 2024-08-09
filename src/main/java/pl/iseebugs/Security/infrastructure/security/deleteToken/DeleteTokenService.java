@@ -2,9 +2,6 @@ package pl.iseebugs.Security.infrastructure.security.deleteToken;
 
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
-import pl.iseebugs.Security.domain.user.AppUser;
-import pl.iseebugs.Security.infrastructure.security.TokenNotFoundException;
-import pl.iseebugs.Security.infrastructure.security.token.ConfirmationToken;
 
 import java.time.LocalDateTime;
 import java.util.Optional;
@@ -23,8 +20,8 @@ public class DeleteTokenService {
         return deleteTokenRepository.findByToken(token);
     }
 
-    public Optional<DeleteToken> getTokenByEmail(String email) {
-        return deleteTokenRepository.findTokenByEmail(email);
+    public Optional<DeleteToken> getTokenByUserId(Long id) {
+        return deleteTokenRepository.findTokenByAppUserId(id);
     }
 
     public void setConfirmedAt(String token) {

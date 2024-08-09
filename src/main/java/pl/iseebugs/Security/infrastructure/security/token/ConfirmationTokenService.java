@@ -18,12 +18,12 @@ public class ConfirmationTokenService {
         confirmationTokenRepository.save(token);
     }
 
-    public Optional<ConfirmationToken> getToken(String token) {
+    public Optional<ConfirmationToken> getTokenByToken(String token) {
         return confirmationTokenRepository.findByToken(token);
     }
 
-    public Optional<ConfirmationToken> getTokenByEmail(String email) {
-        return confirmationTokenRepository.findTokenByEmail(email);
+    public Optional<ConfirmationToken> getTokenByUserId(Long id) {
+        return confirmationTokenRepository.findTokenByEmail(id);
     }
 
     public int setConfirmedAt(String token) {
@@ -35,8 +35,8 @@ public class ConfirmationTokenService {
         confirmationTokenRepository.deleteByAppUserId(appUser.getId());
     }
 
-    public boolean isConfirmed(String email) throws TokenNotFoundException {
-        ConfirmationToken confirmationToken = confirmationTokenRepository.findTokenByEmail(email)
+    public boolean isConfirmed(Long id) throws TokenNotFoundException {
+        ConfirmationToken confirmationToken = confirmationTokenRepository.findTokenByEmail(id)
                 .orElseThrow(() -> new TokenNotFoundException("Confirmation token not found"));
         return confirmationToken.getConfirmedAt().isBefore(LocalDateTime.now());
     }

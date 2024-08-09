@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.*;
 import pl.iseebugs.Security.domain.email.EmailSender;
 import pl.iseebugs.Security.domain.email.InvalidEmailTypeException;
 import pl.iseebugs.Security.domain.loginandregister.RegistrationTokenConflictException;
+import pl.iseebugs.Security.domain.user.AppUserNotFoundException;
 import pl.iseebugs.Security.infrastructure.security.projection.AuthReqRespDTO;
 
 @AllArgsConstructor
@@ -22,22 +23,22 @@ public class RegisterController {
     }
 
     @PostMapping("/signup")
-    public ResponseEntity<AuthReqRespDTO> signUp(@RequestBody AuthReqRespDTO signUpRequest) throws EmailSender.EmailConflictException, InvalidEmailTypeException {
+    public ResponseEntity<AuthReqRespDTO> signUp(@RequestBody AuthReqRespDTO signUpRequest) throws EmailSender.EmailConflictException, InvalidEmailTypeException, AppUserNotFoundException {
         return  ResponseEntity.ok(loginAndRegisterFacade.signUp(signUpRequest));
     }
 
     @GetMapping(path = "/confirm")
-    public ResponseEntity<AuthReqRespDTO> confirm(@RequestParam("token") String token) throws RegistrationTokenConflictException, TokenNotFoundException {
+    public ResponseEntity<AuthReqRespDTO> confirm(@RequestParam("token") String token) throws RegistrationTokenConflictException, TokenNotFoundException, AppUserNotFoundException {
         return ResponseEntity.ok(loginAndRegisterFacade.confirmToken(token));
     }
 
     @GetMapping(path = "/confirm/refresh-confirmation-token")
-    public ResponseEntity<AuthReqRespDTO> refreshConfirmationToken(@RequestParam("email") String email) throws TokenNotFoundException, InvalidEmailTypeException, RegistrationTokenConflictException {
+    public ResponseEntity<AuthReqRespDTO> refreshConfirmationToken(@RequestParam("email") String email) throws TokenNotFoundException, InvalidEmailTypeException, RegistrationTokenConflictException, AppUserNotFoundException {
         return ResponseEntity.ok(loginAndRegisterFacade.refreshConfirmationToken(email));
     }
 
     @PostMapping("/signin")
-    public ResponseEntity<AuthReqRespDTO> signIn(@RequestBody AuthReqRespDTO signInRequest) throws TokenNotFoundException {
+    public ResponseEntity<AuthReqRespDTO> signIn(@RequestBody AuthReqRespDTO signInRequest) throws TokenNotFoundException, AppUserNotFoundException {
         return  ResponseEntity.ok(loginAndRegisterFacade.signIn(signInRequest));
     }
 
@@ -75,7 +76,7 @@ public class RegisterController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
         }
         String accessToken = authHeader.substring(7);
-        return ResponseEntity.ok(loginAndRegisterFacade.generateNewPassword(accessToken));
+        return ResponseEntity.ok(loginAndRegisterFacade.resetPasswordAndNotify(accessToken));
     }
 
     @PatchMapping("/users/password")
@@ -88,7 +89,7 @@ public class RegisterController {
     }
 
     @GetMapping("/delete-confirm")
-    public ResponseEntity<AuthReqRespDTO> deleteConfirm(@RequestParam("token") String token) throws TokenNotFoundException {
+    public ResponseEntity<AuthReqRespDTO> deleteConfirm(@RequestParam("token") String token) throws TokenNotFoundException, AppUserNotFoundException {
         return ResponseEntity.ok(loginAndRegisterFacade.confirmDeleteToken(token));
     }
 }

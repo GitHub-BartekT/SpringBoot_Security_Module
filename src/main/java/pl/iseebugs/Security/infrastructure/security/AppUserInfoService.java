@@ -6,7 +6,7 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import pl.iseebugs.Security.domain.user.AppUserRepository;
-import pl.iseebugs.Security.infrastructure.security.projection.AppUserReadModel;
+import pl.iseebugs.Security.infrastructure.security.projection.AppUserReadModelSecurity;
 
 @Service
 class AppUserInfoService implements UserDetailsService {
@@ -20,17 +20,17 @@ class AppUserInfoService implements UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String username) throws BadCredentialsException {
-        AppUserReadModel user = findByUsername(username);
+        AppUserReadModelSecurity user = findByUsername(username);
         return getUser(user);
     }
 
-    private AppUserInfoDetails getUser(AppUserReadModel userReadModel){
+    private AppUserInfoDetails getUser(AppUserReadModelSecurity userReadModel){
         return new AppUserInfoDetails(userReadModel);
     }
 
-    AppUserReadModel findByUsername(final String email) throws BadCredentialsException {
+    AppUserReadModelSecurity findByUsername(final String email) throws BadCredentialsException {
         return appUserRepository.findByEmail(email)
-                .map(user -> AppUserReadModel.builder()
+                .map(user -> AppUserReadModelSecurity.builder()
                         .firstName(user.getFirstName())
                         .lastName(user.getLastName())
                         .email(user.getEmail())

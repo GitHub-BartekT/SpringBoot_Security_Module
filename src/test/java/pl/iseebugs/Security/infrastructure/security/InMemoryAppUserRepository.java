@@ -12,7 +12,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Function;
 
@@ -43,11 +42,6 @@ public class InMemoryAppUserRepository implements AppUserRepository {
             throw new RuntimeException("Failed to save the entity to the database.");
         }
         return entity;
-    }
-
-    @Override
-    public void enableAppUser(final String email) {
-
     }
 
     @Override
@@ -143,6 +137,16 @@ public class InMemoryAppUserRepository implements AppUserRepository {
     @Override
     public Optional<AppUser> findById(final Long aLong) {
         return Optional.empty();
+    }
+
+    @Override
+    public boolean existsByEmail(final String email) {
+        return false;
+    }
+
+    @Override
+    public void enableAppUser(final Long id) {
+
     }
 
     @Override
