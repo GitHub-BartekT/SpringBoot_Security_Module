@@ -16,7 +16,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import pl.iseebugs.Security.domain.user.AppUserRepository;
+import pl.iseebugs.Security.domain.user.AppUserFacade;
 
 @Configuration
 @EnableWebSecurity
@@ -24,11 +24,11 @@ import pl.iseebugs.Security.domain.user.AppUserRepository;
 class SecurityConfig {
 
     JWTAuthFilter jwtAuthFilter;
-    AppUserRepository appUserRepository;
+    AppUserFacade appUserFacade;
 
-    SecurityConfig(JWTAuthFilter jwtAuthFilter, AppUserRepository appUserRepository){
+    SecurityConfig(JWTAuthFilter jwtAuthFilter, AppUserFacade appUserFacade){
         this.jwtAuthFilter = jwtAuthFilter;
-        this.appUserRepository = appUserRepository;
+        this.appUserFacade = appUserFacade;
     }
 
     @Bean
@@ -70,7 +70,7 @@ class SecurityConfig {
 
     @Bean
     public UserDetailsService userDetailsService(){
-        return new AppUserInfoService(appUserRepository);
+        return new AppUserInfoService(appUserFacade);
     }
 
     @Bean
