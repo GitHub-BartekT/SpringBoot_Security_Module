@@ -17,16 +17,6 @@ public class RegisterController {
 
     SecurityFacade securityFacade;
 
-    @GetMapping()
-    public String goHome(){
-        return "This is path with public access.";
-    }
-
-    @PostMapping("/signup")
-    public ResponseEntity<AuthReqRespDTO> signUp(@RequestBody AuthReqRespDTO signUpRequest) throws EmailSender.EmailConflictException, InvalidEmailTypeException, AppUserNotFoundException {
-        return  ResponseEntity.ok(securityFacade.signUp(signUpRequest));
-    }
-
     @GetMapping(path = "/confirm")
     public ResponseEntity<AuthReqRespDTO> confirm(@RequestParam("token") String token) throws RegistrationTokenConflictException, TokenNotFoundException, AppUserNotFoundException {
         return ResponseEntity.ok(securityFacade.confirmToken(token));

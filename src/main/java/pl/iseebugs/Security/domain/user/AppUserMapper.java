@@ -12,6 +12,8 @@ class AppUserMapper {
                 .email(appUser.getEmail())
                 .password(appUser.getPassword())
                 .role(appUser.getRole())
+                .locked(appUser.getLocked())
+                .enabled(appUser.getEnabled())
                 .build();
     }
 
@@ -23,6 +25,8 @@ class AppUserMapper {
                 .email(appUser.getEmail())
                 .password(appUser.getPassword())
                 .role(appUser.getRole())
+                .locked(appUser.isLocked())
+                .enabled(appUser.isEnabled())
                 .build();
     }
 }

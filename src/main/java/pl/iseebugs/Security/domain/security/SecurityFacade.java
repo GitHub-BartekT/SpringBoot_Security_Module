@@ -22,7 +22,7 @@ import pl.iseebugs.Security.domain.account.delete.DeleteToken;
 import pl.iseebugs.Security.domain.account.delete.DeleteTokenService;
 import pl.iseebugs.Security.domain.security.projection.AuthReqRespDTO;
 import pl.iseebugs.Security.domain.account.create.ConfirmationToken;
-import pl.iseebugs.Security.domain.account.create.ConfirmationTokenFacade;
+import pl.iseebugs.Security.domain.account.create.ConfirmationTokenService;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
@@ -37,7 +37,7 @@ public class SecurityFacade {
     private final PasswordEncoder passwordEncoder;
     private final JWTUtils jwtUtils;
     private final AuthenticationManager authenticationManager;
-    private final ConfirmationTokenFacade confirmationTokenService;
+    private final ConfirmationTokenService confirmationTokenService;
     private final DeleteTokenService deleteTokenService;
     private final EmailFacade emailFacade;
     private final LoginAndRegisterHelper helper;
@@ -47,56 +47,6 @@ public class SecurityFacade {
 
     public String passwordEncode (CharSequence rawPassword){
         return passwordEncoder.encode(rawPassword);
-    }
-
-    AuthReqRespDTO signUp(AuthReqRespDTO registrationRequest) throws EmailSender.EmailConflictException, InvalidEmailTypeException, AppUserNotFoundException {
-        AuthReqRespDTO responseDTO = new AuthReqRespDTO();
-
-        String firstName = registrationRequest.getFirstName();
-        String lastName = registrationRequest.getLastName();
-        String email = registrationRequest.getEmail();
-        String password = passwordEncoder.encode(registrationRequest.getPassword());
-        String roles = "USER";
-
-        if (appUserFacade.existsByEmail(email)) {
-            throw new EmailSender.EmailConflictException();
-        }
-
-        AppUserInfoDetails userToSave = new AppUserInfoDetails(
-                firstName,
-                lastName,
-                email,
-                password,
-                roles);
-
-        AppUserWriteModel userToCreate = AppUserMapperLogin.fromUserDetailsToAppUserReadModel(userToSave);
-        AppUserReadModel created = appUserFacade.create(userToCreate);
-
-        String token = UUID.randomUUID().toString();
-
-        ConfirmationToken confirmationToken = new ConfirmationToken(
-                token,
-                LocalDateTime.now(),
-                LocalDateTime.now().plusMinutes(CONFIRMATION_ACCOUNT_TOKEN_EXPIRATION_TIME),
-                created.id()
-        );
-
-        confirmationTokenService.saveConfirmationToken(confirmationToken);
-        responseDTO.setToken(token);
-
-        if (created.id() != null) {
-            responseDTO.setMessage("User created successfully.");
-            responseDTO.setExpirationTime("15 minutes");
-            responseDTO.setStatusCode(201);
-
-            String link = helper.createUrl("/api/auth/confirm?token=", token);
-
-            emailFacade.sendTemplateEmail(
-                    EmailType.ACTIVATION,
-                    registrationRequest,
-                    link);
-        }
-        return responseDTO;
     }
 
     AuthReqRespDTO confirmToken(final String token) throws TokenNotFoundException, RegistrationTokenConflictException, AppUserNotFoundException {
@@ -137,7 +87,7 @@ public class SecurityFacade {
         LocalDateTime expiredAt = confirmationToken.getExpiresAt();
 
         if (confirmationToken.getConfirmedAt() == null) {
-            if (expiredAt.isBefore(LocalDateTime.now())) {
+            if (expiredAt.isAfter(LocalDateTime.now())) {
                 log.info("Confirmation token not confirmed.");
                 throw new BadCredentialsException("Registration not confirmed.");
             } else {
