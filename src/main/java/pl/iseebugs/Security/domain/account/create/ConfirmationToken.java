@@ -4,7 +4,6 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import pl.iseebugs.Security.domain.user.AppUser;
 
 import java.time.LocalDateTime;
 
@@ -35,6 +34,7 @@ public class ConfirmationToken {
     private LocalDateTime expiresAt;
     private LocalDateTime confirmedAt;
     private Long appUserId;
+
 
     public ConfirmationToken(final String token,
                              final LocalDateTime createdAt,

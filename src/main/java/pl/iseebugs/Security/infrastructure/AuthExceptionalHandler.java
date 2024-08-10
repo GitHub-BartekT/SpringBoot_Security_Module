@@ -6,9 +6,11 @@ import org.springframework.security.authentication.CredentialsExpiredException;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
-import pl.iseebugs.Security.domain.loginandregister.RegistrationTokenConflictException;
+import pl.iseebugs.Security.domain.account.BadTokenTypeException;
+import pl.iseebugs.Security.domain.account.create.RegistrationTokenConflictException;
 import pl.iseebugs.Security.domain.security.TokenNotFoundException;
 import pl.iseebugs.Security.domain.security.projection.AuthReqRespDTO;
+import pl.iseebugs.Security.domain.user.AppUserNotFoundException;
 
 @ControllerAdvice
 class AuthExceptionalHandler {
@@ -22,8 +24,8 @@ class AuthExceptionalHandler {
         return ResponseEntity.ok().body(response);
     }
 
-    @ExceptionHandler(RegistrationTokenConflictException.BadTokenTypeException.class)
-    ResponseEntity<AuthReqRespDTO> handlerBadTokenTypeException(RegistrationTokenConflictException.BadTokenTypeException e){
+    @ExceptionHandler(BadTokenTypeException.class)
+    ResponseEntity<AuthReqRespDTO> handlerBadTokenTypeException(BadTokenTypeException e){
         AuthReqRespDTO response = new AuthReqRespDTO();
         response.setStatusCode(401);
         response.setError(e.getClass().getSimpleName());
@@ -62,6 +64,16 @@ class AuthExceptionalHandler {
     ResponseEntity<AuthReqRespDTO> handlerBadCredentialsException(BadCredentialsException e){
         AuthReqRespDTO response = new AuthReqRespDTO();
         response.setStatusCode(403);
+        response.setError(e.getClass().getSimpleName());
+        response.setMessage(e.getMessage());
+        return ResponseEntity.ok().body(response);
+    }
+
+
+    @ExceptionHandler(AppUserNotFoundException.class)
+    ResponseEntity<AuthReqRespDTO> handlerAppUserNotFoundException(AppUserNotFoundException e){
+        AuthReqRespDTO response = new AuthReqRespDTO();
+        response.setStatusCode(404);
         response.setError(e.getClass().getSimpleName());
         response.setMessage(e.getMessage());
         return ResponseEntity.ok().body(response);
