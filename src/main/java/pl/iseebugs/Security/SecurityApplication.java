@@ -4,9 +4,9 @@ import io.github.cdimascio.dotenv.Dotenv;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
-import pl.iseebugs.Security.infrastructure.email.EmailProperties;
-import pl.iseebugs.Security.infrastructure.security.AppProperties;
-import pl.iseebugs.Security.infrastructure.security.AuthorizationProperties;
+import pl.iseebugs.Security.domain.email.EmailProperties;
+import pl.iseebugs.Security.domain.security.AppProperties;
+import pl.iseebugs.Security.domain.security.AuthorizationProperties;
 
 @SpringBootApplication
 @EnableConfigurationProperties({EmailProperties.class, AuthorizationProperties.class, AppProperties.class})

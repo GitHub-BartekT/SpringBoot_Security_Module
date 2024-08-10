@@ -6,11 +6,9 @@ import org.springframework.security.authentication.CredentialsExpiredException;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
-import pl.iseebugs.Security.infrastructure.security.BadTokenTypeException;
-import pl.iseebugs.Security.infrastructure.security.EmailConflictException;
-import pl.iseebugs.Security.infrastructure.security.RegistrationTokenConflictException;
-import pl.iseebugs.Security.infrastructure.security.TokenNotFoundException;
-import pl.iseebugs.Security.infrastructure.security.projection.AuthReqRespDTO;
+import pl.iseebugs.Security.domain.loginandregister.RegistrationTokenConflictException;
+import pl.iseebugs.Security.domain.security.TokenNotFoundException;
+import pl.iseebugs.Security.domain.security.projection.AuthReqRespDTO;
 
 @ControllerAdvice
 class AuthExceptionalHandler {
@@ -24,8 +22,8 @@ class AuthExceptionalHandler {
         return ResponseEntity.ok().body(response);
     }
 
-    @ExceptionHandler(BadTokenTypeException.class)
-    ResponseEntity<AuthReqRespDTO> handlerBadTokenTypeException(BadTokenTypeException e){
+    @ExceptionHandler(RegistrationTokenConflictException.BadTokenTypeException.class)
+    ResponseEntity<AuthReqRespDTO> handlerBadTokenTypeException(RegistrationTokenConflictException.BadTokenTypeException e){
         AuthReqRespDTO response = new AuthReqRespDTO();
         response.setStatusCode(401);
         response.setError(e.getClass().getSimpleName());
