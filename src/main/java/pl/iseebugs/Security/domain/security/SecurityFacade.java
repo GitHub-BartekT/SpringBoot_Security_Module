@@ -49,31 +49,6 @@ public class SecurityFacade {
         return passwordEncoder.encode(rawPassword);
     }
 
-    AuthReqRespDTO confirmToken(final String token) throws TokenNotFoundException, RegistrationTokenConflictException, AppUserNotFoundException {
-        ConfirmationToken confirmationToken;
-        confirmationToken = confirmationTokenService.getTokenByToken(token)
-                .orElseThrow(TokenNotFoundException::new);
-
-        if (confirmationToken.getConfirmedAt() != null) {
-            log.info("Confirmation token already confirmed.");
-            throw new RegistrationTokenConflictException();
-        }
-
-        AuthReqRespDTO response = new AuthReqRespDTO();
-        LocalDateTime expiredAt = confirmationToken.getExpiresAt();
-
-        if (expiredAt.isBefore(LocalDateTime.now())) {
-            log.info("Token expired.");
-            throw new CredentialsExpiredException("Token expired.");
-        }
-
-        confirmationTokenService.setConfirmedAt(token);
-        appUserFacade.enableAppUser(confirmationToken.getAppUserId());
-        response.setStatusCode(200);
-        response.setMessage("User confirmed.");
-        return response;
-    }
-
     AuthReqRespDTO signIn(AuthReqRespDTO signingRequest) throws TokenNotFoundException, AppUserNotFoundException {
         AuthReqRespDTO response = new AuthReqRespDTO();
         String email = signingRequest.getEmail();

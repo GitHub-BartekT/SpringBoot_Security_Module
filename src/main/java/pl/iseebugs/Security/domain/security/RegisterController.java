@@ -17,11 +17,6 @@ public class RegisterController {
 
     SecurityFacade securityFacade;
 
-    @GetMapping(path = "/confirm")
-    public ResponseEntity<AuthReqRespDTO> confirm(@RequestParam("token") String token) throws RegistrationTokenConflictException, TokenNotFoundException, AppUserNotFoundException {
-        return ResponseEntity.ok(securityFacade.confirmToken(token));
-    }
-
     @GetMapping(path = "/confirm/refresh-confirmation-token")
     public ResponseEntity<AuthReqRespDTO> refreshConfirmationToken(@RequestParam("email") String email) throws TokenNotFoundException, InvalidEmailTypeException, RegistrationTokenConflictException, AppUserNotFoundException {
         return ResponseEntity.ok(securityFacade.refreshConfirmationToken(email));
