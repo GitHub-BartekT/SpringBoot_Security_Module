@@ -37,7 +37,7 @@ class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
                                 "/api/auth",
-                                "/api/auth/signup",
+                                "/api/auth/create/**",
                                 "/api/auth/confirm",
                                 "/api/auth/signin",
                                 "/api/auth/refresh").permitAll()

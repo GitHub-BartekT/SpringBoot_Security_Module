@@ -13,7 +13,7 @@ import pl.iseebugs.Security.domain.user.AppUserNotFoundException;
 
 @AllArgsConstructor
 @RestController
-@RequestMapping("/api/auth")
+@RequestMapping("/api/auth/create")
 class AccountCreate {
 
     AccountCreateFacade accountCreateFacade;
@@ -31,6 +31,11 @@ class AccountCreate {
     @GetMapping(path = "/confirm")
     public ResponseEntity<AuthReqRespDTO> confirm(@RequestParam("token") String token) throws RegistrationTokenConflictException, TokenNotFoundException, AppUserNotFoundException {
         return ResponseEntity.ok(accountCreateFacade.confirmToken(token));
+    }
+
+    @GetMapping(path = "/refresh-confirmation-token")
+    public ResponseEntity<AuthReqRespDTO> refreshConfirmationToken(@RequestParam("email") String email) throws TokenNotFoundException, InvalidEmailTypeException, RegistrationTokenConflictException, AppUserNotFoundException {
+        return ResponseEntity.ok(accountCreateFacade.refreshConfirmationToken(email));
     }
 }
 

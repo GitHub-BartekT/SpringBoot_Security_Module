@@ -122,4 +122,49 @@ public class AccountCreateFacade {
         response.setMessage("User confirmed.");
         return response;
     }
+
+    public AuthReqRespDTO refreshConfirmationToken(String email) throws InvalidEmailTypeException, TokenNotFoundException, RegistrationTokenConflictException, AppUserNotFoundException {
+        AuthReqRespDTO responseDTO = new AuthReqRespDTO();
+        responseDTO.setEmail(email);
+
+        AppUserReadModel appUserResult = appUserFacade.findByEmail(email);
+        responseDTO.setFirstName(appUserResult.firstName());
+        responseDTO.setLastName(appUserResult.lastName());
+
+        String token = UUID.randomUUID().toString();
+        responseDTO.setToken(token);
+
+        if (confirmationTokenService.getTokenByUserId(appUserResult.id()).isEmpty()) {
+            ConfirmationToken confirmationToken = new ConfirmationToken(
+                    token,
+                    LocalDateTime.now(),
+                    LocalDateTime.now().plusMinutes(CONFIRMATION_ACCOUNT_TOKEN_EXPIRATION_TIME),
+                    appUserResult.id()
+            );
+            confirmationTokenService.saveConfirmationToken(confirmationToken);
+            responseDTO.setStatusCode(201);
+        } else if (confirmationTokenService.getTokenByUserId(appUserResult.id()).get().getConfirmedAt() != null
+                && confirmationTokenService.isConfirmed(appUserResult.id())) {
+            log.info("Confirmation token already confirmed.");
+            throw new RegistrationTokenConflictException("Confirmation token already confirmed.");
+        } else {
+            ConfirmationToken confirmationToken = confirmationTokenService.getTokenByUserId(appUserResult.id())
+                    .orElseThrow(() -> new TokenNotFoundException("Confirmation token not found."));
+
+            confirmationToken.setCreatedAt(LocalDateTime.now());
+            confirmationToken.setExpiresAt(LocalDateTime.now().plusMinutes(CONFIRMATION_ACCOUNT_TOKEN_EXPIRATION_TIME));
+            confirmationToken.setToken(token);
+            confirmationTokenService.saveConfirmationToken(confirmationToken);
+            responseDTO.setStatusCode(204);
+        }
+
+        responseDTO.setMessage("Generated new confirmation token.");
+        responseDTO.setExpirationTime("15 minutes");
+
+        String link = accountHelper.createUrl("/api/auth/confirm?token=", token);
+
+        emailFacade.sendTemplateEmail(EmailType.ACTIVATION, responseDTO, link);
+
+        return responseDTO;
+    }
 }

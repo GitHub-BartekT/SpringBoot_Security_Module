@@ -9,20 +9,20 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import pl.iseebugs.Security.domain.email.EmailSender;
-import pl.iseebugs.Security.domain.loginandregister.RegistrationTokenConflictException;
-import pl.iseebugs.Security.domain.user.AppUserFacade;
-import pl.iseebugs.Security.domain.user.AppUserNotFoundException;
+import pl.iseebugs.Security.domain.account.create.ConfirmationToken;
+import pl.iseebugs.Security.domain.account.create.ConfirmationTokenService;
+import pl.iseebugs.Security.domain.account.delete.DeleteToken;
+import pl.iseebugs.Security.domain.account.delete.DeleteTokenService;
 import pl.iseebugs.Security.domain.email.EmailFacade;
 import pl.iseebugs.Security.domain.email.EmailType;
 import pl.iseebugs.Security.domain.email.InvalidEmailTypeException;
+import pl.iseebugs.Security.domain.loginandregister.BadTokenTypeException;
+import pl.iseebugs.Security.domain.loginandregister.RegistrationTokenConflictException;
+import pl.iseebugs.Security.domain.security.projection.AuthReqRespDTO;
+import pl.iseebugs.Security.domain.user.AppUserFacade;
+import pl.iseebugs.Security.domain.user.AppUserNotFoundException;
 import pl.iseebugs.Security.domain.user.dto.AppUserReadModel;
 import pl.iseebugs.Security.domain.user.dto.AppUserWriteModel;
-import pl.iseebugs.Security.domain.account.delete.DeleteToken;
-import pl.iseebugs.Security.domain.account.delete.DeleteTokenService;
-import pl.iseebugs.Security.domain.security.projection.AuthReqRespDTO;
-import pl.iseebugs.Security.domain.account.create.ConfirmationToken;
-import pl.iseebugs.Security.domain.account.create.ConfirmationTokenService;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
@@ -85,48 +85,6 @@ public class SecurityFacade {
         response.setExpirationTime("24Hr");
         response.setMessage("Successfully singed in");
         return response;
-    }
-
-    AuthReqRespDTO refreshConfirmationToken(String email) throws InvalidEmailTypeException, TokenNotFoundException, RegistrationTokenConflictException, AppUserNotFoundException {
-        AuthReqRespDTO responseDTO = new AuthReqRespDTO();
-        responseDTO.setEmail(email);
-
-        AppUserReadModel appUserResult = appUserFacade.findByEmail(email);
-        responseDTO.setFirstName(appUserResult.firstName());
-        responseDTO.setLastName(appUserResult.lastName());
-
-        String token = UUID.randomUUID().toString();
-        responseDTO.setToken(token);
-
-        if (confirmationTokenService.getTokenByUserId(appUserResult.id()).isEmpty()) {
-            ConfirmationToken confirmationToken = new ConfirmationToken(
-                    token,
-                    LocalDateTime.now(),
-                    LocalDateTime.now().plusMinutes(CONFIRMATION_ACCOUNT_TOKEN_EXPIRATION_TIME),
-                    appUserResult.id()
-            );
-            confirmationTokenService.saveConfirmationToken(confirmationToken);
-            responseDTO.setStatusCode(201);
-        } else if (confirmationTokenService.isConfirmed(appUserResult.id())) {
-            log.info("Confirmation token already confirmed.");
-            throw new RegistrationTokenConflictException("Confirmation token already confirmed.");
-        } else {
-            ConfirmationToken confirmationToken = confirmationTokenService.getTokenByUserId(appUserResult.id())
-                    .orElseThrow(() -> new TokenNotFoundException("Confirmation token not found."));
-
-            confirmationToken.setCreatedAt(LocalDateTime.now());
-            confirmationToken.setExpiresAt(LocalDateTime.now().plusMinutes(CONFIRMATION_ACCOUNT_TOKEN_EXPIRATION_TIME));
-            responseDTO.setStatusCode(204);
-        }
-
-        responseDTO.setMessage("Generated new confirmation token.");
-        responseDTO.setExpirationTime("15 minutes");
-
-        String link = helper.createUrl("/api/auth/confirm?token=", token);
-
-        emailFacade.sendTemplateEmail(EmailType.ACTIVATION, responseDTO, link);
-
-        return responseDTO;
     }
 
     AuthReqRespDTO refreshToken(String refreshToken) throws Exception {
@@ -194,7 +152,7 @@ public class SecurityFacade {
         return responseDTO;
     }
 
-    AuthReqRespDTO resetPasswordAndNotify(String accessToken) throws RegistrationTokenConflictException.BadTokenTypeException, InvalidEmailTypeException, AppUserNotFoundException {
+    AuthReqRespDTO resetPasswordAndNotify(String accessToken) throws BadTokenTypeException, InvalidEmailTypeException, AppUserNotFoundException {
         helper.validateIsTokenAccess(accessToken);
 
         String userEmail = jwtUtils.extractUsername(accessToken);
@@ -226,7 +184,7 @@ public class SecurityFacade {
         return responseDTO;
     }
 
-    AuthReqRespDTO updatePassword(String accessToken, AuthReqRespDTO requestDTO) throws RegistrationTokenConflictException.BadTokenTypeException, InvalidEmailTypeException, AppUserNotFoundException {
+    AuthReqRespDTO updatePassword(String accessToken, AuthReqRespDTO requestDTO) throws BadTokenTypeException, InvalidEmailTypeException, AppUserNotFoundException {
         helper.validateIsTokenAccess(accessToken);
 
         String userEmail = jwtUtils.extractUsername(accessToken);
