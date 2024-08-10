@@ -12,7 +12,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import pl.iseebugs.Security.domain.email.EmailSender;
-import pl.iseebugs.Security.domain.loginandregister.RegistrationTokenConflictException;
+import pl.iseebugs.Security.domain.account.create.RegistrationTokenConflictException;
 import pl.iseebugs.Security.domain.user.AppUser;
 import pl.iseebugs.Security.domain.user.AppUserRepository;
 import pl.iseebugs.Security.domain.email.EmailFacade;

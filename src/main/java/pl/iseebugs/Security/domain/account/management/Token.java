@@ -1,4 +1,4 @@
-package pl.iseebugs.Security.domain.loginandregister;
+package pl.iseebugs.Security.domain.account.management;
 
 public enum Token {
     REGISTER,

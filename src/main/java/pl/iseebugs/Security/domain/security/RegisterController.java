@@ -4,9 +4,6 @@ import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import pl.iseebugs.Security.domain.email.EmailSender;
-import pl.iseebugs.Security.domain.email.InvalidEmailTypeException;
-import pl.iseebugs.Security.domain.loginandregister.RegistrationTokenConflictException;
 import pl.iseebugs.Security.domain.user.AppUserNotFoundException;
 import pl.iseebugs.Security.domain.security.projection.AuthReqRespDTO;
 
@@ -29,15 +26,6 @@ public class RegisterController {
         }
         String refreshToken = authHeader.substring(7);
         return ResponseEntity.ok(securityFacade.refreshToken(refreshToken));
-    }
-
-    @DeleteMapping("/users")
-    ResponseEntity<AuthReqRespDTO> deleteUser(@RequestHeader("Authorization") String authHeader) throws Exception {
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
-        }
-        String accessToken = authHeader.substring(7);
-        return ResponseEntity.ok(securityFacade.deleteUser(accessToken));
     }
 
     @PatchMapping("/users")
@@ -68,8 +56,5 @@ public class RegisterController {
         return ResponseEntity.ok(securityFacade.updatePassword(accessToken, reqRespDTO));
     }
 
-    @GetMapping("/delete-confirm")
-    public ResponseEntity<AuthReqRespDTO> deleteConfirm(@RequestParam("token") String token) throws TokenNotFoundException, AppUserNotFoundException {
-        return ResponseEntity.ok(securityFacade.confirmDeleteToken(token));
-    }
+
 }

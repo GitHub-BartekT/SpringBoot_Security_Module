@@ -9,7 +9,6 @@ import pl.iseebugs.Security.domain.email.EmailFacade;
 import pl.iseebugs.Security.domain.email.EmailSender;
 import pl.iseebugs.Security.domain.email.EmailType;
 import pl.iseebugs.Security.domain.email.InvalidEmailTypeException;
-import pl.iseebugs.Security.domain.loginandregister.RegistrationTokenConflictException;
 import pl.iseebugs.Security.domain.security.SecurityFacade;
 import pl.iseebugs.Security.domain.security.TokenNotFoundException;
 import pl.iseebugs.Security.domain.security.projection.AuthReqRespDTO;

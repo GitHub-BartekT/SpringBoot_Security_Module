@@ -2,8 +2,7 @@ package pl.iseebugs.Security.domain.security;
 
 import lombok.extern.java.Log;
 import org.springframework.stereotype.Component;
-import pl.iseebugs.Security.domain.loginandregister.BadTokenTypeException;
-import pl.iseebugs.Security.domain.loginandregister.RegistrationTokenConflictException;
+import pl.iseebugs.Security.domain.account.BadTokenTypeException;
 
 @Log
 @Component
