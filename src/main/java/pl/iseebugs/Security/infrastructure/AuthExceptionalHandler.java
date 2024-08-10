@@ -7,8 +7,8 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import pl.iseebugs.Security.domain.loginandregister.RegistrationTokenConflictException;
-import pl.iseebugs.Security.infrastructure.security.TokenNotFoundException;
-import pl.iseebugs.Security.infrastructure.security.projection.AuthReqRespDTO;
+import pl.iseebugs.Security.domain.security.TokenNotFoundException;
+import pl.iseebugs.Security.domain.security.projection.AuthReqRespDTO;
 
 @ControllerAdvice
 class AuthExceptionalHandler {

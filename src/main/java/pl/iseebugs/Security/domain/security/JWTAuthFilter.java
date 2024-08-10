@@ -1,4 +1,4 @@
-package pl.iseebugs.Security.infrastructure.security;
+package pl.iseebugs.Security.domain.security;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;

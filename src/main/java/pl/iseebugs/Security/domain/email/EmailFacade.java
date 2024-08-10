@@ -11,7 +11,7 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.Context;
-import pl.iseebugs.Security.infrastructure.security.projection.AuthReqRespDTO;
+import pl.iseebugs.Security.domain.security.projection.AuthReqRespDTO;
 
 @Service
 public class EmailFacade implements EmailSender{

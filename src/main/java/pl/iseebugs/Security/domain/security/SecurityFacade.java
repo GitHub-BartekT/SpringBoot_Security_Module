@@ -1,4 +1,4 @@
-package pl.iseebugs.Security.infrastructure.security;
+package pl.iseebugs.Security.domain.security;
 
 import lombok.AllArgsConstructor;
 import lombok.extern.java.Log;
@@ -20,9 +20,9 @@ import pl.iseebugs.Security.domain.user.dto.AppUserReadModel;
 import pl.iseebugs.Security.domain.user.dto.AppUserWriteModel;
 import pl.iseebugs.Security.domain.account.delete.DeleteToken;
 import pl.iseebugs.Security.domain.account.delete.DeleteTokenService;
-import pl.iseebugs.Security.infrastructure.security.projection.AuthReqRespDTO;
+import pl.iseebugs.Security.domain.security.projection.AuthReqRespDTO;
 import pl.iseebugs.Security.domain.account.create.ConfirmationToken;
-import pl.iseebugs.Security.domain.account.create.ConfirmationTokenService;
+import pl.iseebugs.Security.domain.account.create.ConfirmationTokenFacade;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
@@ -31,19 +31,23 @@ import java.util.UUID;
 @AllArgsConstructor
 @Service
 @Log
-public class LoginAndRegisterFacade {
+public class SecurityFacade {
 
     private final AppUserFacade appUserFacade;
     private final PasswordEncoder passwordEncoder;
     private final JWTUtils jwtUtils;
     private final AuthenticationManager authenticationManager;
-    private final ConfirmationTokenService confirmationTokenService;
+    private final ConfirmationTokenFacade confirmationTokenService;
     private final DeleteTokenService deleteTokenService;
     private final EmailFacade emailFacade;
     private final LoginAndRegisterHelper helper;
     private static Long CONFIRMATION_ACCOUNT_TOKEN_EXPIRATION_TIME = 15L;
     private static Long DELETE_ACCOUNT_TOKEN_EXPIRATION_TIME = 1440L;
 
+
+    public String passwordEncode (CharSequence rawPassword){
+        return passwordEncoder.encode(rawPassword);
+    }
 
     AuthReqRespDTO signUp(AuthReqRespDTO registrationRequest) throws EmailSender.EmailConflictException, InvalidEmailTypeException, AppUserNotFoundException {
         AuthReqRespDTO responseDTO = new AuthReqRespDTO();

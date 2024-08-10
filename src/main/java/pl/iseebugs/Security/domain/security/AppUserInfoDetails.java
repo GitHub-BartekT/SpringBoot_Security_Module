@@ -1,10 +1,10 @@
-package pl.iseebugs.Security.infrastructure.security;
+package pl.iseebugs.Security.domain.security;
 
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import pl.iseebugs.Security.domain.user.AppUser;
-import pl.iseebugs.Security.infrastructure.security.projection.AppUserReadModelSecurity;
+import pl.iseebugs.Security.domain.security.projection.AppUserReadModelSecurity;
 
 import java.util.Collection;
 import java.util.List;

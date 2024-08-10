@@ -1,4 +1,4 @@
-package pl.iseebugs.Security.infrastructure.security;
+package pl.iseebugs.Security.domain.security;
 
 import pl.iseebugs.Security.domain.user.dto.AppUserReadModel;
 import pl.iseebugs.Security.domain.user.dto.AppUserWriteModel;

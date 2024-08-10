@@ -1,4 +1,4 @@
-package pl.iseebugs.Security.infrastructure.security;
+package pl.iseebugs.Security.domain.security;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -8,7 +8,7 @@ import org.springframework.stereotype.Service;
 import pl.iseebugs.Security.domain.user.AppUserFacade;
 import pl.iseebugs.Security.domain.user.AppUserNotFoundException;
 import pl.iseebugs.Security.domain.user.dto.AppUserReadModel;
-import pl.iseebugs.Security.infrastructure.security.projection.AppUserReadModelSecurity;
+import pl.iseebugs.Security.domain.security.projection.AppUserReadModelSecurity;
 
 @Service
 class AppUserInfoService implements UserDetailsService {

@@ -1,4 +1,4 @@
-package pl.iseebugs.Security.infrastructure.security;
+package pl.iseebugs.Security.domain.security;
 
 import lombok.extern.java.Log;
 import org.springframework.stereotype.Component;

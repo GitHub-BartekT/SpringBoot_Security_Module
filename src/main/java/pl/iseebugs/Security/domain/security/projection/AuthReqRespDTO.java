@@ -1,4 +1,4 @@
-package pl.iseebugs.Security.infrastructure.security.projection;
+package pl.iseebugs.Security.domain.security.projection;
 
 import lombok.Getter;
 import lombok.Setter;

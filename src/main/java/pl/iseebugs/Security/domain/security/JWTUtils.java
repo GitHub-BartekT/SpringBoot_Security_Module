@@ -1,4 +1,4 @@
-package pl.iseebugs.Security.infrastructure.security;
+package pl.iseebugs.Security.domain.security;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
