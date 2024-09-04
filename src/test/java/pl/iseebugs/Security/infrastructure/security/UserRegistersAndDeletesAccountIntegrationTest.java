@@ -27,12 +27,10 @@ class UserRegistersAndDeletesAccountIntegrationTest extends BaseIntegrationTest 
     //Step 1: User tried to get JWT by requesting POST /auth/signin
     //with username='someTestUser', password='somePassword' and system returned UNAUTHORIZED
         // given && when
-        log.info("Step 1.");
+        log.info("Step 1. SignIn with bad credentials.");
         ResultActions failedLoginRequest = mockMvc.perform(post("/api/auth/signin")
                 .content("""
                         {
-                        "firstName": "firstTestName",
-                        "lastName": "lastTestName",
                         "email": "some@mail.com",
                         "password": "somePassword"
                         }
@@ -46,14 +44,14 @@ class UserRegistersAndDeletesAccountIntegrationTest extends BaseIntegrationTest 
         AuthReqRespDTO confirmResultFailedDto = objectMapper.readValue(registerActionResultFailedJson, AuthReqRespDTO.class);
         assertAll(
                 () -> assertThat(confirmResultFailedDto.getStatusCode()).isEqualTo(404),
-                () -> assertThat(confirmResultFailedDto.getMessage()).isEqualTo("User not found."),
-                () -> assertThat(confirmResultFailedDto.getError()).isEqualTo("UsernameNotFoundException")
+                () -> assertThat(confirmResultFailedDto.getMessage()).isEqualTo("Email not found."),
+                () -> assertThat(confirmResultFailedDto.getError()).isEqualTo("EmailNotFoundException")
         );
 
 
     //Step 2: User made GET /{some public endpoint} and system returned OK(200) and some public response
         // given && when
-        log.info("Step 2.");
+        log.info("Step 2. Open endpoint.");
         ResultActions publicAccess = mockMvc.perform(get("/api/auth")
                 .contentType(MediaType.APPLICATION_JSON)
         );
@@ -66,12 +64,10 @@ class UserRegistersAndDeletesAccountIntegrationTest extends BaseIntegrationTest 
     //Step 3: user made POST /api/auth/signup with username="someTestUser", password="someTestPassword"
     //and system registered user with status OK(200) and register token="someToken"
         // given && when
-        log.info("Step 3.");
-        ResultActions successRegisterRequest = mockMvc.perform(post("/api/auth/signup")
+        log.info("Step 3. SignUp with success.");
+        ResultActions successRegisterRequest = mockMvc.perform(post("/api/auth/create/signup")
                 .content("""
                         {
-                        "firstName": "firstTestName",
-                        "lastName": "lastTestName",
                         "email": "some@mail.com",
                         "password": "somePassword"
                         }
@@ -97,9 +93,9 @@ class UserRegistersAndDeletesAccountIntegrationTest extends BaseIntegrationTest 
 
     // Step 4: user made POST /api/auth/confirm with token="invalidToken" and system responses with status FORBIDDEN(403)
         // given && when
-        log.info("Step 4.");
+        log.info("Step 4. Confirm token with invalid token");
         String badToken = "not.valid.token";
-        ResultActions badConfirmTokenRegisterRequest = mockMvc.perform(get("/api/auth/confirm?token=" + badToken)
+        ResultActions badConfirmTokenRegisterRequest = mockMvc.perform(get("/api/auth/create/confirm?token=" + badToken)
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
         );
 
@@ -116,8 +112,8 @@ class UserRegistersAndDeletesAccountIntegrationTest extends BaseIntegrationTest 
 
     //Step 5: user made POST /api/auth/confirm with token="someToken" and system responses with status OK(200)
         // given && when
-        log.info("Step 5.");
-        ResultActions confirmRegisterRequest = mockMvc.perform(get("/api/auth/confirm?token=" + registrationToken)
+        log.info("Step 5. Confirm token successfully");
+        ResultActions confirmRegisterRequest = mockMvc.perform(get("/api/auth/create/confirm?token=" + registrationToken)
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
         );
 
@@ -135,12 +131,10 @@ class UserRegistersAndDeletesAccountIntegrationTest extends BaseIntegrationTest 
     //Step 6: user tried to get JWT by requesting POST /api/auth/signin with username="someTestUser", password="someTestPassword"
     //and system returned OK(200) and accessToken=AAAA.BBBB.CCC and refreshToken=DDDD.EEEE.FFF
         // given && when
-        log.info("Step 6.");
+        log.info("Step 6. SignIn successfuly");
         ResultActions loginRequest = mockMvc.perform(post("/api/auth/signin")
                 .content("""
                         {
-                        "firstName": "firstTestName",
-                        "lastName": "lastTestName",
                         "email": "some@mail.com",
                         "password": "somePassword"
                         }
@@ -245,8 +239,8 @@ class UserRegistersAndDeletesAccountIntegrationTest extends BaseIntegrationTest 
        );
     //Step 10:    User made DELETE /api/auth/deleteUser “Authorization: AAAA.BBBB.CCC” (refresh token)
     // and system returned UNAUTHORIZED(401)
-        log.info("Step 10.");
-        ResultActions badDeleteRegisterRequest = mockMvc.perform(delete("/api/auth/users")
+        log.info("Step 10. Delete account with bad type token.");
+        ResultActions badDeleteRegisterRequest = mockMvc.perform(delete("/api/auth/delete")
                 .header("Authorization", "Bearer " + refreshToken)
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
         );
@@ -262,7 +256,7 @@ class UserRegistersAndDeletesAccountIntegrationTest extends BaseIntegrationTest 
     //Step 11: User made DELETE /api/auth/deleteUser with “Authorization: AAAA.BBBB.CCC”
     //and system returned OK(204)
         log.info("Step 11.");
-        ResultActions deleteRegisterRequest = mockMvc.perform(delete("/api/auth/users")
+        ResultActions deleteRegisterRequest = mockMvc.perform(delete("/api/auth/delete")
                 .header("Authorization", "Bearer " + newAccessToken)
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
         );
@@ -282,7 +276,7 @@ class UserRegistersAndDeletesAccountIntegrationTest extends BaseIntegrationTest 
     //Step 12: User made GET /api/auth/delete-confirm?token= with “Authorization: AAAA.BBBB.CCC”
     //and system returned OK(204)
         log.info("Step 12.");
-        ResultActions confirmationDeleteRegisterRequest = mockMvc.perform(get("/api/auth/delete-confirm?token=" + deleteToken)
+        ResultActions confirmationDeleteRegisterRequest = mockMvc.perform(get("/api/auth/delete/delete-confirm?token=" + deleteToken)
                 .header("Authorization", "Bearer " + newAccessToken)
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
         );
@@ -319,8 +313,8 @@ class UserRegistersAndDeletesAccountIntegrationTest extends BaseIntegrationTest 
         AuthReqRespDTO confirmResultFailedDtoNoUser = objectMapper.readValue(confirmActionResultFailedJsonNoUser, AuthReqRespDTO.class);
         assertAll(
                 () -> assertThat(confirmResultFailedDto.getStatusCode()).isEqualTo(404),
-                () -> assertThat(confirmResultFailedDto.getMessage()).isEqualTo("User not found."),
-                () -> assertThat(confirmResultFailedDto.getError()).isEqualTo("UsernameNotFoundException")
+                () -> assertThat(confirmResultFailedDto.getMessage()).isEqualTo("Email not found."),
+                () -> assertThat(confirmResultFailedDto.getError()).isEqualTo("EmailNotFoundException")
         );
     }
 }

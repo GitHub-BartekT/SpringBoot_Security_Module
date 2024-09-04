@@ -7,8 +7,9 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import pl.iseebugs.Security.domain.account.BadTokenTypeException;
+import pl.iseebugs.Security.domain.account.EmailNotFoundException;
 import pl.iseebugs.Security.domain.account.create.RegistrationTokenConflictException;
-import pl.iseebugs.Security.domain.security.TokenNotFoundException;
+import pl.iseebugs.Security.domain.account.TokenNotFoundException;
 import pl.iseebugs.Security.domain.security.projection.AuthReqRespDTO;
 import pl.iseebugs.Security.domain.user.AppUserNotFoundException;
 
@@ -78,4 +79,14 @@ class AuthExceptionalHandler {
         response.setMessage(e.getMessage());
         return ResponseEntity.ok().body(response);
     }
+
+    @ExceptionHandler(EmailNotFoundException.class)
+    ResponseEntity<AuthReqRespDTO> handlerEmailNotFoundException(EmailNotFoundException e){
+        AuthReqRespDTO response = new AuthReqRespDTO();
+        response.setStatusCode(404);
+        response.setError(e.getClass().getSimpleName());
+        response.setMessage(e.getMessage());
+        return ResponseEntity.ok().body(response);
+    }
+
 }

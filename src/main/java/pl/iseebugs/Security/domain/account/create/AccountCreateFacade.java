@@ -5,12 +5,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.CredentialsExpiredException;
 import org.springframework.stereotype.Service;
 import pl.iseebugs.Security.domain.account.AccountHelper;
+import pl.iseebugs.Security.domain.account.EmailNotFoundException;
 import pl.iseebugs.Security.domain.email.EmailFacade;
 import pl.iseebugs.Security.domain.email.EmailSender;
 import pl.iseebugs.Security.domain.email.EmailType;
 import pl.iseebugs.Security.domain.email.InvalidEmailTypeException;
 import pl.iseebugs.Security.domain.security.SecurityFacade;
-import pl.iseebugs.Security.domain.security.TokenNotFoundException;
+import pl.iseebugs.Security.domain.account.TokenNotFoundException;
 import pl.iseebugs.Security.domain.security.projection.AuthReqRespDTO;
 import pl.iseebugs.Security.domain.user.AppUserFacade;
 import pl.iseebugs.Security.domain.user.AppUserNotFoundException;
@@ -122,7 +123,7 @@ public class AccountCreateFacade {
         return response;
     }
 
-    public AuthReqRespDTO refreshConfirmationToken(String email) throws InvalidEmailTypeException, TokenNotFoundException, RegistrationTokenConflictException, AppUserNotFoundException {
+    public AuthReqRespDTO refreshConfirmationToken(String email) throws InvalidEmailTypeException, TokenNotFoundException, RegistrationTokenConflictException, AppUserNotFoundException, EmailNotFoundException {
         AuthReqRespDTO responseDTO = new AuthReqRespDTO();
         responseDTO.setEmail(email);
 

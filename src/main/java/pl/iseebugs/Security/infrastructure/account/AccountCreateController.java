@@ -3,25 +3,21 @@ package pl.iseebugs.Security.infrastructure.account;
 import lombok.AllArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import pl.iseebugs.Security.domain.account.EmailNotFoundException;
 import pl.iseebugs.Security.domain.account.create.AccountCreateFacade;
 import pl.iseebugs.Security.domain.email.EmailSender;
 import pl.iseebugs.Security.domain.email.InvalidEmailTypeException;
 import pl.iseebugs.Security.domain.account.create.RegistrationTokenConflictException;
-import pl.iseebugs.Security.domain.security.TokenNotFoundException;
+import pl.iseebugs.Security.domain.account.TokenNotFoundException;
 import pl.iseebugs.Security.domain.security.projection.AuthReqRespDTO;
 import pl.iseebugs.Security.domain.user.AppUserNotFoundException;
 
 @AllArgsConstructor
 @RestController
 @RequestMapping("/api/auth/create")
-class AccountCreate {
+class AccountCreateController {
 
     AccountCreateFacade accountCreateFacade;
-
-    @GetMapping()
-    public String goHome() {
-        return "This is path with public access.";
-    }
 
     @PostMapping("/signup")
     public ResponseEntity<AuthReqRespDTO> signUp(@RequestBody AuthReqRespDTO signUpRequest) throws EmailSender.EmailConflictException, InvalidEmailTypeException, AppUserNotFoundException {
@@ -34,7 +30,7 @@ class AccountCreate {
     }
 
     @GetMapping(path = "/refresh-confirmation-token")
-    public ResponseEntity<AuthReqRespDTO> refreshConfirmationToken(@RequestParam("email") String email) throws TokenNotFoundException, InvalidEmailTypeException, RegistrationTokenConflictException, AppUserNotFoundException {
+    public ResponseEntity<AuthReqRespDTO> refreshConfirmationToken(@RequestParam("email") String email) throws TokenNotFoundException, InvalidEmailTypeException, RegistrationTokenConflictException, AppUserNotFoundException, EmailNotFoundException {
         return ResponseEntity.ok(accountCreateFacade.refreshConfirmationToken(email));
     }
 }

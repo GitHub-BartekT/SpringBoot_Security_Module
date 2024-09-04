@@ -1,4 +1,4 @@
-package pl.iseebugs.Security.domain.security;
+package pl.iseebugs.Security.domain.account;
 
 public class TokenNotFoundException extends Exception{
     public TokenNotFoundException() {

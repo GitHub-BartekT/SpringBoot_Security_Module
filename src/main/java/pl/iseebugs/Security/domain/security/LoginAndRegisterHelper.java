@@ -7,19 +7,11 @@ import pl.iseebugs.Security.domain.account.BadTokenTypeException;
 @Log
 @Component
 class LoginAndRegisterHelper {
-    private final AppProperties appProperties;
+
     private final JWTUtils jwtUtils;
 
-    LoginAndRegisterHelper(final AppProperties appProperties, final JWTUtils jwtUtils) {
-        this.appProperties = appProperties;
+    LoginAndRegisterHelper(final JWTUtils jwtUtils) {
         this.jwtUtils = jwtUtils;
-    }
-
-    String createUrl(final String endpoint, final String token) {
-        return appProperties.uri() + ":" +
-                appProperties.port() +
-                endpoint +
-                token;
     }
 
     void validateIsTokenAccess(final String token) throws BadTokenTypeException {

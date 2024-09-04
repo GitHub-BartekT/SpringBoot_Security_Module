@@ -1,7 +1,9 @@
 package pl.iseebugs.Security.domain.user;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
+import pl.iseebugs.Security.domain.account.EmailNotFoundException;
 import pl.iseebugs.Security.domain.user.dto.AppUserReadModel;
 import pl.iseebugs.Security.domain.user.dto.AppUserWriteModel;
 
@@ -24,15 +26,38 @@ public class AppUserFacade {
         return AppUserMapper.toAppUserReadModel(user);
     }
 
-    public AppUserReadModel findByEmail(String email) throws AppUserNotFoundException {
-        AppUser user = appUserRepository.findByEmail(email).orElseThrow(AppUserNotFoundException::new);
+    public AppUserReadModel findByEmail(String email) throws UsernameNotFoundException, EmailNotFoundException {
+        AppUser user = appUserRepository.findByEmail(email).orElseThrow(EmailNotFoundException::new);
         return AppUserMapper.toAppUserReadModel(user);
     }
-    public AppUserReadModel update(AppUserWriteModel appUser) throws AppUserNotFoundException {
-        AppUser toUpdate = AppUserMapper.toAppUser(appUser);
+    public AppUserReadModel updatePersonalData(AppUserWriteModel appUser) throws AppUserNotFoundException, EmailNotFoundException {
+        if(!existsByEmail(appUser.getEmail())){
+            throw new AppUserNotFoundException();
+        }
+
+        AppUser toUpdate = appUserRepository
+                .findByEmail(appUser.getEmail())
+                .orElseThrow(AppUserNotFoundException::new);
+
+        if(appUser.getFirstName() != null && !appUser.getFirstName().isBlank()){
+            toUpdate.setFirstName(appUser.getFirstName());
+        }
+
+        if(appUser.getLastName() != null && !appUser.getLastName().isBlank()){
+            toUpdate.setLastName(appUser.getLastName());
+        }
         AppUser updated = appUserRepository.save(toUpdate);
         return AppUserMapper.toAppUserReadModel(updated);
     }
+
+    public AppUserReadModel update(AppUserWriteModel appUser) throws AppUserNotFoundException, EmailNotFoundException {
+        AppUser toUpdate = appUserRepository
+                .findById(appUser.getId())
+                .orElseThrow(AppUserNotFoundException::new);
+        AppUser updated = appUserRepository.save(toUpdate);
+        return AppUserMapper.toAppUserReadModel(updated);
+    }
+
 
     public void enableAppUser(Long id) throws AppUserNotFoundException {
         appUserRepository.findById(id).orElseThrow(AppUserNotFoundException::new);

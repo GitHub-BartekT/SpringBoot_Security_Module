@@ -5,6 +5,7 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.stereotype.Service;
+import pl.iseebugs.Security.domain.account.EmailNotFoundException;
 import pl.iseebugs.Security.domain.user.AppUserFacade;
 import pl.iseebugs.Security.domain.user.AppUserNotFoundException;
 import pl.iseebugs.Security.domain.user.dto.AppUserReadModel;
@@ -26,7 +27,7 @@ class AppUserInfoService implements UserDetailsService {
         AppUserReadModelSecurity user = null;
         try {
             user = findByUsername(username);
-        } catch (AppUserNotFoundException e) {
+        } catch (AppUserNotFoundException | EmailNotFoundException e) {
             throw new RuntimeException(e);
         }
         return getUser(user);
@@ -36,7 +37,7 @@ class AppUserInfoService implements UserDetailsService {
         return new AppUserInfoDetails(userReadModel);
     }
 
-    AppUserReadModelSecurity findByUsername(final String email) throws BadCredentialsException, AppUserNotFoundException {
+    AppUserReadModelSecurity findByUsername(final String email) throws BadCredentialsException, AppUserNotFoundException, EmailNotFoundException {
        AppUserReadModel user = appUserFacade.findByEmail(email);
        return  AppUserReadModelSecurity.builder()
                .firstName(user.firstName())

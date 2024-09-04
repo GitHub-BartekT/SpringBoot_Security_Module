@@ -37,9 +37,10 @@ public class EmailFacade implements EmailSender{
         if (template == null){
             throw new InvalidEmailTypeException("Invalid email type: " + type);
         }
+        String firstName = userData.getFirstName() == null ? "new user" : userData.getFirstName();
 
         Context context = new Context();
-        String welcomeText = template.getWelcomeText().replace("${name}", userData.getFirstName());
+        String welcomeText = template.getWelcomeText().replace("${name}", firstName);
         context.setVariable("welcomeText", welcomeText);
         context.setVariable("text1", template.getText1());
         context.setVariable("link", link);
