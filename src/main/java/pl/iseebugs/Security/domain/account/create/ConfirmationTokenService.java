@@ -3,7 +3,7 @@ package pl.iseebugs.Security.domain.account.create;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 import pl.iseebugs.Security.domain.user.AppUser;
-import pl.iseebugs.Security.domain.security.TokenNotFoundException;
+import pl.iseebugs.Security.domain.account.TokenNotFoundException;
 
 import java.time.LocalDateTime;
 import java.util.Optional;

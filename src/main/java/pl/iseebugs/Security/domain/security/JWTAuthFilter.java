@@ -1,9 +1,11 @@
 package pl.iseebugs.Security.domain.security;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.extern.log4j.Log4j2;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -11,16 +13,18 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
+import pl.iseebugs.Security.domain.security.projection.AuthReqRespDTO;
 
 import java.io.IOException;
 
+@Log4j2
 @Component
 class JWTAuthFilter extends OncePerRequestFilter {
 
     private final JWTUtils jwtUtils;
     private final AppUserInfoService appUserInfoService;
 
-    JWTAuthFilter(JWTUtils jwtUtils, AppUserInfoService appUserInfoService){
+    JWTAuthFilter(JWTUtils jwtUtils, AppUserInfoService appUserInfoService) {
         this.jwtUtils = jwtUtils;
         this.appUserInfoService = appUserInfoService;
     }
@@ -30,16 +34,65 @@ class JWTAuthFilter extends OncePerRequestFilter {
         final String authHeader = request.getHeader("Authorization");
         final String jwtToken;
         final String userEmail;
-        if (authHeader == null || authHeader.isBlank()){
+
+        if (authHeader == null || authHeader.isBlank()) {
             filterChain.doFilter(request, response);
             return;
         }
+
         jwtToken = authHeader.substring(7);
         userEmail = jwtUtils.extractUsername(jwtToken);
-        if (userEmail != null && SecurityContextHolder.getContext().getAuthentication() == null){
-            UserDetails userDetails = appUserInfoService.loadUserByUsername(userEmail);
 
-            if (jwtUtils.isTokenValid(jwtToken, userDetails) && !jwtUtils.isRefreshToken(jwtToken)){
+        if (request.getRequestURI().equals("/api/auth/refresh")) {
+            if (userEmail != null && jwtUtils.isRefreshToken(jwtToken)) {
+                log.info("Is refresh token");
+                UserDetails userDetails = appUserInfoService.loadUserByUsername(userEmail);
+                log.info("Load user");
+                if (jwtUtils.isTokenValid(jwtToken, userDetails)) {
+                    log.info("Valid refresh token");
+
+                    SecurityContext securityContext = SecurityContextHolder.createEmptyContext();
+                    UsernamePasswordAuthenticationToken token = new UsernamePasswordAuthenticationToken(
+                            userDetails, null, userDetails.getAuthorities()
+                    );
+                    token.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                    securityContext.setAuthentication(token);
+                    SecurityContextHolder.setContext(securityContext);
+                    log.info("Security context set: " + SecurityContextHolder.getContext().getAuthentication());
+                }
+                log.info("End of refresh token validation");
+            } else {
+                log.info("Invalid refresh token");
+                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                response.setContentType("application/json");
+
+                AuthReqRespDTO errorResponse = new AuthReqRespDTO();
+                errorResponse.setStatusCode(HttpServletResponse.SC_UNAUTHORIZED);
+                errorResponse.setMessage("Invalid or expired refresh token");
+
+                ObjectMapper objectMapper = new ObjectMapper();
+                String jsonResponse = objectMapper.writeValueAsString(errorResponse);
+
+                response.getWriter().write(jsonResponse);
+                return;
+            }
+        } else {
+            if (userEmail != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+                log.info("Extracted email: " + userEmail);
+                UserDetails userDetails = appUserInfoService.loadUserByUsername(userEmail);
+
+                if (!jwtUtils.isTokenValid(jwtToken, userDetails)) {
+                    response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                    response.getWriter().write("Invalid token");
+                    return;
+                }
+
+                if (!jwtUtils.isAccessToken(jwtToken)) {
+                    response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+                    response.getWriter().write("Only Access Token cannot be used to access this resource");
+                    return;
+                }
+
                 SecurityContext securityContext = SecurityContextHolder.createEmptyContext();
                 UsernamePasswordAuthenticationToken token = new UsernamePasswordAuthenticationToken(
                         userDetails, null, userDetails.getAuthorities()

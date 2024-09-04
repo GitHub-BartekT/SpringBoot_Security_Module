@@ -1,10 +1,10 @@
 package pl.iseebugs.Security.domain.security.projection;
 
+import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
 
-@Setter
-@Getter
+@Data
 public class AuthReqRespDTO {
     private int statusCode;
     private String error;

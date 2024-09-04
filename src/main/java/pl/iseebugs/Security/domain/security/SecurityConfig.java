@@ -39,8 +39,7 @@ class SecurityConfig {
                                 "/api/auth",
                                 "/api/auth/create/**",
                                 "/api/auth/confirm",
-                                "/api/auth/signin",
-                                "/api/auth/refresh").permitAll()
+                                "/api/auth/signin").permitAll()
                         .requestMatchers(
                                 "/swagger-ui/**",
                                 "/swagger-ui.html",
@@ -49,8 +48,11 @@ class SecurityConfig {
                                 "/swagger-resources/**").permitAll()
                         .requestMatchers(
                                 "/api/auth/users",
+                                "/api/auth/delete",
+                                "/api/auth/delete/**",
                                 "/api/auth/users/password",
-                                "/api/auth/users/delete-confirm")
+                                "/api/auth/users/delete-confirm",
+                                "/api/auth/refresh")
                         .hasAnyAuthority("USER")
                         .anyRequest().authenticated())
                 .sessionManagement(manager -> manager.sessionCreationPolicy(SessionCreationPolicy.STATELESS))

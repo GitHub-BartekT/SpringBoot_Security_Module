@@ -1,12 +1,17 @@
 package pl.iseebugs.Security.domain.security;
 
 import lombok.AllArgsConstructor;
+import lombok.extern.log4j.Log4j2;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import pl.iseebugs.Security.domain.account.EmailNotFoundException;
+import pl.iseebugs.Security.domain.account.TokenNotFoundException;
 import pl.iseebugs.Security.domain.user.AppUserNotFoundException;
 import pl.iseebugs.Security.domain.security.projection.AuthReqRespDTO;
+import pl.iseebugs.Security.domain.user.dto.AppUserWriteModel;
 
+@Log4j2
 @AllArgsConstructor
 @RestController
 @RequestMapping("/api/auth")
@@ -15,7 +20,7 @@ public class RegisterController {
     SecurityFacade securityFacade;
 
     @PostMapping("/signin")
-    public ResponseEntity<AuthReqRespDTO> signIn(@RequestBody AuthReqRespDTO signInRequest) throws TokenNotFoundException, AppUserNotFoundException {
+    public ResponseEntity<AuthReqRespDTO> signIn(@RequestBody AuthReqRespDTO signInRequest) throws TokenNotFoundException, AppUserNotFoundException, EmailNotFoundException {
         return  ResponseEntity.ok(securityFacade.signIn(signInRequest));
     }
 
@@ -30,12 +35,12 @@ public class RegisterController {
 
     @PatchMapping("/users")
     ResponseEntity<AuthReqRespDTO> updateUser(@RequestHeader("Authorization") String authHeader,
-                                              @RequestBody AuthReqRespDTO updateRequest) throws Exception {
+                                              @RequestBody AppUserWriteModel appUserWriteModel) throws Exception {
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
         }
-        String refreshToken = authHeader.substring(7);
-        return ResponseEntity.ok(securityFacade.updateUser(refreshToken, updateRequest));
+        String accessToken = authHeader.substring(7);
+        return ResponseEntity.ok(securityFacade.updateUser(accessToken, appUserWriteModel));
     }
 
     @PatchMapping("/users/forgotten-password")
@@ -55,6 +60,4 @@ public class RegisterController {
         String accessToken = authHeader.substring(7);
         return ResponseEntity.ok(securityFacade.updatePassword(accessToken, reqRespDTO));
     }
-
-
 }
