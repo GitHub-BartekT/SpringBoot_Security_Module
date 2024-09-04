@@ -1,6 +1,7 @@
 package pl.iseebugs.Security.domain.security;
 
 import lombok.AllArgsConstructor;
+import lombok.extern.log4j.Log4j2;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -10,6 +11,7 @@ import pl.iseebugs.Security.domain.user.AppUserNotFoundException;
 import pl.iseebugs.Security.domain.security.projection.AuthReqRespDTO;
 import pl.iseebugs.Security.domain.user.dto.AppUserWriteModel;
 
+@Log4j2
 @AllArgsConstructor
 @RestController
 @RequestMapping("/api/auth")

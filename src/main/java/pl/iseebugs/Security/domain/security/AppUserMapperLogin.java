@@ -12,16 +12,4 @@ class AppUserMapperLogin {
                 userDetails.password(),
                 userDetails.role());
     }
-
-    static AppUserWriteModel fromUserDetailsToAppUserReadModel(AppUserInfoDetails userDetails) {
-        return AppUserWriteModel.builder()
-                .firstName(userDetails.getFirstName())
-                .lastName(userDetails.getLastName())
-                .email(userDetails.getUsername())
-                .password(userDetails.getPassword())
-                .role(userDetails.getAuthorities().toString())
-                .enabled(userDetails.isEnabled())
-                .locked(!userDetails.isAccountNonLocked())
-                .build();
-    }
 }

@@ -104,6 +104,7 @@ public class SecurityFacade {
     }
 
     AuthReqRespDTO refreshToken(String refreshToken) throws Exception {
+        log.info("Start refreshing token");
         helper.validateIsTokenRefresh(refreshToken);
 
         String userEmail = jwtUtils.extractUsername(refreshToken);
@@ -125,6 +126,7 @@ public class SecurityFacade {
         response.setMessage("Successfully Refreshed Token");
 
         log.info("User with email: " + userEmail + " refreshed access token.");
+        log.info("Response DTO: " + response);
         return response;
     }
 

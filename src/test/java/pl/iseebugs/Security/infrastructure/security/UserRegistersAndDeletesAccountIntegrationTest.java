@@ -170,7 +170,7 @@ class UserRegistersAndDeletesAccountIntegrationTest extends BaseIntegrationTest 
         );
 
         // then
-        MvcResult badRefreshActionResult = badRefreshRegisterRequest.andExpect(status().isOk()).andReturn();
+        MvcResult badRefreshActionResult = badRefreshRegisterRequest.andExpect(status().isUnauthorized()).andReturn();
         String badRefreshActionResultJson = badRefreshActionResult.getResponse().getContentAsString();
         AuthReqRespDTO badRefreshResultDto = objectMapper.readValue(badRefreshActionResultJson, AuthReqRespDTO.class);
 
@@ -178,7 +178,7 @@ class UserRegistersAndDeletesAccountIntegrationTest extends BaseIntegrationTest 
         //then
         assertAll(
                 () -> assertThat(badRefreshResultDto.getStatusCode()).isEqualTo(401),
-                () -> assertThat(badRefreshResultDto.getMessage()).isEqualTo("Invalid Token type.")
+                () -> assertThat(badRefreshResultDto.getMessage()).isEqualTo("Invalid or expired refresh token")
         );
 
 
