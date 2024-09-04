@@ -312,9 +312,9 @@ class UserRegistersAndDeletesAccountIntegrationTest extends BaseIntegrationTest 
         String confirmActionResultFailedJsonNoUser = registerActionResultFailedNoUser.getResponse().getContentAsString();
         AuthReqRespDTO confirmResultFailedDtoNoUser = objectMapper.readValue(confirmActionResultFailedJsonNoUser, AuthReqRespDTO.class);
         assertAll(
-                () -> assertThat(confirmResultFailedDto.getStatusCode()).isEqualTo(404),
-                () -> assertThat(confirmResultFailedDto.getMessage()).isEqualTo("Email not found."),
-                () -> assertThat(confirmResultFailedDto.getError()).isEqualTo("EmailNotFoundException")
+                () -> assertThat(confirmResultFailedDtoNoUser.getStatusCode()).isEqualTo(404),
+                () -> assertThat(confirmResultFailedDtoNoUser.getMessage()).isEqualTo("Email not found."),
+                () -> assertThat(confirmResultFailedDtoNoUser.getError()).isEqualTo("EmailNotFoundException")
         );
     }
 }

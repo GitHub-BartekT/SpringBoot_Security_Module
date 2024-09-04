@@ -17,7 +17,7 @@ public class AppUserFacade {
         this.appUserRepository = appUserRepository;
     }
 
-    public boolean existsByEmail(String email){
+    public boolean existsByEmail(String email) {
         return appUserRepository.existsByEmail(email);
     }
 
@@ -30,8 +30,9 @@ public class AppUserFacade {
         AppUser user = appUserRepository.findByEmail(email).orElseThrow(EmailNotFoundException::new);
         return AppUserMapper.toAppUserReadModel(user);
     }
+
     public AppUserReadModel updatePersonalData(AppUserWriteModel appUser) throws AppUserNotFoundException, EmailNotFoundException {
-        if(!existsByEmail(appUser.getEmail())){
+        if (!existsByEmail(appUser.getEmail())) {
             throw new AppUserNotFoundException();
         }
 
@@ -39,11 +40,11 @@ public class AppUserFacade {
                 .findByEmail(appUser.getEmail())
                 .orElseThrow(AppUserNotFoundException::new);
 
-        if(appUser.getFirstName() != null && !appUser.getFirstName().isBlank()){
+        if (appUser.getFirstName() != null && !appUser.getFirstName().isBlank()) {
             toUpdate.setFirstName(appUser.getFirstName());
         }
 
-        if(appUser.getLastName() != null && !appUser.getLastName().isBlank()){
+        if (appUser.getLastName() != null && !appUser.getLastName().isBlank()) {
             toUpdate.setLastName(appUser.getLastName());
         }
         AppUser updated = appUserRepository.save(toUpdate);
@@ -54,10 +55,32 @@ public class AppUserFacade {
         AppUser toUpdate = appUserRepository
                 .findById(appUser.getId())
                 .orElseThrow(AppUserNotFoundException::new);
+
+        if (validateStringArgument(appUser.getFirstName())) {
+            toUpdate.setFirstName(appUser.getFirstName());
+        }
+        if (validateStringArgument(appUser.getLastName())) {
+            toUpdate.setLastName(appUser.getLastName());
+        }
+        if (validateStringArgument(appUser.getEmail())) {
+            toUpdate.setEmail(appUser.getEmail());
+        }
+        if (validateStringArgument(appUser.getPassword())) {
+            toUpdate.setPassword(appUser.getPassword());
+        }
+        if (validateStringArgument(appUser.getRole())) {
+            toUpdate.setRole(appUser.getRole());
+        }
+        toUpdate.setEnabled(appUser.isEnabled());
+        toUpdate.setLocked(appUser.isLocked());
+
         AppUser updated = appUserRepository.save(toUpdate);
         return AppUserMapper.toAppUserReadModel(updated);
     }
 
+    private boolean validateStringArgument(String argument) {
+        return argument != null && !argument.isBlank();
+    }
 
     public void enableAppUser(Long id) throws AppUserNotFoundException {
         appUserRepository.findById(id).orElseThrow(AppUserNotFoundException::new);
@@ -66,10 +89,10 @@ public class AppUserFacade {
     }
 
     public AppUserReadModel create(AppUserWriteModel appUser) throws AppUserNotFoundException {
-        if(appUser.getId() != null){
+        if (appUser.getId() != null) {
             throw new IllegalArgumentException("Id could be present.");
         }
-        if(appUserRepository.existsByEmail(appUser.getEmail())){
+        if (appUserRepository.existsByEmail(appUser.getEmail())) {
             throw new IllegalArgumentException("User already exists.");
         }
         AppUser toCreate = AppUserMapper.toAppUser(appUser);
