@@ -9,9 +9,6 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import pl.iseebugs.Security.domain.account.BadTokenTypeException;
-import pl.iseebugs.Security.domain.account.create.ConfirmationTokenService;
-import pl.iseebugs.Security.domain.email.EmailFacade;
-import pl.iseebugs.Security.domain.user.AppUserFacade;
 import pl.iseebugs.Security.domain.user.dto.AppUserReadModel;
 
 

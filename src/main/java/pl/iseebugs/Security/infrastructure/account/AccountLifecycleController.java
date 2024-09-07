@@ -1,4 +1,4 @@
-package pl.iseebugs.Security.domain.security;
+package pl.iseebugs.Security.infrastructure.account;
 
 import lombok.AllArgsConstructor;
 import lombok.extern.log4j.Log4j2;
@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.*;
 import pl.iseebugs.Security.domain.account.EmailNotFoundException;
 import pl.iseebugs.Security.domain.account.TokenNotFoundException;
 import pl.iseebugs.Security.domain.account.lifecycle.LifecycleAccountFacade;
+import pl.iseebugs.Security.domain.security.SecurityFacade;
 import pl.iseebugs.Security.domain.user.AppUserNotFoundException;
 import pl.iseebugs.Security.domain.security.projection.AuthReqRespDTO;
 import pl.iseebugs.Security.domain.user.dto.AppUserWriteModel;
@@ -16,9 +17,8 @@ import pl.iseebugs.Security.domain.user.dto.AppUserWriteModel;
 @AllArgsConstructor
 @RestController
 @RequestMapping("/api/auth")
-public class RegisterController {
+public class AccountLifecycleController {
 
-    SecurityFacade securityFacade;
     LifecycleAccountFacade lifecycleAccountFacade;
 
     @PostMapping("/signin")
