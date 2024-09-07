@@ -164,4 +164,35 @@ public class LifecycleAccountFacade {
         return responseDTO;
     }
 
+    public AuthReqRespDTO updatePassword(String accessToken, AuthReqRespDTO requestDTO) throws BadTokenTypeException, InvalidEmailTypeException, AppUserNotFoundException, EmailNotFoundException {
+        securityFacade.isAccessToken(accessToken);
+
+        String userEmail = securityFacade.extractUsername(accessToken);
+        AppUserReadModel appUserFromDB = appUserFacade.findByEmail(userEmail);
+
+        String newPassword = requestDTO.getPassword();
+        String encodePassword = securityFacade.passwordEncode(newPassword);
+
+        AppUserWriteModel toUpdate = AppUserWriteModel.builder()
+                .id(appUserFromDB.id())
+                .password(encodePassword)
+                .build();
+
+        AppUserReadModel updated = appUserFacade.update(toUpdate);
+
+        AuthReqRespDTO responseDTO = new AuthReqRespDTO();
+
+        responseDTO.setMessage("Password changed successfully");
+        responseDTO.setStatusCode(200);
+        responseDTO.setFirstName(updated.firstName());
+        responseDTO.setLastName(updated.lastName());
+        responseDTO.setEmail(updated.email());
+
+        emailFacade.sendTemplateEmail(
+                EmailType.RESET,
+                responseDTO,
+                newPassword);
+
+        return responseDTO;
+    }
 }

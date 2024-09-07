@@ -9,18 +9,10 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import pl.iseebugs.Security.domain.account.BadTokenTypeException;
-import pl.iseebugs.Security.domain.account.EmailNotFoundException;
 import pl.iseebugs.Security.domain.account.create.ConfirmationTokenService;
 import pl.iseebugs.Security.domain.email.EmailFacade;
-import pl.iseebugs.Security.domain.email.EmailType;
-import pl.iseebugs.Security.domain.email.InvalidEmailTypeException;
-import pl.iseebugs.Security.domain.security.projection.AuthReqRespDTO;
 import pl.iseebugs.Security.domain.user.AppUserFacade;
-import pl.iseebugs.Security.domain.user.AppUserNotFoundException;
 import pl.iseebugs.Security.domain.user.dto.AppUserReadModel;
-import pl.iseebugs.Security.domain.user.dto.AppUserWriteModel;
-
-import java.util.UUID;
 
 
 @AllArgsConstructor
@@ -28,14 +20,9 @@ import java.util.UUID;
 @Log
 public class SecurityFacade {
 
-    private final AppUserFacade appUserFacade;
     private final PasswordEncoder passwordEncoder;
     private final JWTUtils jwtUtils;
     private final AuthenticationManager authenticationManager;
-    private final ConfirmationTokenService confirmationTokenService;
-    private final EmailFacade emailFacade;
-    private final LoginAndRegisterHelper helper;
-
 
     public String passwordEncode(CharSequence rawPassword) {
         return passwordEncoder.encode(rawPassword);
@@ -88,37 +75,5 @@ public class SecurityFacade {
 
     public boolean isTokenValid(String token, String email){
         return jwtUtils.isTokenValid(token, email);
-    }
-
-    AuthReqRespDTO updatePassword(String accessToken, AuthReqRespDTO requestDTO) throws BadTokenTypeException, InvalidEmailTypeException, AppUserNotFoundException, EmailNotFoundException {
-        helper.validateIsTokenAccess(accessToken);
-
-        String userEmail = jwtUtils.extractUsername(accessToken);
-        AppUserReadModel appUserFromDB = appUserFacade.findByEmail(userEmail);
-
-        String newPassword = requestDTO.getPassword();
-        String encodePassword = passwordEncoder.encode(newPassword);
-
-        AppUserWriteModel toUpdate = AppUserWriteModel.builder()
-                .id(appUserFromDB.id())
-                .password(encodePassword)
-                .build();
-
-        AppUserReadModel updated = appUserFacade.update(toUpdate);
-
-        AuthReqRespDTO responseDTO = new AuthReqRespDTO();
-
-        responseDTO.setMessage("Password changed successfully");
-        responseDTO.setStatusCode(200);
-        responseDTO.setFirstName(updated.firstName());
-        responseDTO.setLastName(updated.lastName());
-        responseDTO.setEmail(updated.email());
-
-        emailFacade.sendTemplateEmail(
-                EmailType.RESET,
-                responseDTO,
-                newPassword);
-
-        return responseDTO;
     }
 }

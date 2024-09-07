@@ -60,6 +60,6 @@ public class RegisterController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
         }
         String accessToken = authHeader.substring(7);
-        return ResponseEntity.ok(securityFacade.updatePassword(accessToken, reqRespDTO));
+        return ResponseEntity.ok(lifecycleAccountFacade.updatePassword(accessToken, reqRespDTO));
     }
 }
