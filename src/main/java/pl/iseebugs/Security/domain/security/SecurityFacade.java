@@ -3,27 +3,23 @@ package pl.iseebugs.Security.domain.security;
 import lombok.AllArgsConstructor;
 import lombok.extern.java.Log;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.CredentialsExpiredException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import pl.iseebugs.Security.domain.account.BadTokenTypeException;
 import pl.iseebugs.Security.domain.account.EmailNotFoundException;
-import pl.iseebugs.Security.domain.account.TokenNotFoundException;
-import pl.iseebugs.Security.domain.account.create.ConfirmationToken;
 import pl.iseebugs.Security.domain.account.create.ConfirmationTokenService;
 import pl.iseebugs.Security.domain.email.EmailFacade;
 import pl.iseebugs.Security.domain.email.EmailType;
 import pl.iseebugs.Security.domain.email.InvalidEmailTypeException;
-import pl.iseebugs.Security.domain.account.BadTokenTypeException;
 import pl.iseebugs.Security.domain.security.projection.AuthReqRespDTO;
 import pl.iseebugs.Security.domain.user.AppUserFacade;
 import pl.iseebugs.Security.domain.user.AppUserNotFoundException;
 import pl.iseebugs.Security.domain.user.dto.AppUserReadModel;
 import pl.iseebugs.Security.domain.user.dto.AppUserWriteModel;
 
-import java.time.LocalDateTime;
 import java.util.UUID;
 
 
@@ -57,6 +53,14 @@ public class SecurityFacade {
         throw new BadTokenTypeException();
     }
 
+    public void isRefreshToken(String refreshToken) throws BadTokenTypeException {
+        if (jwtUtils.isRefreshToken(refreshToken)) {
+            return;
+        }
+        log.info("The provided token is not an refresh token.");
+        throw new BadTokenTypeException();
+    }
+
     public void isTokenExpired(String accessToken) {
         String userEmail = extractUsername(accessToken);
         if (jwtUtils.isTokenExpired(accessToken)) {
@@ -82,31 +86,8 @@ public class SecurityFacade {
                         password));
     }
 
-    AuthReqRespDTO refreshToken(String refreshToken) throws Exception {
-        log.info("Start refreshing token");
-        helper.validateIsTokenRefresh(refreshToken);
-
-        String userEmail = jwtUtils.extractUsername(refreshToken);
-        AppUserReadModel user = appUserFacade.findByEmail(userEmail);
-        UserDetails userToJWT = AppUserMapperLogin.fromAppUserReadModelToUserDetails(user);
-
-        if (!jwtUtils.isTokenValid(refreshToken, userToJWT)) {
-            log.info("User with email: " + userEmail + " used an expired token.");
-            throw new CredentialsExpiredException("Token expired.");
-        }
-
-        AuthReqRespDTO response = new AuthReqRespDTO();
-
-        var jwt = jwtUtils.generateAccessToken(userToJWT);
-        response.setStatusCode(200);
-        response.setToken(jwt);
-        response.setRefreshToken(refreshToken);
-        response.setExpirationTime("60 min");
-        response.setMessage("Successfully Refreshed Token");
-
-        log.info("User with email: " + userEmail + " refreshed access token.");
-        log.info("Response DTO: " + response);
-        return response;
+    public boolean isTokenValid(String token, String email){
+        return jwtUtils.isTokenValid(token, email);
     }
 
     AuthReqRespDTO updateUser(String accessToken, AppUserWriteModel toWrite) throws Exception {
@@ -146,38 +127,6 @@ public class SecurityFacade {
             responseDTO.setFirstName(ourUserResult.firstName());
             responseDTO.setLastName(ourUserResult.lastName());
         }
-
-        return responseDTO;
-    }
-
-    AuthReqRespDTO resetPasswordAndNotify(String accessToken) throws BadTokenTypeException, InvalidEmailTypeException, AppUserNotFoundException, EmailNotFoundException {
-        helper.validateIsTokenAccess(accessToken);
-
-        String userEmail = jwtUtils.extractUsername(accessToken);
-        AppUserReadModel appUserFromDB = appUserFacade.findByEmail(userEmail);
-
-        String newPassword = UUID.randomUUID().toString();
-        String encodePassword = passwordEncoder.encode(newPassword);
-
-        AppUserWriteModel toUpdate = AppUserWriteModel.builder()
-                .id(appUserFromDB.id())
-                .password(encodePassword)
-                .build();
-
-        AppUserReadModel updated = appUserFacade.update(toUpdate);
-
-        AuthReqRespDTO responseDTO = new AuthReqRespDTO();
-
-        responseDTO.setMessage("Password changed successfully");
-        responseDTO.setStatusCode(200);
-        responseDTO.setFirstName(updated.firstName());
-        responseDTO.setLastName(updated.lastName());
-        responseDTO.setEmail(updated.email());
-
-        emailFacade.sendTemplateEmail(
-                EmailType.RESET,
-                responseDTO,
-                newPassword);
 
         return responseDTO;
     }

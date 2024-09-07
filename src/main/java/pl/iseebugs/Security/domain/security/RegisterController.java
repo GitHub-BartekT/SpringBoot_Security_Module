@@ -32,7 +32,7 @@ public class RegisterController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
         }
         String refreshToken = authHeader.substring(7);
-        return ResponseEntity.ok(securityFacade.refreshToken(refreshToken));
+        return ResponseEntity.ok(lifecycleAccountFacade.refreshToken(refreshToken));
     }
 
     @PatchMapping("/users")
@@ -51,7 +51,7 @@ public class RegisterController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
         }
         String accessToken = authHeader.substring(7);
-        return ResponseEntity.ok(securityFacade.resetPasswordAndNotify(accessToken));
+        return ResponseEntity.ok(lifecycleAccountFacade.resetPasswordAndNotify(accessToken));
     }
 
     @PatchMapping("/users/password")
