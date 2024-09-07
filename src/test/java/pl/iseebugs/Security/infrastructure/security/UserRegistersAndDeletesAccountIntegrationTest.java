@@ -7,6 +7,7 @@ import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.util.StringUtils;
 import pl.iseebugs.Security.BaseIntegrationTest;
+import pl.iseebugs.Security.domain.account.lifecycle.dto.LoginResponse;
 import pl.iseebugs.Security.domain.security.projection.AuthReqRespDTO;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -146,17 +147,15 @@ class UserRegistersAndDeletesAccountIntegrationTest extends BaseIntegrationTest 
         // then
         MvcResult loginActionResult = loginRequest.andExpect(status().isOk()).andReturn();
         String loginActionResultJson = loginActionResult.getResponse().getContentAsString();
-        AuthReqRespDTO loginResultDto = objectMapper.readValue(loginActionResultJson, AuthReqRespDTO.class);
+        LoginResponse loginResultDto = objectMapper.readValue(loginActionResultJson, LoginResponse.class);
 
-        String accessToken = loginResultDto.getToken();
+        String accessToken = loginResultDto.getAccessToken();
         String refreshToken = loginResultDto.getRefreshToken();
 
         //then
         assertAll(
-                () -> assertThat(loginResultDto.getStatusCode()).isEqualTo(200),
-                () -> assertThat(loginResultDto.getMessage()).isEqualTo("Successfully singed in"),
-                () -> assertThat(loginResultDto.getToken()).isNotBlank(),
-                () -> assertThat(loginResultDto.getRefreshToken()).isNotBlank(),
+                () -> assertThat(accessToken).isNotBlank(),
+                () -> assertThat(refreshToken).isNotBlank(),
                 () -> assertThat(StringUtils.countOccurrencesOf(accessToken, ".")).isEqualTo(2),
                 () -> assertThat(StringUtils.countOccurrencesOf(refreshToken, ".")).isEqualTo(2)
         );

@@ -10,6 +10,8 @@ import pl.iseebugs.Security.domain.account.EmailNotFoundException;
 import pl.iseebugs.Security.domain.account.TokenNotFoundException;
 import pl.iseebugs.Security.domain.account.create.AccountCreateFacade;
 import pl.iseebugs.Security.domain.account.create.ConfirmationToken;
+import pl.iseebugs.Security.domain.account.lifecycle.dto.LoginRequest;
+import pl.iseebugs.Security.domain.account.lifecycle.dto.LoginResponse;
 import pl.iseebugs.Security.domain.email.EmailFacade;
 import pl.iseebugs.Security.domain.email.EmailType;
 import pl.iseebugs.Security.domain.email.InvalidEmailTypeException;
@@ -34,9 +36,8 @@ public class LifecycleAccountFacade {
     private final AccountCreateFacade accountCreateFacade;
     private final EmailFacade emailFacade;
 
-    public AuthReqRespDTO signIn(AuthReqRespDTO signingRequest) throws TokenNotFoundException, EmailNotFoundException {
-        AuthReqRespDTO response = new AuthReqRespDTO();
-        String email = signingRequest.getEmail();
+    public LoginResponse signIn(LoginRequest loginRequest) throws TokenNotFoundException, EmailNotFoundException {
+        String email = loginRequest.getEmail();
         log.info("user email: " + email);
 
         var user = appUserFacade.findByEmail(email);
@@ -55,16 +56,16 @@ public class LifecycleAccountFacade {
             }
         }
 
-        securityFacade.authenticateByAuthenticationManager(email, signingRequest.getPassword());
+        securityFacade.authenticateByAuthenticationManager(email, loginRequest.getPassword());
 
         LoginTokenDto accessToken = securityFacade.generateAccessToken(user);
         LoginTokenDto refreshToken = securityFacade.generateRefreshToken(user);
-        response.setStatusCode(200);
-        response.setToken(accessToken.token());
-        response.setRefreshToken(refreshToken.token());
-        response.setExpirationTime("24Hr");
-        response.setMessage("Successfully singed in");
-        return response;
+        return LoginResponse.builder()
+                .accessToken(accessToken.token())
+                .accessTokenExpiresAt(accessToken.expiresAt())
+                .refreshToken(refreshToken.token())
+                .refreshTokenExpiresAt(refreshToken.expiresAt())
+                .build();
     }
 
     public AuthReqRespDTO refreshToken(String refreshToken) throws Exception {

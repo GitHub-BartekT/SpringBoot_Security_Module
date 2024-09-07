@@ -8,7 +8,8 @@ import org.springframework.web.bind.annotation.*;
 import pl.iseebugs.Security.domain.account.EmailNotFoundException;
 import pl.iseebugs.Security.domain.account.TokenNotFoundException;
 import pl.iseebugs.Security.domain.account.lifecycle.LifecycleAccountFacade;
-import pl.iseebugs.Security.domain.security.SecurityFacade;
+import pl.iseebugs.Security.domain.account.lifecycle.dto.LoginRequest;
+import pl.iseebugs.Security.domain.account.lifecycle.dto.LoginResponse;
 import pl.iseebugs.Security.domain.user.AppUserNotFoundException;
 import pl.iseebugs.Security.domain.security.projection.AuthReqRespDTO;
 import pl.iseebugs.Security.domain.user.dto.AppUserWriteModel;
@@ -22,7 +23,7 @@ public class AccountLifecycleController {
     LifecycleAccountFacade lifecycleAccountFacade;
 
     @PostMapping("/signin")
-    public ResponseEntity<AuthReqRespDTO> signIn(@RequestBody AuthReqRespDTO signInRequest) throws TokenNotFoundException, AppUserNotFoundException, EmailNotFoundException {
+    public ResponseEntity<LoginResponse> signIn(@RequestBody LoginRequest signInRequest) throws TokenNotFoundException, AppUserNotFoundException, EmailNotFoundException {
         return  ResponseEntity.ok(lifecycleAccountFacade.signIn(signInRequest));
     }
 
