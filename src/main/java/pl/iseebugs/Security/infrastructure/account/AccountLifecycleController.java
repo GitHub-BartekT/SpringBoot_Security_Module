@@ -23,8 +23,8 @@ public class AccountLifecycleController {
     LifecycleAccountFacade lifecycleAccountFacade;
 
     @PostMapping("/signin")
-    public ResponseEntity<LoginResponse> signIn(@RequestBody LoginRequest signInRequest) throws TokenNotFoundException, AppUserNotFoundException, EmailNotFoundException {
-        return  ResponseEntity.ok(lifecycleAccountFacade.signIn(signInRequest));
+    public ResponseEntity<LoginResponse> login(@RequestBody LoginRequest signInRequest) throws TokenNotFoundException, AppUserNotFoundException, EmailNotFoundException {
+        return  ResponseEntity.ok(lifecycleAccountFacade.login(signInRequest));
     }
 
     @PostMapping("/refresh")

@@ -36,13 +36,28 @@ public class LifecycleAccountFacade {
     private final AccountCreateFacade accountCreateFacade;
     private final EmailFacade emailFacade;
 
-    public LoginResponse signIn(LoginRequest loginRequest) throws TokenNotFoundException, EmailNotFoundException {
+    public LoginResponse login(LoginRequest loginRequest) throws TokenNotFoundException, EmailNotFoundException {
         String email = loginRequest.getEmail();
-        log.info("user email: " + email);
+        String password = loginRequest.getPassword();
 
         var user = appUserFacade.findByEmail(email);
 
-        ConfirmationToken confirmationToken = accountCreateFacade.getTokenByUserId(user.id());
+        validConfirmationToken(user.id());
+
+        securityFacade.authenticateByAuthenticationManager(email, password);
+
+        LoginTokenDto accessToken = securityFacade.generateAccessToken(user);
+        LoginTokenDto refreshToken = securityFacade.generateRefreshToken(user);
+        return LoginResponse.builder()
+                .accessToken(accessToken.token())
+                .accessTokenExpiresAt(accessToken.expiresAt())
+                .refreshToken(refreshToken.token())
+                .refreshTokenExpiresAt(refreshToken.expiresAt())
+                .build();
+    }
+
+    private void validConfirmationToken(final Long userId) throws TokenNotFoundException {
+        ConfirmationToken confirmationToken = accountCreateFacade.getTokenByUserId(userId);
 
         LocalDateTime expiredAt = confirmationToken.getExpiresAt();
 
@@ -55,17 +70,6 @@ public class LifecycleAccountFacade {
                 throw new CredentialsExpiredException("Token expired.");
             }
         }
-
-        securityFacade.authenticateByAuthenticationManager(email, loginRequest.getPassword());
-
-        LoginTokenDto accessToken = securityFacade.generateAccessToken(user);
-        LoginTokenDto refreshToken = securityFacade.generateRefreshToken(user);
-        return LoginResponse.builder()
-                .accessToken(accessToken.token())
-                .accessTokenExpiresAt(accessToken.expiresAt())
-                .refreshToken(refreshToken.token())
-                .refreshTokenExpiresAt(refreshToken.expiresAt())
-                .build();
     }
 
     public AuthReqRespDTO refreshToken(String refreshToken) throws Exception {
