@@ -9,6 +9,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import pl.iseebugs.Security.domain.account.BadTokenTypeException;
+import pl.iseebugs.Security.domain.security.projection.LoginTokenDto;
 import pl.iseebugs.Security.domain.user.dto.AppUserReadModel;
 
 
@@ -53,12 +54,12 @@ public class SecurityFacade {
         }
     }
 
-    public String generateAccessToken(AppUserReadModel appUserReadModel){
+    public LoginTokenDto generateAccessToken(AppUserReadModel appUserReadModel){
         UserDetails userToJWT = AppUserMapperLogin.fromAppUserReadModelToUserDetails(appUserReadModel);
         return jwtUtils.generateAccessToken(userToJWT);
     }
 
-    public String generateRefreshToken(AppUserReadModel appUserReadModel){
+    public LoginTokenDto generateRefreshToken(AppUserReadModel appUserReadModel){
         UserDetails userToJWT = AppUserMapperLogin.fromAppUserReadModelToUserDetails(appUserReadModel);
         return jwtUtils.generateRefreshToken(userToJWT);
     }

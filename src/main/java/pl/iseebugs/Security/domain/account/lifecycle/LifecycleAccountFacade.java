@@ -15,6 +15,7 @@ import pl.iseebugs.Security.domain.email.EmailType;
 import pl.iseebugs.Security.domain.email.InvalidEmailTypeException;
 import pl.iseebugs.Security.domain.security.SecurityFacade;
 import pl.iseebugs.Security.domain.security.projection.AuthReqRespDTO;
+import pl.iseebugs.Security.domain.security.projection.LoginTokenDto;
 import pl.iseebugs.Security.domain.user.AppUserFacade;
 import pl.iseebugs.Security.domain.user.AppUserNotFoundException;
 import pl.iseebugs.Security.domain.user.dto.AppUserReadModel;
@@ -56,11 +57,11 @@ public class LifecycleAccountFacade {
 
         securityFacade.authenticateByAuthenticationManager(email, signingRequest.getPassword());
 
-        var jwt = securityFacade.generateAccessToken(user);
-        var refreshToken = securityFacade.generateRefreshToken(user);
+        LoginTokenDto accessToken = securityFacade.generateAccessToken(user);
+        LoginTokenDto refreshToken = securityFacade.generateRefreshToken(user);
         response.setStatusCode(200);
-        response.setToken(jwt);
-        response.setRefreshToken(refreshToken);
+        response.setToken(accessToken.token());
+        response.setRefreshToken(refreshToken.token());
         response.setExpirationTime("24Hr");
         response.setMessage("Successfully singed in");
         return response;
@@ -80,9 +81,9 @@ public class LifecycleAccountFacade {
 
         AuthReqRespDTO response = new AuthReqRespDTO();
 
-        var jwt = securityFacade.generateAccessToken(user);
+        var accessToken = securityFacade.generateAccessToken(user);
         response.setStatusCode(200);
-        response.setToken(jwt);
+        response.setToken(accessToken.token());
         response.setRefreshToken(refreshToken);
         response.setExpirationTime("60 min");
         response.setMessage("Successfully Refreshed Token");

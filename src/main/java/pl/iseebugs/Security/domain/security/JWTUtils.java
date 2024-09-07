@@ -5,6 +5,7 @@ import io.jsonwebtoken.Jwts;
 import lombok.extern.java.Log;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
+import pl.iseebugs.Security.domain.security.projection.LoginTokenDto;
 
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
@@ -21,10 +22,8 @@ class JWTUtils {
     private final SecretKey Key;
     private static long EXPIRATION_REFRESH_TOKEN_TIME;
     private static long EXPIRATION_ACCESS_TOKEN_TIME;
-    private final AuthorizationProperties authorizationProperties;
 
     JWTUtils(final AuthorizationProperties authorizationProperties){
-        this.authorizationProperties = authorizationProperties;
         EXPIRATION_REFRESH_TOKEN_TIME = authorizationProperties.getExpirationRefreshTokenTime();
         EXPIRATION_ACCESS_TOKEN_TIME = authorizationProperties.getExpirationAccessTokenTime();
         String secretString = authorizationProperties.getSecret();
@@ -32,28 +31,33 @@ class JWTUtils {
         this.Key = new SecretKeySpec(keyBytes,"HmacSHA256");
     }
 
-    public String generateAccessToken(UserDetails userDetails){
+    public LoginTokenDto generateAccessToken(UserDetails userDetails){
         return generateToken(userDetails, Token.ACCESS);
     }
 
-    public String generateRefreshToken(UserDetails userDetails){
+    public LoginTokenDto generateRefreshToken(UserDetails userDetails){
      return generateToken(userDetails, Token.REFRESH);
     }
 
-    private String generateToken(UserDetails userDetails, Token tokenType){
+    private LoginTokenDto generateToken(UserDetails userDetails, Token tokenType){
         HashMap<String, Object> claims = new HashMap<>();
         claims.put("type", tokenType);
         long tokenTime = tokenType.equals(Token.ACCESS) ? EXPIRATION_ACCESS_TOKEN_TIME : EXPIRATION_REFRESH_TOKEN_TIME;
 
         log.info("Created " + tokenType + " token for user with email: " + userDetails.getUsername());
 
-        return Jwts.builder()
+        Date expiresAt = new Date(System.currentTimeMillis() + tokenTime);
+        String token = Jwts.builder()
                 .claims(claims)
                 .subject(userDetails.getUsername())
                 .issuedAt(new Date(System.currentTimeMillis()))
-                .expiration(new Date(System.currentTimeMillis() + tokenTime))
+                .expiration(expiresAt)
                 .signWith(Key)
                 .compact();
+
+        return LoginTokenDto.builder()
+                .token(token)
+                .expiresAt(expiresAt).build();
     }
 
     public String extractUsername(String token){
