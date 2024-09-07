@@ -65,42 +65,21 @@ public class SecurityFacade {
         }
     }
 
-    AuthReqRespDTO signIn(AuthReqRespDTO signingRequest) throws TokenNotFoundException, EmailNotFoundException {
-        AuthReqRespDTO response = new AuthReqRespDTO();
-        String email = signingRequest.getEmail();
-        log.info("user email: " + email);
+    public String generateAccessToken(AppUserReadModel appUserReadModel){
+        UserDetails userToJWT = AppUserMapperLogin.fromAppUserReadModelToUserDetails(appUserReadModel);
+        return jwtUtils.generateAccessToken(userToJWT);
+    }
 
-        var user = appUserFacade.findByEmail(email);
+    public String generateRefreshToken(AppUserReadModel appUserReadModel){
+        UserDetails userToJWT = AppUserMapperLogin.fromAppUserReadModelToUserDetails(appUserReadModel);
+        return jwtUtils.generateRefreshToken(userToJWT);
+    }
 
-        ConfirmationToken confirmationToken = confirmationTokenService.getTokenByUserId(user.id())
-                .orElseThrow(() -> new TokenNotFoundException("Confirmation token not found."));
-
-        LocalDateTime expiredAt = confirmationToken.getExpiresAt();
-
-        if (confirmationToken.getConfirmedAt() == null) {
-            if (expiredAt.isAfter(LocalDateTime.now())) {
-                log.info("Confirmation token not confirmed.");
-                throw new BadCredentialsException("Registration not confirmed.");
-            } else {
-                log.info("Token expired.");
-                throw new CredentialsExpiredException("Token expired.");
-            }
-        }
-
+    public void authenticateByAuthenticationManager (String email, String password){
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
                         email,
-                        signingRequest.getPassword()));
-
-        UserDetails userToJWT = AppUserMapperLogin.fromAppUserReadModelToUserDetails(user);
-        var jwt = jwtUtils.generateAccessToken(userToJWT);
-        var refreshToken = jwtUtils.generateRefreshToken(userToJWT);
-        response.setStatusCode(200);
-        response.setToken(jwt);
-        response.setRefreshToken(refreshToken);
-        response.setExpirationTime("24Hr");
-        response.setMessage("Successfully singed in");
-        return response;
+                        password));
     }
 
     AuthReqRespDTO refreshToken(String refreshToken) throws Exception {

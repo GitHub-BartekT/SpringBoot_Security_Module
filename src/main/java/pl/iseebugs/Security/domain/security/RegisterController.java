@@ -7,6 +7,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import pl.iseebugs.Security.domain.account.EmailNotFoundException;
 import pl.iseebugs.Security.domain.account.TokenNotFoundException;
+import pl.iseebugs.Security.domain.account.lifecycle.LifecycleAccountFacade;
 import pl.iseebugs.Security.domain.user.AppUserNotFoundException;
 import pl.iseebugs.Security.domain.security.projection.AuthReqRespDTO;
 import pl.iseebugs.Security.domain.user.dto.AppUserWriteModel;
@@ -18,10 +19,11 @@ import pl.iseebugs.Security.domain.user.dto.AppUserWriteModel;
 public class RegisterController {
 
     SecurityFacade securityFacade;
+    LifecycleAccountFacade lifecycleAccountFacade;
 
     @PostMapping("/signin")
     public ResponseEntity<AuthReqRespDTO> signIn(@RequestBody AuthReqRespDTO signInRequest) throws TokenNotFoundException, AppUserNotFoundException, EmailNotFoundException {
-        return  ResponseEntity.ok(securityFacade.signIn(signInRequest));
+        return  ResponseEntity.ok(lifecycleAccountFacade.signIn(signInRequest));
     }
 
     @PostMapping("/refresh")
