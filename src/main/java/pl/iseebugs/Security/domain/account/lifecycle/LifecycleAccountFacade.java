@@ -92,6 +92,46 @@ public class LifecycleAccountFacade {
         return response;
     }
 
+    public AuthReqRespDTO updateUser(String accessToken, AppUserWriteModel toWrite) throws Exception {
+        securityFacade.isAccessToken(accessToken);
+
+        String userEmail = securityFacade.extractUsername(accessToken);
+        AppUserReadModel appUserFromDataBase = appUserFacade.findByEmail(userEmail);
+
+        if (!securityFacade.isTokenValid(accessToken, userEmail)) {
+            log.info("User with email: " + userEmail + " used an expired token.");
+            throw new CredentialsExpiredException("Token expired.");
+        }
+
+        AuthReqRespDTO responseDTO = new AuthReqRespDTO();
+
+        String firstName = toWrite.getFirstName().isBlank() ?
+                appUserFromDataBase.firstName() :
+                toWrite.getFirstName();
+        String lastName = toWrite.getLastName().isBlank() ?
+                appUserFromDataBase.lastName() :
+                toWrite.getLastName();
+
+        AppUserWriteModel toUpdate = AppUserWriteModel.builder()
+                .id(appUserFromDataBase.id())
+                .email(appUserFromDataBase.email())
+                .firstName(firstName)
+                .lastName(lastName)
+                .build();
+
+        AppUserReadModel ourUserResult = appUserFacade.updatePersonalData(toUpdate);
+
+        if (ourUserResult.id() != null) {
+            responseDTO.setMessage("User update successfully");
+            responseDTO.setStatusCode(200);
+            responseDTO.setEmail(ourUserResult.email());
+            responseDTO.setFirstName(ourUserResult.firstName());
+            responseDTO.setLastName(ourUserResult.lastName());
+        }
+
+        return responseDTO;
+    }
+
     public AuthReqRespDTO resetPasswordAndNotify(String accessToken) throws BadTokenTypeException, InvalidEmailTypeException, AppUserNotFoundException, EmailNotFoundException {
         securityFacade.isAccessToken(accessToken);
 

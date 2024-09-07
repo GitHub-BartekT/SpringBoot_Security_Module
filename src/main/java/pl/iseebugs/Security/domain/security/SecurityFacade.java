@@ -90,47 +90,6 @@ public class SecurityFacade {
         return jwtUtils.isTokenValid(token, email);
     }
 
-    AuthReqRespDTO updateUser(String accessToken, AppUserWriteModel toWrite) throws Exception {
-        helper.validateIsTokenAccess(accessToken);
-
-        String userEmail = jwtUtils.extractUsername(accessToken);
-        AppUserReadModel appUserFromDataBase = appUserFacade.findByEmail(userEmail);
-        UserDetails userToJWT = AppUserMapperLogin.fromAppUserReadModelToUserDetails(appUserFromDataBase);
-
-        if (!jwtUtils.isTokenValid(accessToken, userToJWT)) {
-            log.info("User with email: " + userEmail + " used an expired token.");
-            throw new CredentialsExpiredException("Token expired.");
-        }
-
-        AuthReqRespDTO responseDTO = new AuthReqRespDTO();
-
-        String firstName = toWrite.getFirstName().isBlank() ?
-                appUserFromDataBase.firstName() :
-                toWrite.getFirstName();
-        String lastName = toWrite.getLastName().isBlank() ?
-                appUserFromDataBase.lastName() :
-                toWrite.getLastName();
-
-        AppUserWriteModel toUpdate = AppUserWriteModel.builder()
-                .id(appUserFromDataBase.id())
-                .email(appUserFromDataBase.email())
-                .firstName(firstName)
-                .lastName(lastName)
-                .build();
-
-        AppUserReadModel ourUserResult = appUserFacade.updatePersonalData(toUpdate);
-
-        if (ourUserResult.id() != null) {
-            responseDTO.setMessage("User update successfully");
-            responseDTO.setStatusCode(200);
-            responseDTO.setEmail(ourUserResult.email());
-            responseDTO.setFirstName(ourUserResult.firstName());
-            responseDTO.setLastName(ourUserResult.lastName());
-        }
-
-        return responseDTO;
-    }
-
     AuthReqRespDTO updatePassword(String accessToken, AuthReqRespDTO requestDTO) throws BadTokenTypeException, InvalidEmailTypeException, AppUserNotFoundException, EmailNotFoundException {
         helper.validateIsTokenAccess(accessToken);
 
