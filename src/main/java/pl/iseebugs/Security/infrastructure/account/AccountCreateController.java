@@ -27,8 +27,9 @@ class AccountCreateController {
     }
 
     @GetMapping(path = "/confirm")
-    public ResponseEntity<AuthReqRespDTO> confirm(@RequestParam("token") String token) throws RegistrationTokenConflictException, TokenNotFoundException, AppUserNotFoundException {
-        return ResponseEntity.ok(accountCreateFacade.confirmToken(token));
+    public ResponseEntity<?> confirm(@RequestParam("token") String token) throws RegistrationTokenConflictException, TokenNotFoundException, AppUserNotFoundException {
+        accountCreateFacade.confirmToken(token);
+        return ResponseEntity.ok("User confirmed.");
     }
 
     @GetMapping(path = "/refresh-confirmation-token")

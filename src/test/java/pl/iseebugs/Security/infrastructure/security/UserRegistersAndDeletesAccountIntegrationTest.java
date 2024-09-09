@@ -120,14 +120,10 @@ class UserRegistersAndDeletesAccountIntegrationTest extends BaseIntegrationTest 
         );
 
         // then
-        MvcResult confirmActionResult = confirmRegisterRequest.andExpect(status().isOk()).andReturn();
-        String confirmActionResultJson = confirmActionResult.getResponse().getContentAsString();
-        AuthReqRespDTO confirmResultDto = objectMapper.readValue(confirmActionResultJson, AuthReqRespDTO.class);
-
-        assertAll(
-                () -> assertThat(confirmResultDto.getStatusCode()).isEqualTo(200),
-                () -> assertThat(confirmResultDto.getMessage()).isEqualTo("User confirmed.")
-        );
+        MvcResult confirmActionResult = confirmRegisterRequest
+                .andExpect(status().isOk())
+                .andExpect(content().string("User confirmed.")) // Sprawdzenie treści odpowiedzi
+                .andReturn();
 
 
     //Step 6: user tried to get JWT by requesting POST /api/auth/signin with username="someTestUser", password="someTestPassword"

@@ -10,7 +10,7 @@ import java.util.Optional;
 
 @Service
 @AllArgsConstructor
-public class ConfirmationTokenService {
+class ConfirmationTokenService {
 
     private final ConfirmationTokenRepository confirmationTokenRepository;
 

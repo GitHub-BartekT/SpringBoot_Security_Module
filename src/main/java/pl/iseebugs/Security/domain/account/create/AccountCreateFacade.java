@@ -79,62 +79,14 @@ public class AccountCreateFacade {
         return new LoginTokenDto(token, tokenExpiresAt);
     }
 
-    private static String getUUID() {
-        return UUID.randomUUID().toString();
-    }
-
-    private ConfirmationToken createNewConfirmationToken(final String token, final Long userId) throws TokenNotFoundException {
-        ConfirmationToken confirmationToken = new ConfirmationToken(
-                token,
-                LocalDateTime.now(),
-                LocalDateTime.now().plusMinutes(CONFIRMATION_ACCOUNT_TOKEN_EXPIRATION_TIME),
-                userId
-        );
-        confirmationTokenService.saveConfirmationToken(confirmationToken);
-        return confirmationTokenService.getTokenByToken(token).orElseThrow(TokenNotFoundException::new);
-    }
-
-    private AppUserReadModel createAppUser(final String email, final String password, final String roles) throws AppUserNotFoundException {
-        AppUserWriteModel userToCreate = AppUserWriteModel.builder()
-                .email(email)
-                .password(password)
-                .role(roles)
-                .locked(false)
-                .enabled(false)
-                .build();
-
-        return appUserFacade.create(userToCreate);
-    }
-
-    private void validateEmailConflict(final String email) throws EmailSender.EmailConflictException {
-        if (appUserFacade.existsByEmail(email)) {
-            throw new EmailSender.EmailConflictException();
-        }
-    }
-
-    public AuthReqRespDTO confirmToken(final String token) throws TokenNotFoundException, RegistrationTokenConflictException, AppUserNotFoundException {
-        ConfirmationToken confirmationToken;
-        confirmationToken = confirmationTokenService.getTokenByToken(token)
+    public void confirmToken(final String token) throws TokenNotFoundException, RegistrationTokenConflictException, AppUserNotFoundException {
+        ConfirmationToken confirmationToken = confirmationTokenService.getTokenByToken(token)
                 .orElseThrow(TokenNotFoundException::new);
 
-        if (confirmationToken.getConfirmedAt() != null) {
-            log.info("Confirmation token already confirmed.");
-            throw new RegistrationTokenConflictException();
-        }
-
-        AuthReqRespDTO response = new AuthReqRespDTO();
-        LocalDateTime expiredAt = confirmationToken.getExpiresAt();
-
-        if (expiredAt.isBefore(LocalDateTime.now())) {
-            log.info("Token expired.");
-            throw new CredentialsExpiredException("Token expired.");
-        }
+        validateConfirmationToken(confirmationToken);
 
         confirmationTokenService.setConfirmedAt(token);
         appUserFacade.enableAppUser(confirmationToken.getAppUserId());
-        response.setStatusCode(200);
-        response.setMessage("User confirmed.");
-        return response;
     }
 
     public AuthReqRespDTO refreshConfirmationToken(String email) throws InvalidEmailTypeException, TokenNotFoundException, RegistrationTokenConflictException, AppUserNotFoundException, EmailNotFoundException {
@@ -174,6 +126,53 @@ public class AccountCreateFacade {
         emailFacade.sendTemplateEmail(EmailType.ACTIVATION, responseDTO, link);
 
         return responseDTO;
+    }
+
+    private static void validateConfirmationToken(final ConfirmationToken confirmationToken) throws RegistrationTokenConflictException {
+        if (confirmationToken.getConfirmedAt() != null) {
+            log.info("Confirmation token already confirmed.");
+            throw new RegistrationTokenConflictException();
+        }
+
+        LocalDateTime expiredAt = confirmationToken.getExpiresAt();
+
+        if (expiredAt.isBefore(LocalDateTime.now())) {
+            log.info("Token expired.");
+            throw new CredentialsExpiredException("Token expired.");
+        }
+    }
+
+    private static String getUUID() {
+        return UUID.randomUUID().toString();
+    }
+
+    private ConfirmationToken createNewConfirmationToken(final String token, final Long userId) throws TokenNotFoundException {
+        ConfirmationToken confirmationToken = new ConfirmationToken(
+                token,
+                LocalDateTime.now(),
+                LocalDateTime.now().plusMinutes(CONFIRMATION_ACCOUNT_TOKEN_EXPIRATION_TIME),
+                userId
+        );
+        confirmationTokenService.saveConfirmationToken(confirmationToken);
+        return confirmationTokenService.getTokenByToken(token).orElseThrow(TokenNotFoundException::new);
+    }
+
+    private AppUserReadModel createAppUser(final String email, final String password, final String roles) throws AppUserNotFoundException {
+        AppUserWriteModel userToCreate = AppUserWriteModel.builder()
+                .email(email)
+                .password(password)
+                .role(roles)
+                .locked(false)
+                .enabled(false)
+                .build();
+
+        return appUserFacade.create(userToCreate);
+    }
+
+    private void validateEmailConflict(final String email) throws EmailSender.EmailConflictException {
+        if (appUserFacade.existsByEmail(email)) {
+            throw new EmailSender.EmailConflictException();
+        }
     }
 
     public ConfirmationToken getTokenByUserId(Long userId) throws TokenNotFoundException {
