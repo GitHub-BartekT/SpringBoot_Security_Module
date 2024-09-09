@@ -1,6 +1,7 @@
 package pl.iseebugs.Security.domain.security;
 
 import lombok.AllArgsConstructor;
+import lombok.Data;
 import lombok.extern.java.Log;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.CredentialsExpiredException;
@@ -11,6 +12,8 @@ import org.springframework.stereotype.Service;
 import pl.iseebugs.Security.domain.account.BadTokenTypeException;
 import pl.iseebugs.Security.domain.security.projection.LoginTokenDto;
 import pl.iseebugs.Security.domain.user.dto.AppUserReadModel;
+
+import java.util.Date;
 
 
 @AllArgsConstructor
@@ -52,6 +55,10 @@ public class SecurityFacade {
             log.info("User with email: " + userEmail + " used an expired token.");
             throw new CredentialsExpiredException("Token expired.");
         }
+    }
+
+    public Date extractExpiresAt(String token) {
+        return jwtUtils.extractExpiresAt(token);
     }
 
     public LoginTokenDto generateAccessToken(AppUserReadModel appUserReadModel){

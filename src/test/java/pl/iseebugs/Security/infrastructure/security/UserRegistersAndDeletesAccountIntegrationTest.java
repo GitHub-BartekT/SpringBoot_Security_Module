@@ -193,16 +193,14 @@ class UserRegistersAndDeletesAccountIntegrationTest extends BaseIntegrationTest 
         // then
         MvcResult refreshActionResult = refreshRegisterRequest.andExpect(status().isOk()).andReturn();
         String refreshActionResultJson = refreshActionResult.getResponse().getContentAsString();
-        AuthReqRespDTO refreshResultDto = objectMapper.readValue(refreshActionResultJson, AuthReqRespDTO.class);
+        LoginResponse refreshResultDto = objectMapper.readValue(refreshActionResultJson, LoginResponse.class);
 
-        String newAccessToken = refreshResultDto.getToken();
+        String newAccessToken = refreshResultDto.getAccessToken();
         String newRefreshToken = refreshResultDto.getRefreshToken();
 
         //then
         assertAll(
-                () -> assertThat(refreshResultDto.getStatusCode()).isEqualTo(200),
-                () -> assertThat(refreshResultDto.getMessage()).isEqualTo("Successfully Refreshed Token"),
-                () -> assertThat(refreshResultDto.getToken()).isNotBlank(),
+                () -> assertThat(refreshResultDto.getAccessToken()).isNotBlank(),
                 () -> assertThat(refreshResultDto.getRefreshToken()).isNotBlank(),
                 () -> assertThat(newRefreshToken.equals(refreshToken)),
                 () -> assertThat(StringUtils.countOccurrencesOf(newAccessToken, ".")).isEqualTo(2),

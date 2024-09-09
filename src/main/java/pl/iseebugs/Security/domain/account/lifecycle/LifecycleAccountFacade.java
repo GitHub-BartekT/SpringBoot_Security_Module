@@ -24,6 +24,7 @@ import pl.iseebugs.Security.domain.user.dto.AppUserReadModel;
 import pl.iseebugs.Security.domain.user.dto.AppUserWriteModel;
 
 import java.time.LocalDateTime;
+import java.util.Date;
 import java.util.UUID;
 
 @Log4j2
@@ -56,23 +57,7 @@ public class LifecycleAccountFacade {
                 .build();
     }
 
-    private void validConfirmationToken(final Long userId) throws TokenNotFoundException {
-        ConfirmationToken confirmationToken = accountCreateFacade.getTokenByUserId(userId);
-
-        LocalDateTime expiredAt = confirmationToken.getExpiresAt();
-
-        if (confirmationToken.getConfirmedAt() == null) {
-            if (expiredAt.isAfter(LocalDateTime.now())) {
-                log.info("Confirmation token not confirmed.");
-                throw new BadCredentialsException("Registration not confirmed.");
-            } else {
-                log.info("Token expired.");
-                throw new CredentialsExpiredException("Token expired.");
-            }
-        }
-    }
-
-    public AuthReqRespDTO refreshToken(String refreshToken) throws Exception {
+    public LoginResponse refreshToken(String refreshToken) throws Exception {
         log.info("Start refreshing token");
         securityFacade.isRefreshToken(refreshToken);
 
@@ -84,18 +69,16 @@ public class LifecycleAccountFacade {
             throw new CredentialsExpiredException("Token expired.");
         }
 
-        AuthReqRespDTO response = new AuthReqRespDTO();
-
         var accessToken = securityFacade.generateAccessToken(user);
-        response.setStatusCode(200);
-        response.setToken(accessToken.token());
-        response.setRefreshToken(refreshToken);
-        response.setExpirationTime("60 min");
-        response.setMessage("Successfully Refreshed Token");
+        Date refreshTokenExpiresAt = securityFacade.extractExpiresAt(refreshToken);
 
         log.info("User with email: " + userEmail + " refreshed access token.");
-        log.info("Response DTO: " + response);
-        return response;
+        return LoginResponse.builder()
+                .accessToken(accessToken.token())
+                .accessTokenExpiresAt(accessToken.expiresAt())
+                .refreshToken(refreshToken)
+                .refreshTokenExpiresAt(refreshTokenExpiresAt)
+                .build();
     }
 
     public AuthReqRespDTO updateUser(String accessToken, AppUserWriteModel toWrite) throws Exception {
@@ -200,5 +183,21 @@ public class LifecycleAccountFacade {
                 newPassword);
 
         return responseDTO;
+    }
+
+    private void validConfirmationToken(final Long userId) throws TokenNotFoundException {
+        ConfirmationToken confirmationToken = accountCreateFacade.getTokenByUserId(userId);
+
+        LocalDateTime expiredAt = confirmationToken.getExpiresAt();
+
+        if (confirmationToken.getConfirmedAt() == null) {
+            if (expiredAt.isAfter(LocalDateTime.now())) {
+                log.info("Confirmation token not confirmed.");
+                throw new BadCredentialsException("Registration not confirmed.");
+            } else {
+                log.info("Token expired.");
+                throw new CredentialsExpiredException("Token expired.");
+            }
+        }
     }
 }

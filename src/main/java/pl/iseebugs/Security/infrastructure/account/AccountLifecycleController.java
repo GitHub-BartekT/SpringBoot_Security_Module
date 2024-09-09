@@ -28,7 +28,7 @@ public class AccountLifecycleController {
     }
 
     @PostMapping("/refresh")
-    public ResponseEntity<AuthReqRespDTO> refreshToken(@RequestHeader("Authorization") String authHeader) throws Exception {
+    public ResponseEntity<LoginResponse> refreshToken(@RequestHeader("Authorization") String authHeader) throws Exception {
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
         }
