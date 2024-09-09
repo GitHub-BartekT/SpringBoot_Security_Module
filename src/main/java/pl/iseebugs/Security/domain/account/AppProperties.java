@@ -1,4 +1,4 @@
-package pl.iseebugs.Security.domain.security;
+package pl.iseebugs.Security.domain.account;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 

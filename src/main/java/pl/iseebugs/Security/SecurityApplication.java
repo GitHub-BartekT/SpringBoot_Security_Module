@@ -5,7 +5,7 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import pl.iseebugs.Security.domain.email.EmailProperties;
-import pl.iseebugs.Security.domain.security.AppProperties;
+import pl.iseebugs.Security.domain.account.AppProperties;
 import pl.iseebugs.Security.domain.security.AuthorizationProperties;
 
 @SpringBootApplication

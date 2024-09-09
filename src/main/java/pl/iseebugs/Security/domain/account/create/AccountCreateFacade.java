@@ -167,4 +167,9 @@ public class AccountCreateFacade {
 
         return responseDTO;
     }
+
+    public ConfirmationToken getTokenByUserId(Long userId) throws TokenNotFoundException {
+        return confirmationTokenService.getTokenByUserId(userId)
+                .orElseThrow(() -> new TokenNotFoundException("Confirmation token not found."));
+    }
 }

@@ -1,7 +1,6 @@
 package pl.iseebugs.Security.domain.account;
 
 import org.springframework.stereotype.Component;
-import pl.iseebugs.Security.domain.security.AppProperties;
 
 @Component
 public class AccountHelper {
