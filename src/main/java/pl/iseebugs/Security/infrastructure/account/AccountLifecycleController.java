@@ -54,7 +54,7 @@ public class AccountLifecycleController {
         }
         String accessToken = authHeader.substring(7);
         lifecycleAccountFacade.resetPasswordAndNotify(accessToken);
-        return ResponseEntity.ok().build();
+        return ResponseEntity.ok("Password reset successfully and notification sent");
     }
 
     @PatchMapping("/users/password")
@@ -64,6 +64,6 @@ public class AccountLifecycleController {
         }
         String accessToken = authHeader.substring(7);
         lifecycleAccountFacade.updatePassword(accessToken, newPassword);
-        return ResponseEntity.ok().build();
+        return ResponseEntity.ok("Password updated successfully");
     }
 }
