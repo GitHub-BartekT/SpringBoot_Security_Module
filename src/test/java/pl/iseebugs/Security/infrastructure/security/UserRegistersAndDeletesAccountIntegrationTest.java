@@ -7,6 +7,7 @@ import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.util.StringUtils;
 import pl.iseebugs.Security.BaseIntegrationTest;
+import pl.iseebugs.Security.domain.account.lifecycle.dto.AppUserUpdateModel;
 import pl.iseebugs.Security.domain.account.lifecycle.dto.LoginResponse;
 import pl.iseebugs.Security.domain.security.projection.AuthReqRespDTO;
 
@@ -162,7 +163,7 @@ class UserRegistersAndDeletesAccountIntegrationTest extends BaseIntegrationTest 
     //Step 7: User made POST /api/auth/refresh with “Authorization: AAAA.BBBB.CCC” (access token)
     // and system returned UNAUTHORIZED(401)
         // given && when
-        log.info("Step 7.");
+        log.info("Step 7. Refresh access token with invalid token type.");
         ResultActions badRefreshRegisterRequest = mockMvc.perform(post("/api/auth/refresh")
                 .header("Authorization", "Bearer " + accessToken)
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
@@ -184,7 +185,7 @@ class UserRegistersAndDeletesAccountIntegrationTest extends BaseIntegrationTest 
     //Step 8: User made POST /api/auth/refresh with “Authorization: DDDD.EEEE.FFF (refresh token)
     // and system returned OK(200) and token=GGGG.HHHH.III and refreshToken=DDDD.EEEE.FFF
         // given && when
-        log.info("Step 8.");
+        log.info("Step 8. Refresh access token successfully");
         ResultActions refreshRegisterRequest = mockMvc.perform(post("/api/auth/refresh")
              .header("Authorization", "Bearer " + refreshToken)
              .contentType(MediaType.APPLICATION_JSON_VALUE)
@@ -228,12 +229,14 @@ class UserRegistersAndDeletesAccountIntegrationTest extends BaseIntegrationTest 
         // then
         MvcResult updateActionResult = updateRegisterRequest.andExpect(status().isOk()).andReturn();
         String updateActionResultJson = updateActionResult.getResponse().getContentAsString();
-        AuthReqRespDTO updateResultDto = objectMapper.readValue(updateActionResultJson, AuthReqRespDTO.class);
+        AppUserUpdateModel updateResultDto = objectMapper.readValue(updateActionResultJson, AppUserUpdateModel.class);
 
         assertAll(
-                () -> assertThat(updateResultDto.getStatusCode()).isEqualTo(200),
-                () -> assertThat(updateResultDto.getMessage()).isEqualTo("User update successfully")
+                () -> assertThat(updateResultDto.email()).isEqualTo("some@mail.com"),
+                () -> assertThat(updateResultDto.firstName()).isEqualTo("Foo"),
+                () -> assertThat(updateResultDto.lastName()).isEqualTo("Bar")
        );
+
     //Step 10:    User made DELETE /api/auth/deleteUser “Authorization: AAAA.BBBB.CCC” (refresh token)
     // and system returned UNAUTHORIZED(401)
         log.info("Step 10. Delete account with bad type token.");

@@ -10,6 +10,7 @@ import pl.iseebugs.Security.domain.account.EmailNotFoundException;
 import pl.iseebugs.Security.domain.account.TokenNotFoundException;
 import pl.iseebugs.Security.domain.account.create.AccountCreateFacade;
 import pl.iseebugs.Security.domain.account.create.ConfirmationToken;
+import pl.iseebugs.Security.domain.account.lifecycle.dto.AppUserUpdateModel;
 import pl.iseebugs.Security.domain.account.lifecycle.dto.LoginRequest;
 import pl.iseebugs.Security.domain.account.lifecycle.dto.LoginResponse;
 import pl.iseebugs.Security.domain.email.EmailFacade;
@@ -42,13 +43,12 @@ public class LifecycleAccountFacade {
         String password = loginRequest.getPassword();
 
         var user = appUserFacade.findByEmail(email);
-
-        validConfirmationToken(user.id());
-
         securityFacade.authenticateByAuthenticationManager(email, password);
+        validConfirmationToken(user.id());
 
         LoginTokenDto accessToken = securityFacade.generateAccessToken(user);
         LoginTokenDto refreshToken = securityFacade.generateRefreshToken(user);
+
         return LoginResponse.builder()
                 .accessToken(accessToken.token())
                 .accessTokenExpiresAt(accessToken.expiresAt())
@@ -58,21 +58,11 @@ public class LifecycleAccountFacade {
     }
 
     public LoginResponse refreshToken(String refreshToken) throws Exception {
-        log.info("Start refreshing token");
-        securityFacade.isRefreshToken(refreshToken);
-
-        String userEmail = securityFacade.extractUsername(refreshToken);
-        AppUserReadModel user = appUserFacade.findByEmail(userEmail);
-
-        if (!securityFacade.isTokenValid(refreshToken, userEmail)) {
-            log.info("User with email: " + userEmail + " used an expired token.");
-            throw new CredentialsExpiredException("Token expired.");
-        }
+        AppUserReadModel user = getAppUserReadModelFromToken(refreshToken);
 
         var accessToken = securityFacade.generateAccessToken(user);
         Date refreshTokenExpiresAt = securityFacade.extractExpiresAt(refreshToken);
 
-        log.info("User with email: " + userEmail + " refreshed access token.");
         return LoginResponse.builder()
                 .accessToken(accessToken.token())
                 .accessTokenExpiresAt(accessToken.expiresAt())
@@ -81,18 +71,8 @@ public class LifecycleAccountFacade {
                 .build();
     }
 
-    public AuthReqRespDTO updateUser(String accessToken, AppUserWriteModel toWrite) throws Exception {
-        securityFacade.isAccessToken(accessToken);
-
-        String userEmail = securityFacade.extractUsername(accessToken);
-        AppUserReadModel appUserFromDataBase = appUserFacade.findByEmail(userEmail);
-
-        if (!securityFacade.isTokenValid(accessToken, userEmail)) {
-            log.info("User with email: " + userEmail + " used an expired token.");
-            throw new CredentialsExpiredException("Token expired.");
-        }
-
-        AuthReqRespDTO responseDTO = new AuthReqRespDTO();
+    public AppUserUpdateModel updateUser(String accessToken, AppUserWriteModel toWrite) throws Exception {
+        AppUserReadModel appUserFromDataBase = getAppUserReadModelFromToken(accessToken);
 
         String firstName = toWrite.getFirstName().isBlank() ?
                 appUserFromDataBase.firstName() :
@@ -110,56 +90,26 @@ public class LifecycleAccountFacade {
 
         AppUserReadModel ourUserResult = appUserFacade.updatePersonalData(toUpdate);
 
-        if (ourUserResult.id() != null) {
-            responseDTO.setMessage("User update successfully");
-            responseDTO.setStatusCode(200);
-            responseDTO.setEmail(ourUserResult.email());
-            responseDTO.setFirstName(ourUserResult.firstName());
-            responseDTO.setLastName(ourUserResult.lastName());
-        }
-
-        return responseDTO;
+        return AppUserUpdateModel.builder()
+                .id(ourUserResult.id())
+                .firstName(ourUserResult.firstName())
+                .lastName(ourUserResult.lastName())
+                .email(ourUserResult.email())
+                .build();
     }
 
-    public AuthReqRespDTO resetPasswordAndNotify(String accessToken) throws BadTokenTypeException, InvalidEmailTypeException, AppUserNotFoundException, EmailNotFoundException {
-        securityFacade.isAccessToken(accessToken);
-
-        String userEmail = securityFacade.extractUsername(accessToken);
-        AppUserReadModel appUserFromDB = appUserFacade.findByEmail(userEmail);
-
+    public void resetPasswordAndNotify(String accessToken) throws InvalidEmailTypeException, AppUserNotFoundException, EmailNotFoundException {
+        AppUserReadModel appUserFromDB = getAppUserReadModelFromToken(accessToken);
         String newPassword = UUID.randomUUID().toString();
-        String encodePassword = securityFacade.passwordEncode(newPassword);
-
-        AppUserWriteModel toUpdate = AppUserWriteModel.builder()
-                .id(appUserFromDB.id())
-                .password(encodePassword)
-                .build();
-
-        AppUserReadModel updated = appUserFacade.update(toUpdate);
-
-        AuthReqRespDTO responseDTO = new AuthReqRespDTO();
-
-        responseDTO.setMessage("Password changed successfully");
-        responseDTO.setStatusCode(200);
-        responseDTO.setFirstName(updated.firstName());
-        responseDTO.setLastName(updated.lastName());
-        responseDTO.setEmail(updated.email());
-
-        emailFacade.sendTemplateEmail(
-                EmailType.RESET,
-                responseDTO,
-                newPassword);
-
-        return responseDTO;
+        updatePasswordAndNotify(newPassword, appUserFromDB);
     }
 
-    public AuthReqRespDTO updatePassword(String accessToken, AuthReqRespDTO requestDTO) throws BadTokenTypeException, InvalidEmailTypeException, AppUserNotFoundException, EmailNotFoundException {
-        securityFacade.isAccessToken(accessToken);
+    public void updatePassword(String accessToken, String newPassword) throws InvalidEmailTypeException, AppUserNotFoundException, EmailNotFoundException {
+        AppUserReadModel appUserFromDB = getAppUserReadModelFromToken(accessToken);
+        updatePasswordAndNotify(newPassword, appUserFromDB);
+    }
 
-        String userEmail = securityFacade.extractUsername(accessToken);
-        AppUserReadModel appUserFromDB = appUserFacade.findByEmail(userEmail);
-
-        String newPassword = requestDTO.getPassword();
+    private void updatePasswordAndNotify(final String newPassword, final AppUserReadModel appUserFromDB) throws AppUserNotFoundException, EmailNotFoundException, InvalidEmailTypeException {
         String encodePassword = securityFacade.passwordEncode(newPassword);
 
         AppUserWriteModel toUpdate = AppUserWriteModel.builder()
@@ -169,20 +119,16 @@ public class LifecycleAccountFacade {
 
         AppUserReadModel updated = appUserFacade.update(toUpdate);
 
-        AuthReqRespDTO responseDTO = new AuthReqRespDTO();
-
-        responseDTO.setMessage("Password changed successfully");
-        responseDTO.setStatusCode(200);
-        responseDTO.setFirstName(updated.firstName());
-        responseDTO.setLastName(updated.lastName());
-        responseDTO.setEmail(updated.email());
+        AppUserUpdateModel responseDTO = AppUserUpdateModel.builder()
+                .firstName(updated.firstName())
+                .lastName(updated.lastName())
+                .email(updated.email())
+                .build();
 
         emailFacade.sendTemplateEmail(
                 EmailType.RESET,
                 responseDTO,
                 newPassword);
-
-        return responseDTO;
     }
 
     private void validConfirmationToken(final Long userId) throws TokenNotFoundException {
@@ -199,5 +145,10 @@ public class LifecycleAccountFacade {
                 throw new CredentialsExpiredException("Token expired.");
             }
         }
+    }
+
+    private AppUserReadModel getAppUserReadModelFromToken(final String accessToken) throws EmailNotFoundException {
+        String userEmail = securityFacade.extractUsername(accessToken);
+        return appUserFacade.findByEmail(userEmail);
     }
 }
