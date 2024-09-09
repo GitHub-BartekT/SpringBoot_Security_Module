@@ -5,11 +5,13 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import pl.iseebugs.Security.domain.account.EmailNotFoundException;
 import pl.iseebugs.Security.domain.account.create.AccountCreateFacade;
+import pl.iseebugs.Security.domain.account.lifecycle.dto.LoginRequest;
 import pl.iseebugs.Security.domain.email.EmailSender;
 import pl.iseebugs.Security.domain.email.InvalidEmailTypeException;
 import pl.iseebugs.Security.domain.account.create.RegistrationTokenConflictException;
 import pl.iseebugs.Security.domain.account.TokenNotFoundException;
 import pl.iseebugs.Security.domain.security.projection.AuthReqRespDTO;
+import pl.iseebugs.Security.domain.security.projection.LoginTokenDto;
 import pl.iseebugs.Security.domain.user.AppUserNotFoundException;
 
 @AllArgsConstructor
@@ -20,7 +22,7 @@ class AccountCreateController {
     AccountCreateFacade accountCreateFacade;
 
     @PostMapping("/signup")
-    public ResponseEntity<AuthReqRespDTO> signUp(@RequestBody AuthReqRespDTO signUpRequest) throws EmailSender.EmailConflictException, InvalidEmailTypeException, AppUserNotFoundException {
+    public ResponseEntity<LoginTokenDto> signUp(@RequestBody LoginRequest signUpRequest) throws EmailSender.EmailConflictException, InvalidEmailTypeException, AppUserNotFoundException {
         return ResponseEntity.ok(accountCreateFacade.signUp(signUpRequest));
     }
 

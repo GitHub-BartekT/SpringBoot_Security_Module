@@ -7,9 +7,10 @@ import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.util.StringUtils;
 import pl.iseebugs.Security.BaseIntegrationTest;
-import pl.iseebugs.Security.domain.account.lifecycle.dto.AppUserUpdateModel;
+import pl.iseebugs.Security.domain.account.lifecycle.dto.AppUserDto;
 import pl.iseebugs.Security.domain.account.lifecycle.dto.LoginResponse;
 import pl.iseebugs.Security.domain.security.projection.AuthReqRespDTO;
+import pl.iseebugs.Security.domain.security.projection.LoginTokenDto;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertAll;
@@ -80,15 +81,14 @@ class UserRegistersAndDeletesAccountIntegrationTest extends BaseIntegrationTest 
         // then
         MvcResult registerActionResult = successRegisterRequest.andExpect(status().isOk()).andReturn();
         String registerActionResultJson = registerActionResult.getResponse().getContentAsString();
-        AuthReqRespDTO registerResultDto = objectMapper.readValue(registerActionResultJson, AuthReqRespDTO.class);
+        LoginTokenDto registerResultDto = objectMapper.readValue(registerActionResultJson, LoginTokenDto.class);
 
-        String registrationToken = registerResultDto.getToken();
+        String registrationToken = registerResultDto.token();
 
-        final AuthReqRespDTO finalConfirmResultDto = registerResultDto;
+        final LoginTokenDto finalConfirmResultDto = registerResultDto;
         assertAll(
-                () -> assertThat(finalConfirmResultDto.getStatusCode()).isEqualTo(201),
-                () -> assertThat(finalConfirmResultDto.getMessage()).isEqualTo("User created successfully."),
-                () -> assertThat(finalConfirmResultDto.getToken()).isNotBlank()
+                () -> assertThat(finalConfirmResultDto.token()).isNotBlank(),
+                () -> assertThat(finalConfirmResultDto.expiresAt()).isNotNull()
         );
 
 
@@ -229,12 +229,12 @@ class UserRegistersAndDeletesAccountIntegrationTest extends BaseIntegrationTest 
         // then
         MvcResult updateActionResult = updateRegisterRequest.andExpect(status().isOk()).andReturn();
         String updateActionResultJson = updateActionResult.getResponse().getContentAsString();
-        AppUserUpdateModel updateResultDto = objectMapper.readValue(updateActionResultJson, AppUserUpdateModel.class);
+        AppUserDto updateResultDto = objectMapper.readValue(updateActionResultJson, AppUserDto.class);
 
         assertAll(
-                () -> assertThat(updateResultDto.email()).isEqualTo("some@mail.com"),
-                () -> assertThat(updateResultDto.firstName()).isEqualTo("Foo"),
-                () -> assertThat(updateResultDto.lastName()).isEqualTo("Bar")
+                () -> assertThat(updateResultDto.getEmail()).isEqualTo("some@mail.com"),
+                () -> assertThat(updateResultDto.getFirstName()).isEqualTo("Foo"),
+                () -> assertThat(updateResultDto.getLastName()).isEqualTo("Bar")
        );
 
     //Step 10:    User made DELETE /api/auth/deleteUser “Authorization: AAAA.BBBB.CCC” (refresh token)

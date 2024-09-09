@@ -1,8 +1,6 @@
 package pl.iseebugs.Security.domain.security.projection;
 
 import lombok.Data;
-import lombok.Getter;
-import lombok.Setter;
 
 @Data
 public class AuthReqRespDTO {

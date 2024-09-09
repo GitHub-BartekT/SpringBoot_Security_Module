@@ -11,7 +11,7 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.Context;
-import pl.iseebugs.Security.domain.account.lifecycle.dto.AppUserUpdateModel;
+import pl.iseebugs.Security.domain.account.lifecycle.dto.AppUserDto;
 import pl.iseebugs.Security.domain.security.projection.AuthReqRespDTO;
 
 @Service
@@ -52,14 +52,14 @@ public class EmailFacade implements EmailSender{
         send(userData.getEmail(), template.getSubject(), email);
     }
 
-    public void sendTemplateEmail(EmailType type, AppUserUpdateModel userData, String link) throws InvalidEmailTypeException {
+    public void sendTemplateEmail(EmailType type, AppUserDto userData, String link) throws InvalidEmailTypeException {
         EmailProperties.EmailTemplate template =
                 emailProperties.getTemplates().get(type.toString());
 
         if (template == null){
             throw new InvalidEmailTypeException("Invalid email type: " + type);
         }
-        String firstName = userData.firstName() == null ? "new user" : userData.firstName();
+        String firstName = userData.getFirstName() == null ? "new user" : userData.getFirstName();
 
         Context context = new Context();
         String welcomeText = template.getWelcomeText().replace("${name}", firstName);
@@ -70,7 +70,7 @@ public class EmailFacade implements EmailSender{
 
         String email = this.templateEngine.process(template.getTemplate(), context);
 
-        send(userData.email(), template.getSubject(), email);
+        send(userData.getEmail(), template.getSubject(), email);
     }
 
     @Override
