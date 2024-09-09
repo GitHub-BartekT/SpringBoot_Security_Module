@@ -22,7 +22,7 @@ class AccountCreateController {
     AccountCreateFacade accountCreateFacade;
 
     @PostMapping("/signup")
-    public ResponseEntity<LoginTokenDto> signUp(@RequestBody LoginRequest signUpRequest) throws EmailSender.EmailConflictException, InvalidEmailTypeException, AppUserNotFoundException {
+    public ResponseEntity<LoginTokenDto> signUp(@RequestBody LoginRequest signUpRequest) throws EmailSender.EmailConflictException, InvalidEmailTypeException, AppUserNotFoundException, TokenNotFoundException {
         return ResponseEntity.ok(accountCreateFacade.signUp(signUpRequest));
     }
 
