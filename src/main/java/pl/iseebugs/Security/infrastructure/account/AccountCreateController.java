@@ -3,6 +3,7 @@ package pl.iseebugs.Security.infrastructure.account;
 import lombok.AllArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import pl.iseebugs.Security.domain.ApiResponse;
 import pl.iseebugs.Security.domain.account.EmailNotFoundException;
 import pl.iseebugs.Security.domain.account.create.AccountCreateFacade;
 import pl.iseebugs.Security.domain.account.lifecycle.dto.LoginRequest;
@@ -33,7 +34,7 @@ class AccountCreateController {
     }
 
     @GetMapping(path = "/refresh-confirmation-token")
-    public ResponseEntity<AuthReqRespDTO> refreshConfirmationToken(@RequestParam("email") String email) throws TokenNotFoundException, InvalidEmailTypeException, RegistrationTokenConflictException, AppUserNotFoundException, EmailNotFoundException {
+    public ResponseEntity<ApiResponse<LoginTokenDto>> refreshConfirmationToken(@RequestParam("email") String email) throws TokenNotFoundException, InvalidEmailTypeException, RegistrationTokenConflictException, AppUserNotFoundException, EmailNotFoundException {
         return ResponseEntity.ok(accountCreateFacade.refreshConfirmationToken(email));
     }
 }
