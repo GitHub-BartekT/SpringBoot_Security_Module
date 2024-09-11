@@ -58,14 +58,19 @@ public class AccountCreateFacade {
         String password = securityFacade.passwordEncode(registrationRequest.getPassword());
 
         createAccountValidator.validateEmailConflict(email);
+
         AppUserReadModel createdUser = createAppUser(email, password);
         String token = createNewConfirmationToken(createdUser.id());
+
         sendConfirmationEmail(email, token);
 
-        return buildSignUpSuccessResponse(token, calculateTokenExpiration(token));
+        Date tokenExpiresAt = calculateTokenExpiration(token);
+        LoginTokenDto loginTokenDto = new LoginTokenDto(token, tokenExpiresAt);
+
+        return APiResponseFactory.createSuccessResponse("Successfully signed up.", loginTokenDto);
     }
 
-    public ApiResponse confirmToken(final String token) throws TokenNotFoundException, RegistrationTokenConflictException, AppUserNotFoundException {
+    public ApiResponse<Void> confirmToken(final String token) throws TokenNotFoundException, RegistrationTokenConflictException, AppUserNotFoundException {
         ConfirmationToken confirmationToken = confirmationTokenService.getTokenByToken(token)
                 .orElseThrow(TokenNotFoundException::new);
 
@@ -73,24 +78,8 @@ public class AccountCreateFacade {
 
         confirmationTokenService.setConfirmedAt(token);
         appUserFacade.enableAppUser(confirmationToken.getAppUserId());
-        return buildErrorResponse(HttpStatus.OK.value(), "Account successfully confirmed");
+        return APiResponseFactory.createResponseWithoutData(HttpStatus.OK.value(), "Account successfully confirmed");
     }
-
-    private ApiResponse<LoginTokenDto> buildSignUpSuccessResponse(final String token, Date tokenExpiresAt) throws TokenNotFoundException {
-        return ApiResponse.<LoginTokenDto>builder()
-                .statusCode(HttpStatus.OK.value())
-                .message("Successfully signed up.")
-                .data(new LoginTokenDto(token, tokenExpiresAt))
-                .build();
-    }
-
-    private static ApiResponse<LoginTokenDto> buildErrorResponse(int statusCode, String message) {
-        return ApiResponse.<LoginTokenDto>builder()
-                .statusCode(statusCode)
-                .message(message)
-                .build();
-    }
-
 
     public ApiResponse<LoginTokenDto> refreshConfirmationToken(final String email) throws InvalidEmailTypeException, TokenNotFoundException, RegistrationTokenConflictException, AppUserNotFoundException, EmailNotFoundException {
         AppUserReadModel user = appUserFacade.findByEmail(email);
@@ -105,13 +94,15 @@ public class AccountCreateFacade {
 
     private ApiResponse<LoginTokenDto> handleExistingConfirmationToken(ConfirmationToken existingToken, AppUserReadModel user) throws RegistrationTokenConflictException, InvalidEmailTypeException, TokenNotFoundException {
         if (existingToken.getConfirmedAt() != null) {
-            return buildErrorResponse(ACCOUNT_ALREADY_CONFIRMED_STATUS, "Account already confirmed.");
+            return APiResponseFactory.createResponseWithoutData(ACCOUNT_ALREADY_CONFIRMED_STATUS, "Account already confirmed.");
         }
 
         String token = refreshConfirmationToken(existingToken);
         sendConfirmationEmail(user.email(), token);
-        return buildConfirmationTokenResponse(token, TOKEN_EXISTS_STATUS, "Successfully generated new confirmation token.");
+        Date tokenExpiresAt = calculateTokenExpiration(token);
+        return APiResponseFactory.createResponseWithStatus(TOKEN_EXISTS_STATUS, "Successfully generated new confirmation token.", new LoginTokenDto(token, tokenExpiresAt));
     }
+
     private String refreshConfirmationToken(ConfirmationToken existingToken) {
         String newToken = getUUID();
         existingToken.setToken(newToken);
@@ -124,17 +115,8 @@ public class AccountCreateFacade {
     private ApiResponse<LoginTokenDto> generateNewConfirmationToken(Long userId, String email) throws InvalidEmailTypeException, TokenNotFoundException {
         String token = createNewConfirmationToken(userId);
         sendConfirmationEmail(email, token);
-        return buildConfirmationTokenResponse(token, TOKEN_CREATED_STATUS, "Successfully generated new confirmation token.");
-    }
-
-
-    private ApiResponse<LoginTokenDto> buildConfirmationTokenResponse(String token, int statusCode, String message) throws TokenNotFoundException {
         Date tokenExpiresAt = calculateTokenExpiration(token);
-        return ApiResponse.<LoginTokenDto>builder()
-                .statusCode(statusCode)
-                .message(message)
-                .data(new LoginTokenDto(token, tokenExpiresAt))
-                .build();
+        return APiResponseFactory.createResponseWithStatus(TOKEN_CREATED_STATUS, "Successfully generated new confirmation token.", new LoginTokenDto(token, tokenExpiresAt));
     }
 
     public ConfirmationToken getTokenByUserId(Long userId) throws TokenNotFoundException {
