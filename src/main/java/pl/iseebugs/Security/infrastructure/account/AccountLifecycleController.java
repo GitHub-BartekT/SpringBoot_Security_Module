@@ -45,7 +45,7 @@ public class AccountLifecycleController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
         }
         String accessToken = authHeader.substring(7);
-        return ResponseEntity.ok(lifecycleAccountFacade.updateUser(accessToken, appUserWriteModel));
+        return ResponseEntity.ok(lifecycleAccountFacade.updateUserData(accessToken, appUserWriteModel));
     }
 
     @PatchMapping("/users/forgotten-password")

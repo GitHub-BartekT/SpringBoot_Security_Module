@@ -63,7 +63,7 @@ public class LifecycleAccountFacade {
         return ApiResponseFactory.createSuccessResponse("Access Token refreshed.", createLoginResponse(accessToken,loginTokenDto));
     }
 
-    public ApiResponse<AppUserDto> updateUser(String accessToken, AppUserWriteModel toWrite) throws Exception {
+    public ApiResponse<AppUserDto> updateUserData(String accessToken, AppUserWriteModel toWrite) throws Exception {
         AppUserReadModel appUserFromDataBase = accountHelper.getAppUserReadModelFromToken(accessToken);
 
         String firstName = toWrite.getFirstName().isBlank() ?

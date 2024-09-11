@@ -53,6 +53,10 @@ The API documentation is available via **Swagger UI**:
 - **MailDev**
 - **Docker**
 
+## Modules
+
+![Modules.png](..%2FModules.png)
+
 ## Potential Improvements 🚀
 
 - **Google Registration - OAuth2:** Implement Google OAuth2 login.
