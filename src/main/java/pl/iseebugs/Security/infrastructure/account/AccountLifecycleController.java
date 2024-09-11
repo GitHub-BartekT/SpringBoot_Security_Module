@@ -5,6 +5,8 @@ import lombok.extern.log4j.Log4j2;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import pl.iseebugs.Security.domain.ApiResponse;
+import pl.iseebugs.Security.domain.account.ApiResponseFactory;
 import pl.iseebugs.Security.domain.account.EmailNotFoundException;
 import pl.iseebugs.Security.domain.account.TokenNotFoundException;
 import pl.iseebugs.Security.domain.account.lifecycle.LifecycleAccountFacade;
@@ -23,12 +25,12 @@ public class AccountLifecycleController {
     LifecycleAccountFacade lifecycleAccountFacade;
 
     @PostMapping("/signin")
-    public ResponseEntity<LoginResponse> login(@RequestBody LoginRequest signInRequest) throws TokenNotFoundException, AppUserNotFoundException, EmailNotFoundException {
+    public ResponseEntity<ApiResponse<LoginResponse>> login(@RequestBody LoginRequest signInRequest) throws TokenNotFoundException, AppUserNotFoundException, EmailNotFoundException {
         return  ResponseEntity.ok(lifecycleAccountFacade.login(signInRequest));
     }
 
     @PostMapping("/refresh")
-    public ResponseEntity<LoginResponse> refreshToken(@RequestHeader("Authorization") String authHeader) throws Exception {
+    public ResponseEntity<ApiResponse<LoginResponse>> refreshToken(@RequestHeader("Authorization") String authHeader) throws Exception {
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
         }
@@ -37,7 +39,7 @@ public class AccountLifecycleController {
     }
 
     @PatchMapping("/users")
-    ResponseEntity<AppUserDto> updateUser(@RequestHeader("Authorization") String authHeader,
+    ResponseEntity<ApiResponse<AppUserDto>> updateUser(@RequestHeader("Authorization") String authHeader,
                                           @RequestBody AppUserWriteModel appUserWriteModel) throws Exception {
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
@@ -47,22 +49,26 @@ public class AccountLifecycleController {
     }
 
     @PatchMapping("/users/forgotten-password")
-    ResponseEntity<?> generateNewPassword(@RequestHeader("Authorization") String authHeader) throws Exception {
+    ResponseEntity<ApiResponse<Void>> generateNewPassword(@RequestHeader("Authorization") String authHeader) throws Exception {
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
         }
         String accessToken = authHeader.substring(7);
         lifecycleAccountFacade.resetPasswordAndNotify(accessToken);
-        return ResponseEntity.ok("Password reset successfully and notification sent");
+        return ResponseEntity.ok(ApiResponseFactory
+                .createResponseWithoutData(HttpStatus.OK.value(), "Password reset successfully and notification sent"));
+
     }
 
     @PatchMapping("/users/password")
-    ResponseEntity<?> generateNewPassword(@RequestHeader("Authorization") String authHeader, @RequestBody String newPassword) throws Exception {
+    ResponseEntity<ApiResponse<Void>> generateNewPassword(@RequestHeader("Authorization") String authHeader, @RequestBody String newPassword) throws Exception {
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
         }
         String accessToken = authHeader.substring(7);
         lifecycleAccountFacade.updatePassword(accessToken, newPassword);
-        return ResponseEntity.ok("Password updated successfully");
+
+        return ResponseEntity.ok(ApiResponseFactory
+                .createResponseWithoutData(HttpStatus.OK.value(), "Password updated successfully"));
     }
 }

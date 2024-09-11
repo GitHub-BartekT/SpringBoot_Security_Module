@@ -4,7 +4,7 @@ import org.springframework.http.HttpStatus;
 import pl.iseebugs.Security.domain.ApiResponse;
 
 public class ApiResponseFactory {
-    public static <T> ApiResponse<T> createSuccessResponse( String message, T data) {
+    public static <T> ApiResponse<T> createSuccessResponse(String message, T data) {
         return ApiResponse.<T>builder()
                 .statusCode(HttpStatus.OK.value())
                 .message(message)
