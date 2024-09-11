@@ -2,6 +2,8 @@ package pl.iseebugs.Security.domain.account;
 
 import org.springframework.stereotype.Component;
 
+import java.util.UUID;
+
 @Component
 public class AccountHelper {
 
@@ -16,5 +18,9 @@ public class AccountHelper {
                 appProperties.port() +
                 endpoint +
                 token;
+    }
+
+    public static String getUUID() {
+        return UUID.randomUUID().toString();
     }
 }

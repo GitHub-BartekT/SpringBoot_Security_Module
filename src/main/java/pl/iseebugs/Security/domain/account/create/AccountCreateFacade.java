@@ -26,6 +26,8 @@ import java.util.Date;
 import java.util.Optional;
 import java.util.UUID;
 
+import static pl.iseebugs.Security.domain.account.AccountHelper.getUUID;
+
 @Log4j2
 @Service
 public class AccountCreateFacade {
@@ -133,10 +135,6 @@ public class AccountCreateFacade {
 
         String link = accountHelper.createUrl("/api/auth/confirm?token=", token);
         emailFacade.sendTemplateEmail(EmailType.ACTIVATION, dataToEmail, link);
-    }
-
-    private static String getUUID() {
-        return UUID.randomUUID().toString();
     }
 
     private ConfirmationToken createNewConfirmationToken(final String token, final Long userId) throws TokenNotFoundException {
