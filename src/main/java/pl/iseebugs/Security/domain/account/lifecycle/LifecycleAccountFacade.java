@@ -2,13 +2,9 @@ package pl.iseebugs.Security.domain.account.lifecycle;
 
 import lombok.AllArgsConstructor;
 import lombok.extern.log4j.Log4j2;
-import org.springframework.security.authentication.BadCredentialsException;
-import org.springframework.security.authentication.CredentialsExpiredException;
 import org.springframework.stereotype.Service;
 import pl.iseebugs.Security.domain.account.EmailNotFoundException;
 import pl.iseebugs.Security.domain.account.TokenNotFoundException;
-import pl.iseebugs.Security.domain.account.create.AccountCreateFacade;
-import pl.iseebugs.Security.domain.account.create.ConfirmationToken;
 import pl.iseebugs.Security.domain.account.lifecycle.dto.AppUserDto;
 import pl.iseebugs.Security.domain.account.lifecycle.dto.LoginRequest;
 import pl.iseebugs.Security.domain.account.lifecycle.dto.LoginResponse;
@@ -22,7 +18,6 @@ import pl.iseebugs.Security.domain.user.AppUserNotFoundException;
 import pl.iseebugs.Security.domain.user.dto.AppUserReadModel;
 import pl.iseebugs.Security.domain.user.dto.AppUserWriteModel;
 
-import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.UUID;
 
@@ -33,7 +28,7 @@ public class LifecycleAccountFacade {
 
     private final AppUserFacade appUserFacade;
     private final SecurityFacade securityFacade;
-    private final AccountCreateFacade accountCreateFacade;
+    private final LifecycleValidator lifecycleValidator;
     private final EmailFacade emailFacade;
 
     public LoginResponse login(LoginRequest loginRequest) throws TokenNotFoundException, EmailNotFoundException {
@@ -42,7 +37,7 @@ public class LifecycleAccountFacade {
 
         var user = appUserFacade.findByEmail(email);
         securityFacade.authenticateByAuthenticationManager(email, password);
-        validConfirmationToken(user.id());
+        lifecycleValidator.validConfirmationToken(user.id());
 
         LoginTokenDto accessToken = securityFacade.generateAccessToken(user);
         LoginTokenDto refreshToken = securityFacade.generateRefreshToken(user);
@@ -129,21 +124,7 @@ public class LifecycleAccountFacade {
                 newPassword);
     }
 
-    private void validConfirmationToken(final Long userId) throws TokenNotFoundException {
-        ConfirmationToken confirmationToken = accountCreateFacade.getTokenByUserId(userId);
 
-        LocalDateTime expiredAt = confirmationToken.getExpiresAt();
-
-        if (confirmationToken.getConfirmedAt() == null) {
-            if (expiredAt.isAfter(LocalDateTime.now())) {
-                log.info("Confirmation token not confirmed.");
-                throw new BadCredentialsException("Registration not confirmed.");
-            } else {
-                log.info("Token expired.");
-                throw new CredentialsExpiredException("Token expired.");
-            }
-        }
-    }
 
     private AppUserReadModel getAppUserReadModelFromToken(final String accessToken) throws EmailNotFoundException {
         String userEmail = securityFacade.extractUsername(accessToken);
