@@ -1,8 +1,7 @@
 package pl.iseebugs.Security.domain.security;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
 import lombok.extern.java.Log;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.CredentialsExpiredException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -16,14 +15,22 @@ import pl.iseebugs.Security.domain.user.dto.AppUserReadModel;
 import java.util.Date;
 
 
-@AllArgsConstructor
-@Service
 @Log
+@Service
 public class SecurityFacade {
 
     private final PasswordEncoder passwordEncoder;
     private final JWTUtils jwtUtils;
     private final AuthenticationManager authenticationManager;
+
+    @Autowired
+    public SecurityFacade(
+        PasswordEncoder passwordEncoder, JWTUtils jwtUtils, AuthenticationManager authenticationManager
+    ){
+        this.passwordEncoder = passwordEncoder;
+        this.jwtUtils = jwtUtils;
+        this.authenticationManager = authenticationManager;
+    }
 
     public String passwordEncode(CharSequence rawPassword) {
         return passwordEncoder.encode(rawPassword);

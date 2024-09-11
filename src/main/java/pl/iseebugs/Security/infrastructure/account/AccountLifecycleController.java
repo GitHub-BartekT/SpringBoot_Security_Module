@@ -8,11 +8,10 @@ import org.springframework.web.bind.annotation.*;
 import pl.iseebugs.Security.domain.account.EmailNotFoundException;
 import pl.iseebugs.Security.domain.account.TokenNotFoundException;
 import pl.iseebugs.Security.domain.account.lifecycle.LifecycleAccountFacade;
-import pl.iseebugs.Security.domain.account.lifecycle.dto.AppUserUpdateModel;
+import pl.iseebugs.Security.domain.account.lifecycle.dto.AppUserDto;
 import pl.iseebugs.Security.domain.account.lifecycle.dto.LoginRequest;
 import pl.iseebugs.Security.domain.account.lifecycle.dto.LoginResponse;
 import pl.iseebugs.Security.domain.user.AppUserNotFoundException;
-import pl.iseebugs.Security.domain.security.projection.AuthReqRespDTO;
 import pl.iseebugs.Security.domain.user.dto.AppUserWriteModel;
 
 @Log4j2
@@ -38,8 +37,8 @@ public class AccountLifecycleController {
     }
 
     @PatchMapping("/users")
-    ResponseEntity<AppUserUpdateModel> updateUser(@RequestHeader("Authorization") String authHeader,
-                                                  @RequestBody AppUserWriteModel appUserWriteModel) throws Exception {
+    ResponseEntity<AppUserDto> updateUser(@RequestHeader("Authorization") String authHeader,
+                                          @RequestBody AppUserWriteModel appUserWriteModel) throws Exception {
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
         }

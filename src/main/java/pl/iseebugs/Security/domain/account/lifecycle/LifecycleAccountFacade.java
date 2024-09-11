@@ -9,7 +9,7 @@ import pl.iseebugs.Security.domain.account.EmailNotFoundException;
 import pl.iseebugs.Security.domain.account.TokenNotFoundException;
 import pl.iseebugs.Security.domain.account.create.AccountCreateFacade;
 import pl.iseebugs.Security.domain.account.create.ConfirmationToken;
-import pl.iseebugs.Security.domain.account.lifecycle.dto.AppUserUpdateModel;
+import pl.iseebugs.Security.domain.account.lifecycle.dto.AppUserDto;
 import pl.iseebugs.Security.domain.account.lifecycle.dto.LoginRequest;
 import pl.iseebugs.Security.domain.account.lifecycle.dto.LoginResponse;
 import pl.iseebugs.Security.domain.email.EmailFacade;
@@ -69,7 +69,7 @@ public class LifecycleAccountFacade {
                 .build();
     }
 
-    public AppUserUpdateModel updateUser(String accessToken, AppUserWriteModel toWrite) throws Exception {
+    public AppUserDto updateUser(String accessToken, AppUserWriteModel toWrite) throws Exception {
         AppUserReadModel appUserFromDataBase = getAppUserReadModelFromToken(accessToken);
 
         String firstName = toWrite.getFirstName().isBlank() ?
@@ -88,7 +88,7 @@ public class LifecycleAccountFacade {
 
         AppUserReadModel ourUserResult = appUserFacade.updatePersonalData(toUpdate);
 
-        return AppUserUpdateModel.builder()
+        return AppUserDto.builder()
                 .id(ourUserResult.id())
                 .firstName(ourUserResult.firstName())
                 .lastName(ourUserResult.lastName())
@@ -117,7 +117,7 @@ public class LifecycleAccountFacade {
 
         AppUserReadModel updated = appUserFacade.update(toUpdate);
 
-        AppUserUpdateModel responseDTO = AppUserUpdateModel.builder()
+        AppUserDto responseDTO = AppUserDto.builder()
                 .firstName(updated.firstName())
                 .lastName(updated.lastName())
                 .email(updated.email())

@@ -1,5 +1,6 @@
 package pl.iseebugs.Security.infrastructure.security;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import lombok.extern.java.Log;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
@@ -7,9 +8,11 @@ import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.util.StringUtils;
 import pl.iseebugs.Security.BaseIntegrationTest;
-import pl.iseebugs.Security.domain.account.lifecycle.dto.AppUserUpdateModel;
+import pl.iseebugs.Security.domain.ApiResponse;
+import pl.iseebugs.Security.domain.account.lifecycle.dto.AppUserDto;
 import pl.iseebugs.Security.domain.account.lifecycle.dto.LoginResponse;
 import pl.iseebugs.Security.domain.security.projection.AuthReqRespDTO;
+import pl.iseebugs.Security.domain.security.projection.LoginTokenDto;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertAll;
@@ -17,9 +20,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
-
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @Log
 class UserRegistersAndDeletesAccountIntegrationTest extends BaseIntegrationTest {
@@ -80,15 +81,15 @@ class UserRegistersAndDeletesAccountIntegrationTest extends BaseIntegrationTest 
         // then
         MvcResult registerActionResult = successRegisterRequest.andExpect(status().isOk()).andReturn();
         String registerActionResultJson = registerActionResult.getResponse().getContentAsString();
-        AuthReqRespDTO registerResultDto = objectMapper.readValue(registerActionResultJson, AuthReqRespDTO.class);
+        ApiResponse<LoginTokenDto> registerResultDto = objectMapper.readValue(
+                registerActionResultJson, new TypeReference<ApiResponse<LoginTokenDto>>() {});
 
-        String registrationToken = registerResultDto.getToken();
+        String registrationToken = registerResultDto.getData().token();
 
-        final AuthReqRespDTO finalConfirmResultDto = registerResultDto;
+        final ApiResponse<LoginTokenDto> finalConfirmResultDto = registerResultDto;
         assertAll(
-                () -> assertThat(finalConfirmResultDto.getStatusCode()).isEqualTo(201),
-                () -> assertThat(finalConfirmResultDto.getMessage()).isEqualTo("User created successfully."),
-                () -> assertThat(finalConfirmResultDto.getToken()).isNotBlank()
+                () -> assertThat(registrationToken).isNotBlank(),
+                () -> assertThat(finalConfirmResultDto.getData().expiresAt()).isNotNull()
         );
 
 
@@ -120,14 +121,10 @@ class UserRegistersAndDeletesAccountIntegrationTest extends BaseIntegrationTest 
         );
 
         // then
-        MvcResult confirmActionResult = confirmRegisterRequest.andExpect(status().isOk()).andReturn();
-        String confirmActionResultJson = confirmActionResult.getResponse().getContentAsString();
-        AuthReqRespDTO confirmResultDto = objectMapper.readValue(confirmActionResultJson, AuthReqRespDTO.class);
-
-        assertAll(
-                () -> assertThat(confirmResultDto.getStatusCode()).isEqualTo(200),
-                () -> assertThat(confirmResultDto.getMessage()).isEqualTo("User confirmed.")
-        );
+        MvcResult confirmActionResult = confirmRegisterRequest
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.message").value("Account successfully confirmed")) // Sprawdzenie treści odpowiedzi
+                .andReturn();
 
 
     //Step 6: user tried to get JWT by requesting POST /api/auth/signin with username="someTestUser", password="someTestPassword"
@@ -229,12 +226,12 @@ class UserRegistersAndDeletesAccountIntegrationTest extends BaseIntegrationTest 
         // then
         MvcResult updateActionResult = updateRegisterRequest.andExpect(status().isOk()).andReturn();
         String updateActionResultJson = updateActionResult.getResponse().getContentAsString();
-        AppUserUpdateModel updateResultDto = objectMapper.readValue(updateActionResultJson, AppUserUpdateModel.class);
+        AppUserDto updateResultDto = objectMapper.readValue(updateActionResultJson, AppUserDto.class);
 
         assertAll(
-                () -> assertThat(updateResultDto.email()).isEqualTo("some@mail.com"),
-                () -> assertThat(updateResultDto.firstName()).isEqualTo("Foo"),
-                () -> assertThat(updateResultDto.lastName()).isEqualTo("Bar")
+                () -> assertThat(updateResultDto.getEmail()).isEqualTo("some@mail.com"),
+                () -> assertThat(updateResultDto.getFirstName()).isEqualTo("Foo"),
+                () -> assertThat(updateResultDto.getLastName()).isEqualTo("Bar")
        );
 
     //Step 10:    User made DELETE /api/auth/deleteUser “Authorization: AAAA.BBBB.CCC” (refresh token)

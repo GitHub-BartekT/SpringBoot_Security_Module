@@ -2,17 +2,42 @@ package pl.iseebugs.Security.domain.account.create;
 
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
+import pl.iseebugs.Security.domain.account.AccountHelper;
 import pl.iseebugs.Security.domain.user.AppUser;
 import pl.iseebugs.Security.domain.account.TokenNotFoundException;
 
 import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.util.Date;
 import java.util.Optional;
+
+import static pl.iseebugs.Security.domain.account.AccountHelper.CONFIRMATION_ACCOUNT_TOKEN_EXPIRATION_TIME;
+import static pl.iseebugs.Security.domain.account.AccountHelper.getUUID;
 
 @Service
 @AllArgsConstructor
-public class ConfirmationTokenService {
+class ConfirmationTokenService {
 
     private final ConfirmationTokenRepository confirmationTokenRepository;
+    private final AccountHelper accountHelper;
+
+    public String createNewConfirmationToken(Long userId) {
+        String token = getUUID();
+        ConfirmationToken confirmationToken = new ConfirmationToken(
+                token,
+                LocalDateTime.now(),
+                LocalDateTime.now().plusMinutes(CONFIRMATION_ACCOUNT_TOKEN_EXPIRATION_TIME),
+                userId
+        );
+        saveConfirmationToken(confirmationToken);
+        return token;
+    }
+
+    public Date calculateTokenExpiration(String token) throws TokenNotFoundException {
+        ConfirmationToken confirmationToken = getTokenByToken(token)
+                .orElseThrow(() -> new TokenNotFoundException("Token not found."));
+        return Date.from(confirmationToken.getExpiresAt().atZone(ZoneId.systemDefault()).toInstant());
+    }
 
     public void saveConfirmationToken(ConfirmationToken token){
         confirmationTokenRepository.save(token);
@@ -26,8 +51,8 @@ public class ConfirmationTokenService {
         return confirmationTokenRepository.findTokenByEmail(id);
     }
 
-    public int setConfirmedAt(String token) {
-        return confirmationTokenRepository.updateConfirmedAt(
+    public void setConfirmedAt(String token) {
+        confirmationTokenRepository.updateConfirmedAt(
                 token, LocalDateTime.now());
     }
 
