@@ -2,21 +2,25 @@ package pl.iseebugs.Security.domain.account.delete;
 
 import lombok.AllArgsConstructor;
 import lombok.extern.log4j.Log4j2;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.CredentialsExpiredException;
 import org.springframework.stereotype.Service;
+import pl.iseebugs.Security.domain.ApiResponse;
 import pl.iseebugs.Security.domain.account.AccountHelper;
+import pl.iseebugs.Security.domain.account.ApiResponseFactory;
 import pl.iseebugs.Security.domain.account.EmailNotFoundException;
-import pl.iseebugs.Security.domain.email.EmailFacade;
-import pl.iseebugs.Security.domain.email.EmailType;
 import pl.iseebugs.Security.domain.security.SecurityFacade;
 import pl.iseebugs.Security.domain.account.TokenNotFoundException;
 import pl.iseebugs.Security.domain.security.projection.AuthReqRespDTO;
+import pl.iseebugs.Security.domain.security.projection.LoginTokenDto;
 import pl.iseebugs.Security.domain.user.AppUserFacade;
 import pl.iseebugs.Security.domain.user.AppUserNotFoundException;
 import pl.iseebugs.Security.domain.user.dto.AppUserReadModel;
 import pl.iseebugs.Security.domain.user.dto.AppUserWriteModel;
+import static pl.iseebugs.Security.domain.account.AccountHelper.getUUID;
 
 import java.time.LocalDateTime;
+import java.util.Date;
 import java.util.UUID;
 
 @Log4j2
@@ -28,22 +32,21 @@ public class AccountDeleteFacade {
 
     private final DeleteTokenService deleteTokenService;
     private final AppUserFacade appUserFacade;
-    private final SecurityFacade securityFacade;
-    private final EmailFacade emailFacade;
-    private final AccountHelper helper;
+    private final AccountHelper accountHelper;
 
-    public AuthReqRespDTO deleteUser(String accessToken) throws Exception {
-        securityFacade.isAccessToken(accessToken);
-        securityFacade.isTokenExpired(accessToken);
+    public ApiResponse<LoginTokenDto> deleteUser(String accessToken) throws Exception {
+        AppUserReadModel user = accountHelper.getAppUserReadModelFromToken(accessToken);
+        String token = getDeleteToken(user);
 
-        String userEmail = securityFacade.extractUsername(accessToken);
-        AppUserReadModel user = appUserFacade.findByEmail(userEmail);
+        accountHelper.sendMailWithDeleteToken(user.email(), "/api/auth/delete/delete-confirm?token=", token);
 
-        AuthReqRespDTO responseDTO = new AuthReqRespDTO();
-        responseDTO.setFirstName(user.firstName());
-        responseDTO.setEmail(user.email());
+        Date tokenExpiresAt = deleteTokenService.calculateTokenExpiration(token);
+        LoginTokenDto deleteTokenDto = new LoginTokenDto(token, tokenExpiresAt);
+        return ApiResponseFactory.createResponseWithStatus(HttpStatus.CREATED.value(), "Delete confirmation mail created successfully.", deleteTokenDto);
+    }
 
-        String token = UUID.randomUUID().toString();
+    private String getDeleteToken(final AppUserReadModel user) throws TokenNotFoundException {
+        String token = getUUID();
 
         DeleteToken deleteToken = deleteTokenService.getTokenByUserId(user.id()).isPresent() ?
                 deleteTokenService.getTokenByUserId(user.id()).orElseThrow(TokenNotFoundException::new) :
@@ -55,32 +58,17 @@ public class AccountDeleteFacade {
         deleteToken.setAppUserId(user.id());
 
         deleteTokenService.saveDeleteToken(deleteToken);
-        responseDTO.setToken(token);
 
-        responseDTO.setMessage("Delete confirmation mail created successfully.");
-        responseDTO.setExpirationTime("24 hours");
-        responseDTO.setStatusCode(201);
-
-        String link = helper.createUrl("/api/auth/delete-confirm?token=", token);
-
-        emailFacade.sendTemplateEmail(
-                EmailType.DELETE,
-                responseDTO,
-                link);
-
-        return responseDTO;
+        return token;
     }
 
-    public AuthReqRespDTO confirmDeleteToken(final String token) throws TokenNotFoundException, AppUserNotFoundException, EmailNotFoundException {
-        DeleteToken deleteToken;
-        deleteToken = deleteTokenService.getToken(token)
+    public ApiResponse<Void> confirmDeleteToken(final String token) throws TokenNotFoundException, AppUserNotFoundException, EmailNotFoundException {
+        DeleteToken deleteToken = deleteTokenService.getToken(token)
                 .orElseThrow(TokenNotFoundException::new);
 
-        AuthReqRespDTO response = new AuthReqRespDTO();
         LocalDateTime expiredAt = deleteToken.getExpiresAt();
 
         if (expiredAt.isBefore(LocalDateTime.now())) {
-            log.info("Token expired.");
             throw new CredentialsExpiredException("Token expired.");
         }
 
@@ -88,9 +76,7 @@ public class AccountDeleteFacade {
 
         anonymization(deleteToken.getAppUserId());
 
-        response.setStatusCode(204);
-        response.setMessage("User account successfully deleted.");
-        return response;
+        return ApiResponseFactory.createResponseWithoutData(HttpStatus.NO_CONTENT.value(), "User account successfully deleted.");
     }
 
     private void anonymization(final Long id) throws AppUserNotFoundException, EmailNotFoundException {

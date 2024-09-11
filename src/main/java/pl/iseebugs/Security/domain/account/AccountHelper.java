@@ -24,12 +24,20 @@ public class AccountHelper {
     private final AppUserFacade appUserFacade;
 
     public void sendMailWithConfirmationToken(final String email, final String endpoint, final String token) throws InvalidEmailTypeException {
+        sendMailWithToken(EmailType.ACTIVATION, email, endpoint, token);
+    }
+
+    public void sendMailWithDeleteToken(final String email, final String endpoint, final String token) throws InvalidEmailTypeException {
+        sendMailWithToken(EmailType.DELETE, email, endpoint, token);
+    }
+
+    private void sendMailWithToken(EmailType emailType, final String email, final String endpoint, final String token) throws InvalidEmailTypeException {
         AppUserDto dataToEmail = AppUserDto.builder()
                 .firstName(null)
                 .email(email).build();
 
         String link = createUrl(endpoint, token);
-        emailFacade.sendTemplateEmail(EmailType.ACTIVATION, dataToEmail, link);
+        emailFacade.sendTemplateEmail(emailType, dataToEmail, link);
     }
 
     public String createUrl(final String endpoint, final String token) {
