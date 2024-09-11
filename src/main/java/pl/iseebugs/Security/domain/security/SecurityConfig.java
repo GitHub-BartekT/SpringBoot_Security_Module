@@ -39,7 +39,8 @@ class SecurityConfig {
                                 "/api/auth",
                                 "/api/auth/create/**",
                                 "/api/auth/confirm",
-                                "/api/auth/signin").permitAll()
+                                "/api/auth/signin",
+                                "/api/auth/delete/**").permitAll()
                         .requestMatchers(
                                 "/swagger-ui/**",
                                 "/swagger-ui.html",
