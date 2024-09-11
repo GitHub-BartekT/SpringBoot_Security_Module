@@ -20,6 +20,7 @@ import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.UUID;
 
+import static pl.iseebugs.Security.domain.account.AccountHelper.DELETE_ACCOUNT_TOKEN_EXPIRATION_TIME;
 import static pl.iseebugs.Security.domain.account.AccountHelper.getUUID;
 
 @Log4j2
@@ -27,7 +28,6 @@ import static pl.iseebugs.Security.domain.account.AccountHelper.getUUID;
 @AllArgsConstructor
 public class AccountDeleteFacade {
 
-    private static Long DELETE_ACCOUNT_TOKEN_EXPIRATION_TIME = 1440L;
     private static final String DELETE_CONFIRMATION_ENDPOINT = "/api/auth/delete/delete-confirm?token=";
 
     private final DeleteTokenService deleteTokenService;

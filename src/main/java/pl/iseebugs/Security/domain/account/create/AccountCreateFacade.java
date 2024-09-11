@@ -11,6 +11,7 @@ import pl.iseebugs.Security.domain.account.TokenNotFoundException;
 import pl.iseebugs.Security.domain.account.lifecycle.dto.LoginRequest;
 import pl.iseebugs.Security.domain.email.EmailSender;
 import pl.iseebugs.Security.domain.email.InvalidEmailTypeException;
+import pl.iseebugs.Security.domain.security.AuthorizationProperties;
 import pl.iseebugs.Security.domain.security.SecurityFacade;
 import pl.iseebugs.Security.domain.security.projection.LoginTokenDto;
 import pl.iseebugs.Security.domain.user.AppUserFacade;

@@ -13,8 +13,6 @@ import pl.iseebugs.Security.domain.security.projection.AppUserReadModelSecurity;
 
 @Service
 class AppUserInfoService implements UserDetailsService {
-    private static final String USER_NOT_FOUND = "User not found.";
-
     AppUserFacade appUserFacade;
 
     @Autowired
@@ -24,7 +22,7 @@ class AppUserInfoService implements UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String username) throws BadCredentialsException {
-        AppUserReadModelSecurity user = null;
+        AppUserReadModelSecurity user;
         try {
             user = findByUsername(username);
         } catch (AppUserNotFoundException | EmailNotFoundException e) {

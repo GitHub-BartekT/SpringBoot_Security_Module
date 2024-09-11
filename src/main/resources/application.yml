@@ -40,6 +40,8 @@ auth:
   secret: ${SECRET}
   expiration-refresh-token-time: 86400000 # 24 hours or 86400 000 milliseconds
   expiration-access-token-time: 3600000 # 60 minutes or 3600 000 milliseconds
+  expiration-confirmation-token-time: 1440 # 1 day or 1440 minutes
+  expiration-delete-token-time: 1440 # 1 day or 1440 minutes
 
 app:
   uri: http://localhost
