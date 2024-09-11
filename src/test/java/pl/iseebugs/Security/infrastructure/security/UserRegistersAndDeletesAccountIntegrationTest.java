@@ -1,5 +1,6 @@
 package pl.iseebugs.Security.infrastructure.security;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import lombok.extern.java.Log;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
@@ -7,6 +8,7 @@ import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.util.StringUtils;
 import pl.iseebugs.Security.BaseIntegrationTest;
+import pl.iseebugs.Security.domain.ApiResponse;
 import pl.iseebugs.Security.domain.account.lifecycle.dto.AppUserDto;
 import pl.iseebugs.Security.domain.account.lifecycle.dto.LoginResponse;
 import pl.iseebugs.Security.domain.security.projection.AuthReqRespDTO;
@@ -18,9 +20,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
-
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @Log
 class UserRegistersAndDeletesAccountIntegrationTest extends BaseIntegrationTest {
@@ -81,14 +81,15 @@ class UserRegistersAndDeletesAccountIntegrationTest extends BaseIntegrationTest 
         // then
         MvcResult registerActionResult = successRegisterRequest.andExpect(status().isOk()).andReturn();
         String registerActionResultJson = registerActionResult.getResponse().getContentAsString();
-        LoginTokenDto registerResultDto = objectMapper.readValue(registerActionResultJson, LoginTokenDto.class);
+        ApiResponse<LoginTokenDto> registerResultDto = objectMapper.readValue(
+                registerActionResultJson, new TypeReference<ApiResponse<LoginTokenDto>>() {});
 
-        String registrationToken = registerResultDto.token();
+        String registrationToken = registerResultDto.getData().token();
 
-        final LoginTokenDto finalConfirmResultDto = registerResultDto;
+        final ApiResponse<LoginTokenDto> finalConfirmResultDto = registerResultDto;
         assertAll(
-                () -> assertThat(finalConfirmResultDto.token()).isNotBlank(),
-                () -> assertThat(finalConfirmResultDto.expiresAt()).isNotNull()
+                () -> assertThat(registrationToken).isNotBlank(),
+                () -> assertThat(finalConfirmResultDto.getData().expiresAt()).isNotNull()
         );
 
 
@@ -122,7 +123,7 @@ class UserRegistersAndDeletesAccountIntegrationTest extends BaseIntegrationTest 
         // then
         MvcResult confirmActionResult = confirmRegisterRequest
                 .andExpect(status().isOk())
-                .andExpect(content().string("User confirmed.")) // Sprawdzenie treści odpowiedzi
+                .andExpect(jsonPath("$.message").value("Account successfully confirmed")) // Sprawdzenie treści odpowiedzi
                 .andReturn();
 
 
