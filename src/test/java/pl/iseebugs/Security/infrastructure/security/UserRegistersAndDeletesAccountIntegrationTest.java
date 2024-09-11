@@ -11,15 +11,11 @@ import pl.iseebugs.Security.BaseIntegrationTest;
 import pl.iseebugs.Security.domain.ApiResponse;
 import pl.iseebugs.Security.domain.account.lifecycle.dto.AppUserDto;
 import pl.iseebugs.Security.domain.account.lifecycle.dto.LoginResponse;
-import pl.iseebugs.Security.domain.security.projection.AuthReqRespDTO;
 import pl.iseebugs.Security.domain.security.projection.LoginTokenDto;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertAll;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @Log
@@ -146,7 +142,7 @@ class UserRegistersAndDeletesAccountIntegrationTest extends BaseIntegrationTest 
         MvcResult loginActionResult = loginRequest.andExpect(status().isOk()).andReturn();
         String loginActionResultJson = loginActionResult.getResponse().getContentAsString();
         ApiResponse<LoginResponse> loginResultDto = objectMapper.readValue(
-                loginActionResultJson, new TypeReference<ApiResponse<LoginResponse>>() {});
+                loginActionResultJson, new TypeReference<>() {});
 
         String accessToken = loginResultDto.getData().getAccessToken();
         String refreshToken = loginResultDto.getData().getRefreshToken();
@@ -170,8 +166,8 @@ class UserRegistersAndDeletesAccountIntegrationTest extends BaseIntegrationTest 
         // then
         MvcResult badRefreshActionResult = badRefreshRegisterRequest.andExpect(status().isUnauthorized()).andReturn();
         String badRefreshActionResultJson = badRefreshActionResult.getResponse().getContentAsString();
-        AuthReqRespDTO badRefreshResultDto = objectMapper.readValue(badRefreshActionResultJson, AuthReqRespDTO.class);
-
+        ApiResponse<LoginResponse> badRefreshResultDto = objectMapper.readValue(
+                badRefreshActionResultJson, new TypeReference<>() {});
 
         //then
         assertAll(
@@ -193,7 +189,7 @@ class UserRegistersAndDeletesAccountIntegrationTest extends BaseIntegrationTest 
         MvcResult refreshActionResult = refreshRegisterRequest.andExpect(status().isOk()).andReturn();
         String refreshActionResultJson = refreshActionResult.getResponse().getContentAsString();
         ApiResponse<LoginResponse> refreshResultDto = objectMapper.readValue(
-                refreshActionResultJson, new TypeReference<ApiResponse<LoginResponse>>() {});
+                refreshActionResultJson, new TypeReference<>() {});
 
 
         String newAccessToken = refreshResultDto.getData().getAccessToken();
