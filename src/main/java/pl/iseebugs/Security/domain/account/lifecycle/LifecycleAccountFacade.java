@@ -37,7 +37,7 @@ public class LifecycleAccountFacade {
         String email = loginRequest.getEmail();
         String password = loginRequest.getPassword();
 
-        var user = appUserFacade.findByEmail(email);
+        AppUserReadModel user = appUserFacade.findByEmail(email);
         securityFacade.authenticateByAuthenticationManager(email, password);
         lifecycleValidator.validConfirmationToken(user.id());
 
@@ -74,13 +74,7 @@ public class LifecycleAccountFacade {
                 .build();
 
         AppUserReadModel ourUserResult = appUserFacade.updatePersonalData(toUpdate);
-
-        return AppUserDto.builder()
-                .id(ourUserResult.id())
-                .firstName(ourUserResult.firstName())
-                .lastName(ourUserResult.lastName())
-                .email(ourUserResult.email())
-                .build();
+        return mapUserToDto(ourUserResult);
     }
 
     public void updatePassword(String accessToken, String newPassword) throws InvalidEmailTypeException, AppUserNotFoundException, EmailNotFoundException {
