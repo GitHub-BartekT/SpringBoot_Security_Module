@@ -1,6 +1,7 @@
 package pl.iseebugs.Security.domain.account.create;
 
 import lombok.extern.log4j.Log4j2;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import pl.iseebugs.Security.domain.ApiResponse;
 import pl.iseebugs.Security.domain.account.AccountHelper;
@@ -52,7 +53,7 @@ public class AccountCreateFacade {
         this.createAccountValidator = createAccountValidator;
     }
 
-    public LoginTokenDto signUp(LoginRequest registrationRequest) throws EmailSender.EmailConflictException, InvalidEmailTypeException, AppUserNotFoundException, TokenNotFoundException {
+    public ApiResponse<LoginTokenDto> signUp(LoginRequest registrationRequest) throws EmailSender.EmailConflictException, InvalidEmailTypeException, AppUserNotFoundException, TokenNotFoundException {
         String email = registrationRequest.getEmail();
         String password = securityFacade.passwordEncode(registrationRequest.getPassword());
         String roles = "USER";
@@ -67,11 +68,15 @@ public class AccountCreateFacade {
         Date tokenExpiresAt = Date.from(confirmationToken.getExpiresAt().atZone(ZoneId.systemDefault()).toInstant());
 
         sendMailWithConfirmationToken(email, token);
-
-        return new LoginTokenDto(token, tokenExpiresAt);
+        LoginTokenDto loginTokenDto = new LoginTokenDto(token, tokenExpiresAt);
+        return ApiResponse.<LoginTokenDto>builder()
+                .statusCode(HttpStatus.OK.value())
+                .message("Successfully signed up.")
+                .data(loginTokenDto)
+                .build();
     }
 
-    public void confirmToken(final String token) throws TokenNotFoundException, RegistrationTokenConflictException, AppUserNotFoundException {
+    public ApiResponse confirmToken(final String token) throws TokenNotFoundException, RegistrationTokenConflictException, AppUserNotFoundException {
         ConfirmationToken confirmationToken = confirmationTokenService.getTokenByToken(token)
                 .orElseThrow(TokenNotFoundException::new);
 
@@ -79,23 +84,29 @@ public class AccountCreateFacade {
 
         confirmationTokenService.setConfirmedAt(token);
         appUserFacade.enableAppUser(confirmationToken.getAppUserId());
+        return ApiResponse.<LoginTokenDto>builder()
+                .statusCode(HttpStatus.OK.value())
+                .message("Account successfully confirmed")
+                .build();
     }
 
     public ApiResponse<LoginTokenDto> refreshConfirmationToken(final String email) throws InvalidEmailTypeException, TokenNotFoundException, RegistrationTokenConflictException, AppUserNotFoundException, EmailNotFoundException {
-        AppUserReadModel appUserResult = appUserFacade.findByEmail(email);
         ApiResponse<LoginTokenDto> response = new ApiResponse<>();
+
+        AppUserReadModel appUserResult = appUserFacade.findByEmail(email);
         Long userId = appUserResult.id();
         String token = getUUID();
 
         Optional<ConfirmationToken> toCheck = confirmationTokenService.getTokenByUserId(userId);
-        ConfirmationToken confirmationToken;
+        ConfirmationToken confirmationToken = null;
         if (toCheck.isEmpty()) {
             confirmationToken = createNewConfirmationToken(token, userId);
             response.setStatusCode(201);
+            response.setMessage("Successfully generated new confirmation token.");
         } else if (toCheck.get().getConfirmedAt() != null
                 && confirmationTokenService.isConfirmed(appUserResult.id())) {
-            log.info("Confirmation token already confirmed.");
-            throw new RegistrationTokenConflictException("Confirmation token already confirmed.");
+            response.setStatusCode(401);
+            response.setMessage("Account already confirmed.");
         } else {
             confirmationToken = confirmationTokenService.getTokenByUserId(appUserResult.id())
                     .orElseThrow(() -> new TokenNotFoundException("Confirmation token not found."));
@@ -104,6 +115,7 @@ public class AccountCreateFacade {
             confirmationToken.setToken(token);
             confirmationTokenService.saveConfirmationToken(confirmationToken);
             response.setStatusCode(204);
+            response.setMessage("Successfully generated new confirmation token.");
         }
 
         sendMailWithConfirmationToken(email, token);
@@ -146,7 +158,6 @@ public class AccountCreateFacade {
                 .locked(false)
                 .enabled(false)
                 .build();
-
         return appUserFacade.create(userToCreate);
     }
 

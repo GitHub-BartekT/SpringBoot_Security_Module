@@ -23,14 +23,13 @@ class AccountCreateController {
     AccountCreateFacade accountCreateFacade;
 
     @PostMapping("/signup")
-    public ResponseEntity<LoginTokenDto> signUp(@RequestBody LoginRequest signUpRequest) throws EmailSender.EmailConflictException, InvalidEmailTypeException, AppUserNotFoundException, TokenNotFoundException {
+    public ResponseEntity<ApiResponse<LoginTokenDto>> signUp(@RequestBody LoginRequest signUpRequest) throws EmailSender.EmailConflictException, InvalidEmailTypeException, AppUserNotFoundException, TokenNotFoundException {
         return ResponseEntity.ok(accountCreateFacade.signUp(signUpRequest));
     }
 
     @GetMapping(path = "/confirm")
-    public ResponseEntity<?> confirm(@RequestParam("token") String token) throws RegistrationTokenConflictException, TokenNotFoundException, AppUserNotFoundException {
-        accountCreateFacade.confirmToken(token);
-        return ResponseEntity.ok("User confirmed.");
+    public ResponseEntity<ApiResponse> confirm(@RequestParam("token") String token) throws RegistrationTokenConflictException, TokenNotFoundException, AppUserNotFoundException {
+        return ResponseEntity.ok(accountCreateFacade.confirmToken(token));
     }
 
     @GetMapping(path = "/refresh-confirmation-token")
