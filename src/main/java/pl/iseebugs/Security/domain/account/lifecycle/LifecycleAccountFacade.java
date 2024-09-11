@@ -44,26 +44,16 @@ public class LifecycleAccountFacade {
         LoginTokenDto accessToken = securityFacade.generateAccessToken(user);
         LoginTokenDto refreshToken = securityFacade.generateRefreshToken(user);
 
-        return LoginResponse.builder()
-                .accessToken(accessToken.token())
-                .accessTokenExpiresAt(accessToken.expiresAt())
-                .refreshToken(refreshToken.token())
-                .refreshTokenExpiresAt(refreshToken.expiresAt())
-                .build();
+        return createLoginResponse(accessToken,refreshToken);
     }
 
     public LoginResponse refreshToken(String refreshToken) throws Exception {
         AppUserReadModel user = accountHelper.getAppUserReadModelFromToken(refreshToken);
+        LoginTokenDto accessToken = securityFacade.generateAccessToken(user);
 
-        var accessToken = securityFacade.generateAccessToken(user);
         Date refreshTokenExpiresAt = securityFacade.extractExpiresAt(refreshToken);
-
-        return LoginResponse.builder()
-                .accessToken(accessToken.token())
-                .accessTokenExpiresAt(accessToken.expiresAt())
-                .refreshToken(refreshToken)
-                .refreshTokenExpiresAt(refreshTokenExpiresAt)
-                .build();
+        LoginTokenDto loginTokenDto = new LoginTokenDto(refreshToken, refreshTokenExpiresAt);
+        return createLoginResponse(accessToken,loginTokenDto);
     }
 
     public AppUserDto updateUser(String accessToken, AppUserWriteModel toWrite) throws Exception {
@@ -113,16 +103,29 @@ public class LifecycleAccountFacade {
                 .build();
 
         AppUserReadModel updated = appUserFacade.update(toUpdate);
-
-        AppUserDto responseDTO = AppUserDto.builder()
-                .firstName(updated.firstName())
-                .lastName(updated.lastName())
-                .email(updated.email())
-                .build();
+        AppUserDto responseDTO = mapUserToDto(updated);
 
         emailFacade.sendTemplateEmail(
                 EmailType.RESET,
                 responseDTO,
                 newPassword);
+    }
+
+    private LoginResponse createLoginResponse(LoginTokenDto accessToken, LoginTokenDto refreshToken) {
+        return LoginResponse.builder()
+                .accessToken(accessToken.token())
+                .accessTokenExpiresAt(accessToken.expiresAt())
+                .refreshToken(refreshToken.token())
+                .refreshTokenExpiresAt(refreshToken.expiresAt())
+                .build();
+    }
+
+    private AppUserDto mapUserToDto(AppUserReadModel user) {
+        return AppUserDto.builder()
+                .id(user.id())
+                .firstName(user.firstName())
+                .lastName(user.lastName())
+                .email(user.email())
+                .build();
     }
 }
