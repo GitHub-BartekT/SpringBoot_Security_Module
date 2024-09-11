@@ -11,6 +11,8 @@ import java.util.UUID;
 @Component
 public class AccountHelper {
 
+    public static final Long CONFIRMATION_ACCOUNT_TOKEN_EXPIRATION_TIME = 15L;
+
     private final AppProperties appProperties;
     private final EmailFacade emailFacade;
 

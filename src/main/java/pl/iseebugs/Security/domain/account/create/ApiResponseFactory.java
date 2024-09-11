@@ -3,7 +3,7 @@ package pl.iseebugs.Security.domain.account.create;
 import org.springframework.http.HttpStatus;
 import pl.iseebugs.Security.domain.ApiResponse;
 
-public class APiResponseFactory {
+class ApiResponseFactory {
     public static <T> ApiResponse<T> createSuccessResponse( String message, T data) {
         return ApiResponse.<T>builder()
                 .statusCode(HttpStatus.OK.value())
