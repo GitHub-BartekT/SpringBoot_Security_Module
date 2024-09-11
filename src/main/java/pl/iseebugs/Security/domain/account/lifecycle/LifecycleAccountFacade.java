@@ -3,6 +3,7 @@ package pl.iseebugs.Security.domain.account.lifecycle;
 import lombok.AllArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.stereotype.Service;
+import pl.iseebugs.Security.domain.account.AccountHelper;
 import pl.iseebugs.Security.domain.account.EmailNotFoundException;
 import pl.iseebugs.Security.domain.account.TokenNotFoundException;
 import pl.iseebugs.Security.domain.account.lifecycle.dto.AppUserDto;
@@ -30,6 +31,7 @@ public class LifecycleAccountFacade {
     private final SecurityFacade securityFacade;
     private final LifecycleValidator lifecycleValidator;
     private final EmailFacade emailFacade;
+    private final AccountHelper accountHelper;
 
     public LoginResponse login(LoginRequest loginRequest) throws TokenNotFoundException, EmailNotFoundException {
         String email = loginRequest.getEmail();
@@ -51,7 +53,7 @@ public class LifecycleAccountFacade {
     }
 
     public LoginResponse refreshToken(String refreshToken) throws Exception {
-        AppUserReadModel user = getAppUserReadModelFromToken(refreshToken);
+        AppUserReadModel user = accountHelper.getAppUserReadModelFromToken(refreshToken);
 
         var accessToken = securityFacade.generateAccessToken(user);
         Date refreshTokenExpiresAt = securityFacade.extractExpiresAt(refreshToken);
@@ -65,7 +67,7 @@ public class LifecycleAccountFacade {
     }
 
     public AppUserDto updateUser(String accessToken, AppUserWriteModel toWrite) throws Exception {
-        AppUserReadModel appUserFromDataBase = getAppUserReadModelFromToken(accessToken);
+        AppUserReadModel appUserFromDataBase = accountHelper.getAppUserReadModelFromToken(accessToken);
 
         String firstName = toWrite.getFirstName().isBlank() ?
                 appUserFromDataBase.firstName() :
@@ -91,14 +93,14 @@ public class LifecycleAccountFacade {
                 .build();
     }
 
-    public void resetPasswordAndNotify(String accessToken) throws InvalidEmailTypeException, AppUserNotFoundException, EmailNotFoundException {
-        AppUserReadModel appUserFromDB = getAppUserReadModelFromToken(accessToken);
-        String newPassword = UUID.randomUUID().toString();
+    public void updatePassword(String accessToken, String newPassword) throws InvalidEmailTypeException, AppUserNotFoundException, EmailNotFoundException {
+        AppUserReadModel appUserFromDB = accountHelper.getAppUserReadModelFromToken(accessToken);
         updatePasswordAndNotify(newPassword, appUserFromDB);
     }
 
-    public void updatePassword(String accessToken, String newPassword) throws InvalidEmailTypeException, AppUserNotFoundException, EmailNotFoundException {
-        AppUserReadModel appUserFromDB = getAppUserReadModelFromToken(accessToken);
+    public void resetPasswordAndNotify(String accessToken) throws InvalidEmailTypeException, AppUserNotFoundException, EmailNotFoundException {
+        AppUserReadModel appUserFromDB = accountHelper.getAppUserReadModelFromToken(accessToken);
+        String newPassword = UUID.randomUUID().toString();
         updatePasswordAndNotify(newPassword, appUserFromDB);
     }
 
@@ -122,12 +124,5 @@ public class LifecycleAccountFacade {
                 EmailType.RESET,
                 responseDTO,
                 newPassword);
-    }
-
-
-
-    private AppUserReadModel getAppUserReadModelFromToken(final String accessToken) throws EmailNotFoundException {
-        String userEmail = securityFacade.extractUsername(accessToken);
-        return appUserFacade.findByEmail(userEmail);
     }
 }
