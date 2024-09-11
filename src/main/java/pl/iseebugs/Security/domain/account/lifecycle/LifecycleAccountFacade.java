@@ -18,9 +18,10 @@ import pl.iseebugs.Security.domain.user.AppUserFacade;
 import pl.iseebugs.Security.domain.user.AppUserNotFoundException;
 import pl.iseebugs.Security.domain.user.dto.AppUserReadModel;
 import pl.iseebugs.Security.domain.user.dto.AppUserWriteModel;
+import static pl.iseebugs.Security.domain.account.AccountHelper.getUUID;
+
 
 import java.util.Date;
-import java.util.UUID;
 
 @Log4j2
 @Service
@@ -83,9 +84,7 @@ public class LifecycleAccountFacade {
     }
 
     public void resetPasswordAndNotify(String accessToken) throws InvalidEmailTypeException, AppUserNotFoundException, EmailNotFoundException {
-        AppUserReadModel appUserFromDB = accountHelper.getAppUserReadModelFromToken(accessToken);
-        String newPassword = UUID.randomUUID().toString();
-        updatePasswordAndNotify(newPassword, appUserFromDB);
+        updatePassword(accessToken, getUUID());
     }
 
     private void updatePasswordAndNotify(final String newPassword, final AppUserReadModel appUserFromDB) throws AppUserNotFoundException, EmailNotFoundException, InvalidEmailTypeException {
