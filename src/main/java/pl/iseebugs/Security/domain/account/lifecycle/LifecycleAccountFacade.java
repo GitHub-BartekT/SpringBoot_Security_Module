@@ -42,6 +42,10 @@ public class LifecycleAccountFacade {
         securityFacade.authenticateByAuthenticationManager(email, password);
         lifecycleValidator.validConfirmationToken(user.id());
 
+        return buildLoginResponse(user);
+    }
+
+    private LoginResponse buildLoginResponse(AppUserReadModel user){
         LoginTokenDto accessToken = securityFacade.generateAccessToken(user);
         LoginTokenDto refreshToken = securityFacade.generateRefreshToken(user);
 
@@ -66,13 +70,8 @@ public class LifecycleAccountFacade {
         String lastName = toWrite.getLastName().isBlank() ?
                 appUserFromDataBase.lastName() :
                 toWrite.getLastName();
-
-        AppUserWriteModel toUpdate = AppUserWriteModel.builder()
-                .id(appUserFromDataBase.id())
-                .email(appUserFromDataBase.email())
-                .firstName(firstName)
-                .lastName(lastName)
-                .build();
+        
+        AppUserWriteModel toUpdate = buildUpdatedUserModel(appUserFromDataBase, firstName, lastName);
 
         AppUserReadModel ourUserResult = appUserFacade.updatePersonalData(toUpdate);
         return mapUserToDto(ourUserResult);
@@ -110,6 +109,15 @@ public class LifecycleAccountFacade {
                 .accessTokenExpiresAt(accessToken.expiresAt())
                 .refreshToken(refreshToken.token())
                 .refreshTokenExpiresAt(refreshToken.expiresAt())
+                .build();
+    }
+
+    private AppUserWriteModel buildUpdatedUserModel(AppUserReadModel existingUser, String firstName, String lastName) {
+        return AppUserWriteModel.builder()
+                .id(existingUser.id())
+                .email(existingUser.email())
+                .firstName(firstName)
+                .lastName(lastName)
                 .build();
     }
 
