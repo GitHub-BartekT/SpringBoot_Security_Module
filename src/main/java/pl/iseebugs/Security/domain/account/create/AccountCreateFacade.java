@@ -7,11 +7,9 @@ import pl.iseebugs.Security.domain.ApiResponse;
 import pl.iseebugs.Security.domain.account.AccountHelper;
 import pl.iseebugs.Security.domain.account.EmailNotFoundException;
 import pl.iseebugs.Security.domain.account.TokenNotFoundException;
-import pl.iseebugs.Security.domain.account.lifecycle.dto.AppUserDto;
 import pl.iseebugs.Security.domain.account.lifecycle.dto.LoginRequest;
 import pl.iseebugs.Security.domain.email.EmailFacade;
 import pl.iseebugs.Security.domain.email.EmailSender;
-import pl.iseebugs.Security.domain.email.EmailType;
 import pl.iseebugs.Security.domain.email.InvalidEmailTypeException;
 import pl.iseebugs.Security.domain.security.SecurityFacade;
 import pl.iseebugs.Security.domain.security.projection.LoginTokenDto;
@@ -24,7 +22,6 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Date;
 import java.util.Optional;
-import java.util.UUID;
 
 import static pl.iseebugs.Security.domain.account.AccountHelper.getUUID;
 
@@ -33,25 +30,23 @@ import static pl.iseebugs.Security.domain.account.AccountHelper.getUUID;
 public class AccountCreateFacade {
 
     private static final Long CONFIRMATION_ACCOUNT_TOKEN_EXPIRATION_TIME = 15L;
+    private static final String TOKEN_CONFIRMATION_ENDPOINT = "/api/auth/create/confirm?token=";
 
     SecurityFacade securityFacade;
     AppUserFacade appUserFacade;
     ConfirmationTokenService confirmationTokenService;
     AccountHelper accountHelper;
-    EmailFacade emailFacade;
     CreateAccountValidator createAccountValidator;
 
     AccountCreateFacade(SecurityFacade securityFacade,
                         AppUserFacade appUserFacade,
                         ConfirmationTokenService confirmationTokenService,
                         AccountHelper accountHelper,
-                        EmailFacade emailFacade,
                         CreateAccountValidator createAccountValidator) {
         this.securityFacade = securityFacade;
         this.appUserFacade = appUserFacade;
         this.confirmationTokenService = confirmationTokenService;
         this.accountHelper = accountHelper;
-        this.emailFacade = emailFacade;
         this.createAccountValidator = createAccountValidator;
     }
 
@@ -62,14 +57,14 @@ public class AccountCreateFacade {
 
         createAccountValidator.validateEmailConflict(email);
         AppUserReadModel createdUser = createAppUser(email, password, roles);
-        log.info("Created new user with id: {}, locked: {}, blocked: {}", createdUser.id(), createdUser.locked(), createdUser.enabled());
 
         String token = getUUID();
 
         ConfirmationToken confirmationToken = createNewConfirmationToken(token, createdUser.id());
         Date tokenExpiresAt = Date.from(confirmationToken.getExpiresAt().atZone(ZoneId.systemDefault()).toInstant());
 
-        sendMailWithConfirmationToken(email, token);
+        accountHelper.sendMailWithConfirmationToken(email, TOKEN_CONFIRMATION_ENDPOINT, token);
+
         LoginTokenDto loginTokenDto = new LoginTokenDto(token, tokenExpiresAt);
         return ApiResponse.<LoginTokenDto>builder()
                 .statusCode(HttpStatus.OK.value())
@@ -120,7 +115,7 @@ public class AccountCreateFacade {
             response.setMessage("Successfully generated new confirmation token.");
         }
 
-        sendMailWithConfirmationToken(email, token);
+        accountHelper.sendMailWithConfirmationToken(email, TOKEN_CONFIRMATION_ENDPOINT, token);
 
         Date tokenExpiresAt = Date.from(confirmationToken.getExpiresAt().atZone(ZoneId.systemDefault()).toInstant());
         LoginTokenDto loginTokenDto = new LoginTokenDto(token, tokenExpiresAt);
@@ -128,13 +123,9 @@ public class AccountCreateFacade {
         return response;
     }
 
-    private void sendMailWithConfirmationToken(final String email, final String token) throws InvalidEmailTypeException {
-        AppUserDto dataToEmail = AppUserDto.builder()
-                .firstName(null)
-                .email(email).build();
-
-        String link = accountHelper.createUrl("/api/auth/confirm?token=", token);
-        emailFacade.sendTemplateEmail(EmailType.ACTIVATION, dataToEmail, link);
+    public ConfirmationToken getTokenByUserId(Long userId) throws TokenNotFoundException {
+        return confirmationTokenService.getTokenByUserId(userId)
+                .orElseThrow(() -> new TokenNotFoundException("Confirmation token not found."));
     }
 
     private ConfirmationToken createNewConfirmationToken(final String token, final Long userId) throws TokenNotFoundException {
@@ -157,10 +148,5 @@ public class AccountCreateFacade {
                 .enabled(false)
                 .build();
         return appUserFacade.create(userToCreate);
-    }
-
-    public ConfirmationToken getTokenByUserId(Long userId) throws TokenNotFoundException {
-        return confirmationTokenService.getTokenByUserId(userId)
-                .orElseThrow(() -> new TokenNotFoundException("Confirmation token not found."));
     }
 }
