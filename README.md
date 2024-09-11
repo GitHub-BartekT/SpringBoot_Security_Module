@@ -1,10 +1,10 @@
-# Spring Security Module - EN
+# Spring Security Module
 ### Overview
 This project focuses on implementing advanced authorization and authentication features using **Spring Boot 3**.
 
 ## Scope of the project
 
-### Live demo in postman
+### Live Demo
 
 📺[Watch the demo on YouTube](https://www.youtube.com/watch?v=INOvOtW8JO8)📺
 
