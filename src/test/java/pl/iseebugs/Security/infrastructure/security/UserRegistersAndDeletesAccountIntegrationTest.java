@@ -267,8 +267,9 @@ class UserRegistersAndDeletesAccountIntegrationTest extends BaseIntegrationTest 
         // then
         MvcResult delete = deleteRegisterRequest.andExpect(status().isOk()).andReturn();
         String deleteActionResultJson = delete.getResponse().getContentAsString();
-        AuthReqRespDTO deleteResultDto = objectMapper.readValue(deleteActionResultJson, AuthReqRespDTO.class);
-        String deleteToken = deleteResultDto.getToken();
+        ApiResponse<LoginTokenDto> deleteResultDto = objectMapper.readValue(deleteActionResultJson, new TypeReference<>() {
+        });
+        String deleteToken = deleteResultDto.getData().token();
         //then
         assertAll(
                 () -> assertThat(deleteResultDto.getStatusCode()).isEqualTo(201),
@@ -287,7 +288,8 @@ class UserRegistersAndDeletesAccountIntegrationTest extends BaseIntegrationTest 
         // then
         MvcResult deletedAccount = confirmationDeleteRegisterRequest.andExpect(status().isOk()).andReturn();
         String deletedAccountActionResultJson = deletedAccount.getResponse().getContentAsString();
-        AuthReqRespDTO deletedAccountResultDto = objectMapper.readValue(deletedAccountActionResultJson, AuthReqRespDTO.class);
+        ApiResponse<LoginTokenDto> deletedAccountResultDto = objectMapper.readValue(deletedAccountActionResultJson, new TypeReference<>() {
+        });
         //then
         assertAll(
                 () -> assertThat(deletedAccountResultDto.getStatusCode()).isEqualTo(204),

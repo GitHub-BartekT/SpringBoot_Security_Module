@@ -36,14 +36,4 @@ public class DeleteToken {
     private LocalDateTime confirmedAt;
 
     private Long appUserId;
-
-    public DeleteToken(final String token,
-                       final LocalDateTime createdAt,
-                       final LocalDateTime expiresAt,
-                       final Long appUserId) {
-        this.token = token;
-        this.createdAt = createdAt;
-        this.expiresAt = expiresAt;
-        this.appUserId = appUserId;
-    }
 }

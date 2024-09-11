@@ -4,10 +4,12 @@ import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import pl.iseebugs.Security.domain.ApiResponse;
 import pl.iseebugs.Security.domain.account.EmailNotFoundException;
 import pl.iseebugs.Security.domain.account.delete.AccountDeleteFacade;
 import pl.iseebugs.Security.domain.account.TokenNotFoundException;
 import pl.iseebugs.Security.domain.security.projection.AuthReqRespDTO;
+import pl.iseebugs.Security.domain.security.projection.LoginTokenDto;
 import pl.iseebugs.Security.domain.user.AppUserNotFoundException;
 
 @AllArgsConstructor
@@ -18,7 +20,7 @@ class AccountDeleteController {
     AccountDeleteFacade accountDeleteFacade;
 
     @DeleteMapping()
-    ResponseEntity<AuthReqRespDTO> deleteUser(@RequestHeader("Authorization") String authHeader) throws Exception {
+    ResponseEntity<ApiResponse<LoginTokenDto>> deleteUser(@RequestHeader("Authorization") String authHeader) throws Exception {
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
         }
@@ -27,7 +29,7 @@ class AccountDeleteController {
     }
 
     @GetMapping("/delete-confirm")
-    public ResponseEntity<AuthReqRespDTO> deleteConfirm(@RequestParam("token") String token) throws TokenNotFoundException, AppUserNotFoundException, EmailNotFoundException {
+    public ResponseEntity<ApiResponse<Void>> deleteConfirm(@RequestParam("token") String token) throws TokenNotFoundException, AppUserNotFoundException, EmailNotFoundException {
         return ResponseEntity.ok(accountDeleteFacade.confirmDeleteToken(token));
     }
 }
