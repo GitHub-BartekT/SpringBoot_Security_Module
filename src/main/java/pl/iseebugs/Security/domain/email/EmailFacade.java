@@ -31,27 +31,6 @@ public class EmailFacade implements EmailSender{
         this.emailProperties = emailProperties;
     }
 
-    public void sendTemplateEmail(EmailType type, AuthReqRespDTO userData, String link) throws InvalidEmailTypeException {
-        EmailProperties.EmailTemplate template =
-                emailProperties.getTemplates().get(type.toString());
-
-        if (template == null){
-            throw new InvalidEmailTypeException("Invalid email type: " + type);
-        }
-        String firstName = userData.getFirstName() == null ? "new user" : userData.getFirstName();
-
-        Context context = new Context();
-        String welcomeText = template.getWelcomeText().replace("${name}", firstName);
-        context.setVariable("welcomeText", welcomeText);
-        context.setVariable("text1", template.getText1());
-        context.setVariable("link", link);
-        context.setVariable("text2", template.getText2());
-
-        String email = this.templateEngine.process(template.getTemplate(), context);
-
-        send(userData.getEmail(), template.getSubject(), email);
-    }
-
     public void sendTemplateEmail(EmailType type, AppUserDto userData, String link) throws InvalidEmailTypeException {
         EmailProperties.EmailTemplate template =
                 emailProperties.getTemplates().get(type.toString());
