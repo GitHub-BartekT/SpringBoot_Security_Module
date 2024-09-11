@@ -5,6 +5,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import pl.iseebugs.Security.domain.ApiResponse;
 import pl.iseebugs.Security.domain.account.AccountHelper;
+import pl.iseebugs.Security.domain.account.ApiResponseFactory;
 import pl.iseebugs.Security.domain.account.EmailNotFoundException;
 import pl.iseebugs.Security.domain.account.TokenNotFoundException;
 import pl.iseebugs.Security.domain.account.lifecycle.dto.LoginRequest;
@@ -18,7 +19,6 @@ import pl.iseebugs.Security.domain.user.dto.AppUserReadModel;
 import pl.iseebugs.Security.domain.user.dto.AppUserWriteModel;
 
 import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.util.Date;
 import java.util.Optional;
 

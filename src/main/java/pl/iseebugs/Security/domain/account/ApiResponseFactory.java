@@ -1,9 +1,9 @@
-package pl.iseebugs.Security.domain.account.create;
+package pl.iseebugs.Security.domain.account;
 
 import org.springframework.http.HttpStatus;
 import pl.iseebugs.Security.domain.ApiResponse;
 
-class ApiResponseFactory {
+public class ApiResponseFactory {
     public static <T> ApiResponse<T> createSuccessResponse( String message, T data) {
         return ApiResponse.<T>builder()
                 .statusCode(HttpStatus.OK.value())
