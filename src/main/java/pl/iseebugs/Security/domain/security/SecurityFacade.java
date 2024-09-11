@@ -40,30 +40,6 @@ public class SecurityFacade {
         return jwtUtils.extractUsername(token);
     }
 
-    public void isAccessToken(String accessToken) throws BadTokenTypeException {
-        if (jwtUtils.isAccessToken(accessToken)) {
-            return;
-        }
-        log.info("The provided token is not an access token.");
-        throw new BadTokenTypeException();
-    }
-
-    public void isRefreshToken(String refreshToken) throws BadTokenTypeException {
-        if (jwtUtils.isRefreshToken(refreshToken)) {
-            return;
-        }
-        log.info("The provided token is not an refresh token.");
-        throw new BadTokenTypeException();
-    }
-
-    public void isTokenExpired(String accessToken) {
-        String userEmail = extractUsername(accessToken);
-        if (jwtUtils.isTokenExpired(accessToken)) {
-            log.info("User with email: " + userEmail + " used an expired token.");
-            throw new CredentialsExpiredException("Token expired.");
-        }
-    }
-
     public Date extractExpiresAt(String token) {
         return jwtUtils.extractExpiresAt(token);
     }
@@ -83,9 +59,5 @@ public class SecurityFacade {
                 new UsernamePasswordAuthenticationToken(
                         email,
                         password));
-    }
-
-    public boolean isTokenValid(String token, String email){
-        return jwtUtils.isTokenValid(token, email);
     }
 }

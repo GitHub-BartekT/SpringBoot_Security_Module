@@ -92,7 +92,6 @@ class AppUserInfoDetails implements UserDetails {
         this.enabled = enabled;
     }
 
-
     AppUser toNewAppUser(){
             return AppUser.builder()
                     .firstName(this.firstName)

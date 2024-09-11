@@ -13,4 +13,6 @@ public class AuthorizationProperties{
         private String secret;
         private int expirationRefreshTokenTime;
         private int expirationAccessTokenTime;
+        private int expirationConfirmationTokenTime;
+        private int expirationDeleteTokenTime;
 }
