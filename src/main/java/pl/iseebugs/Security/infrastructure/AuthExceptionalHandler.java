@@ -1,92 +1,70 @@
 package pl.iseebugs.Security.infrastructure;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.CredentialsExpiredException;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import pl.iseebugs.Security.domain.ApiResponse;
+import pl.iseebugs.Security.domain.account.ApiResponseFactory;
 import pl.iseebugs.Security.domain.account.BadTokenTypeException;
 import pl.iseebugs.Security.domain.account.EmailNotFoundException;
-import pl.iseebugs.Security.domain.account.create.RegistrationTokenConflictException;
 import pl.iseebugs.Security.domain.account.TokenNotFoundException;
-import pl.iseebugs.Security.domain.security.projection.AuthReqRespDTO;
+import pl.iseebugs.Security.domain.account.create.RegistrationTokenConflictException;
 import pl.iseebugs.Security.domain.user.AppUserNotFoundException;
 
 @ControllerAdvice
 class AuthExceptionalHandler {
 
     @ExceptionHandler(UsernameNotFoundException.class)
-    ResponseEntity<AuthReqRespDTO> handlerUsernameNotFoundException(UsernameNotFoundException e){
-        AuthReqRespDTO response = new AuthReqRespDTO();
-        response.setStatusCode(404);
-        response.setError(e.getClass().getSimpleName());
-        response.setMessage(e.getMessage());
-        return ResponseEntity.ok().body(response);
+    ResponseEntity<ApiResponse<Void>> handlerUsernameNotFoundException(UsernameNotFoundException e){
+        return ResponseEntity.ok().body(
+                ApiResponseFactory.createResponseWithoutData(
+                        HttpStatus.NOT_FOUND.value(),
+                        e.getMessage()));
     }
 
     @ExceptionHandler(BadTokenTypeException.class)
-    ResponseEntity<AuthReqRespDTO> handlerBadTokenTypeException(BadTokenTypeException e){
-        AuthReqRespDTO response = new AuthReqRespDTO();
-        response.setStatusCode(401);
-        response.setError(e.getClass().getSimpleName());
-        response.setMessage(e.getMessage());
-        return ResponseEntity.ok().body(response);
+    ResponseEntity<ApiResponse<Void>> handlerBadTokenTypeException(BadTokenTypeException e){
+        return ResponseEntity.ok().body(
+                ApiResponseFactory.createResponseWithoutData(
+                        HttpStatus.UNAUTHORIZED.value(),
+                        e.getMessage()));
     }
 
     @ExceptionHandler(CredentialsExpiredException.class)
-    ResponseEntity<AuthReqRespDTO> handlerCredentialsExpiredException(CredentialsExpiredException e){
-        AuthReqRespDTO response = new AuthReqRespDTO();
-        response.setStatusCode(403);
-        response.setError(e.getClass().getSimpleName());
-        response.setMessage(e.getMessage());
-        return ResponseEntity.ok().body(response);
+    ResponseEntity<ApiResponse<Void>> handlerCredentialsExpiredException(CredentialsExpiredException e){
+        return ResponseEntity.ok().body(
+                ApiResponseFactory.createResponseWithoutData(
+                        HttpStatus.FORBIDDEN.value(),
+                        e.getMessage()));
     }
 
     @ExceptionHandler(TokenNotFoundException.class)
-    ResponseEntity<AuthReqRespDTO> handlerTokenNotFoundException(TokenNotFoundException e){
-        AuthReqRespDTO response = new AuthReqRespDTO();
-        response.setStatusCode(401);
-        response.setError(e.getClass().getSimpleName());
-        response.setMessage(e.getMessage());
-        return ResponseEntity.ok().body(response);
+    ResponseEntity<ApiResponse<Void>>  handlerTokenNotFoundException(TokenNotFoundException e){
+        return ResponseEntity.ok().body(
+                ApiResponseFactory.createResponseWithoutData(
+                        HttpStatus.UNAUTHORIZED.value(),
+                        e.getMessage()));
     }
 
     @ExceptionHandler(RegistrationTokenConflictException.class)
-    ResponseEntity<AuthReqRespDTO> handlerRegistrationTokenConflictException(RegistrationTokenConflictException e){
-        AuthReqRespDTO response = new AuthReqRespDTO();
-        response.setStatusCode(409);
-        response.setError(e.getClass().getSimpleName());
-        response.setMessage(e.getMessage());
-        return ResponseEntity.ok().body(response);
+    ResponseEntity<ApiResponse<Void>> handlerRegistrationTokenConflictException(RegistrationTokenConflictException e){
+        return ResponseEntity.ok().body(
+                ApiResponseFactory.createResponseWithoutData(
+                        HttpStatus.CONFLICT.value(),
+                        e.getMessage()));
     }
 
     @ExceptionHandler(BadCredentialsException.class)
-    ResponseEntity<AuthReqRespDTO> handlerBadCredentialsException(BadCredentialsException e){
-        AuthReqRespDTO response = new AuthReqRespDTO();
-        response.setStatusCode(403);
-        response.setError(e.getClass().getSimpleName());
-        response.setMessage(e.getMessage());
-        return ResponseEntity.ok().body(response);
+    ResponseEntity<ApiResponse<Void>> handlerBadCredentialsException(BadCredentialsException e){
+        return ResponseEntity.ok().body(
+                ApiResponseFactory.createResponseWithoutData(
+                        HttpStatus.FORBIDDEN.value(),
+                        e.getMessage()));
     }
 
-
-    @ExceptionHandler(AppUserNotFoundException.class)
-    ResponseEntity<AuthReqRespDTO> handlerAppUserNotFoundException(AppUserNotFoundException e){
-        AuthReqRespDTO response = new AuthReqRespDTO();
-        response.setStatusCode(404);
-        response.setError(e.getClass().getSimpleName());
-        response.setMessage(e.getMessage());
-        return ResponseEntity.ok().body(response);
-    }
-
-    @ExceptionHandler(EmailNotFoundException.class)
-    ResponseEntity<AuthReqRespDTO> handlerEmailNotFoundException(EmailNotFoundException e){
-        AuthReqRespDTO response = new AuthReqRespDTO();
-        response.setStatusCode(404);
-        response.setError(e.getClass().getSimpleName());
-        response.setMessage(e.getMessage());
-        return ResponseEntity.ok().body(response);
-    }
 
 }

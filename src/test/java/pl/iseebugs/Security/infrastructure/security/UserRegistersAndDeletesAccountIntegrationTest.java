@@ -44,11 +44,11 @@ class UserRegistersAndDeletesAccountIntegrationTest extends BaseIntegrationTest 
         // then
         MvcResult registerActionResultFailed = failedLoginRequest.andExpect(status().isOk()).andReturn();
         String registerActionResultFailedJson = registerActionResultFailed.getResponse().getContentAsString();
-        AuthReqRespDTO confirmResultFailedDto = objectMapper.readValue(registerActionResultFailedJson, AuthReqRespDTO.class);
+        ApiResponse<Void> confirmResultFailedDto = objectMapper.readValue(
+                registerActionResultFailedJson, new TypeReference<>() {});
         assertAll(
                 () -> assertThat(confirmResultFailedDto.getStatusCode()).isEqualTo(404),
-                () -> assertThat(confirmResultFailedDto.getMessage()).isEqualTo("Email not found."),
-                () -> assertThat(confirmResultFailedDto.getError()).isEqualTo("EmailNotFoundException")
+                () -> assertThat(confirmResultFailedDto.getMessage()).isEqualTo("Email not found.")
         );
 
 
@@ -82,7 +82,7 @@ class UserRegistersAndDeletesAccountIntegrationTest extends BaseIntegrationTest 
         MvcResult registerActionResult = successRegisterRequest.andExpect(status().isOk()).andReturn();
         String registerActionResultJson = registerActionResult.getResponse().getContentAsString();
         ApiResponse<LoginTokenDto> registerResultDto = objectMapper.readValue(
-                registerActionResultJson, new TypeReference<ApiResponse<LoginTokenDto>>() {});
+                registerActionResultJson, new TypeReference<>() {});
 
         String registrationToken = registerResultDto.getData().token();
 
@@ -105,10 +105,10 @@ class UserRegistersAndDeletesAccountIntegrationTest extends BaseIntegrationTest 
         // then
         MvcResult badConfirmTokenActionResult = badConfirmTokenRegisterRequest.andExpect(status().isOk()).andReturn();
         String badConfirmTokenActionResultJson = badConfirmTokenActionResult.getResponse().getContentAsString();
-        AuthReqRespDTO badConfirmTokenResultDto = objectMapper.readValue(badConfirmTokenActionResultJson, AuthReqRespDTO.class);
+        ApiResponse<Void> badConfirmTokenResultDto = objectMapper.readValue(
+                badConfirmTokenActionResultJson, new TypeReference<>() {});
         assertAll(
                 () -> assertThat(badConfirmTokenResultDto.getStatusCode()).isEqualTo(401),
-                () -> assertThat(badConfirmTokenResultDto.getError()).isEqualTo("TokenNotFoundException"),
                 () -> assertThat(badConfirmTokenResultDto.getMessage()).isEqualTo("Token not found.")
         );
 
@@ -315,11 +315,11 @@ class UserRegistersAndDeletesAccountIntegrationTest extends BaseIntegrationTest 
         // then
         MvcResult registerActionResultFailedNoUser = failedLoginRequestNoUser.andExpect(status().isOk()).andReturn();
         String confirmActionResultFailedJsonNoUser = registerActionResultFailedNoUser.getResponse().getContentAsString();
-        AuthReqRespDTO confirmResultFailedDtoNoUser = objectMapper.readValue(confirmActionResultFailedJsonNoUser, AuthReqRespDTO.class);
+        ApiResponse<Void> confirmResultFailedDtoNoUser = objectMapper.readValue(
+                confirmActionResultFailedJsonNoUser, new TypeReference<>() {});
         assertAll(
                 () -> assertThat(confirmResultFailedDtoNoUser.getStatusCode()).isEqualTo(404),
-                () -> assertThat(confirmResultFailedDtoNoUser.getMessage()).isEqualTo("Email not found."),
-                () -> assertThat(confirmResultFailedDtoNoUser.getError()).isEqualTo("EmailNotFoundException")
+                () -> assertThat(confirmResultFailedDtoNoUser.getMessage()).isEqualTo("Email not found.")
         );
     }
 }

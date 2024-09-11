@@ -12,7 +12,6 @@ import org.springframework.stereotype.Service;
 import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.Context;
 import pl.iseebugs.Security.domain.account.lifecycle.dto.AppUserDto;
-import pl.iseebugs.Security.domain.security.projection.AuthReqRespDTO;
 
 @Service
 public class EmailFacade implements EmailSender{
