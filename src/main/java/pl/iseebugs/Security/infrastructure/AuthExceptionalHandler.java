@@ -10,10 +10,8 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import pl.iseebugs.Security.domain.ApiResponse;
 import pl.iseebugs.Security.domain.account.ApiResponseFactory;
 import pl.iseebugs.Security.domain.account.BadTokenTypeException;
-import pl.iseebugs.Security.domain.account.EmailNotFoundException;
 import pl.iseebugs.Security.domain.account.TokenNotFoundException;
 import pl.iseebugs.Security.domain.account.create.RegistrationTokenConflictException;
-import pl.iseebugs.Security.domain.user.AppUserNotFoundException;
 
 @ControllerAdvice
 class AuthExceptionalHandler {

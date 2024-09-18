@@ -57,6 +57,29 @@ The API documentation is available via **Swagger UI**:
 
 ![Modules.png](..%2FModules.png)
 
+- **User**
+  - This module represents the main entity interacting with the application. The user is responsible for triggering different actions like signing up, logging in, updating personal data, and deleting the account. 
+- **Account**
+  - The Account module is divided into three core submodules that represent the lifecycle stages of a user's account:
+
+  - **Create**
+    - **signup**: Registers a new user and triggers email confirmation.
+    - **confirmToken**: Verifies the registration token to confirm the user's email.
+    - **refreshConfirmationToken**: Sends a new confirmation token if the original expires.
+  - **Lifecycle**
+    - **login**: Authenticates the user using credentials.
+    - **refreshToken**: Provides a new access token using the refresh token.
+    - **updatePassword**: Allows the user to update their password.
+    - **resetPassword**: Resets the password, typically after a "forgot password" request.
+    - **updateUserData**: Allows users to update their profile information.
+  - **Delete**
+    - **deleteUser**: Initiates the account deletion process by sending a confirmation token.
+    - **confirmDeleteToken**: Confirms the deletion token and deletes the user account after verification.
+- **Security**
+   This module manages authentication and security features such as generating tokens (access, refresh, delete tokens) and verifying credentials.
+- **Email**
+   Handles email-related tasks, such as sending confirmation tokens and password reset emails to users during the account lifecycle.
+
 ## Potential Improvements 🚀
 
 - **Google Registration - OAuth2:** Implement Google OAuth2 login.

@@ -13,7 +13,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
-import pl.iseebugs.Security.domain.security.projection.AuthReqRespDTO;
+import pl.iseebugs.Security.domain.ApiResponse;
 
 import java.io.IOException;
 
@@ -66,7 +66,7 @@ class JWTAuthFilter extends OncePerRequestFilter {
                 response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                 response.setContentType("application/json");
 
-                AuthReqRespDTO errorResponse = new AuthReqRespDTO();
+                ApiResponse<Void> errorResponse = new ApiResponse<>();
                 errorResponse.setStatusCode(HttpServletResponse.SC_UNAUTHORIZED);
                 errorResponse.setMessage("Invalid or expired refresh token");
 
