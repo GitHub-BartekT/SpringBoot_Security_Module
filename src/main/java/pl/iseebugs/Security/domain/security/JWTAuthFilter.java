@@ -32,16 +32,14 @@ class JWTAuthFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(final HttpServletRequest request, final HttpServletResponse response, final FilterChain filterChain) throws ServletException, IOException {
         final String authHeader = request.getHeader("Authorization");
-        final String jwtToken;
-        final String userEmail;
 
         if (authHeader == null || authHeader.isBlank()) {
             filterChain.doFilter(request, response);
             return;
         }
 
-        jwtToken = authHeader.substring(7);
-        userEmail = jwtUtils.extractUsername(jwtToken);
+        final String jwtToken = authHeader.substring(7);
+        final String userEmail = jwtUtils.extractUsername(jwtToken);
 
         if (request.getRequestURI().equals("/api/auth/refresh")) {
             if (userEmail != null && jwtUtils.isRefreshToken(jwtToken)) {

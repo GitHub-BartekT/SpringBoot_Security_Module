@@ -1,5 +1,6 @@
 package pl.iseebugs.Security.infrastructure;
 
+import io.jsonwebtoken.security.SignatureException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -62,6 +63,14 @@ class AuthExceptionalHandler {
                 ApiResponseFactory.createResponseWithoutData(
                         HttpStatus.FORBIDDEN.value(),
                         e.getMessage()));
+    }
+
+    @ExceptionHandler(SignatureException.class)
+    ResponseEntity<ApiResponse<Void>> handlerSignatureException(SignatureException  e){
+        return ResponseEntity.ok().body(
+                ApiResponseFactory.createResponseWithoutData(
+                        HttpStatus.UNAUTHORIZED.value(),
+                        "Invalid JWT signature: " + e.getMessage()));
     }
 
 
