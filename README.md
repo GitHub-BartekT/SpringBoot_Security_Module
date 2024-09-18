@@ -6,13 +6,9 @@ This project focuses on implementing advanced authorization and authentication f
 
 ### Live Demo
 
-📺[Watch the demo on YouTube](https://www.youtube.com/watch?v=INOvOtW8JO8)📺
+📺[Watch the demo on YouTube](https://youtu.be/ogg2mYtxsVE)📺
 
 The demo video covers the major functionalities of the project, including user registration, login, token handling, and more.
-
-### Showcase
-
-![img_1.png](img_1.png)
 
 ### Major Features:
 - **User Registration:**
